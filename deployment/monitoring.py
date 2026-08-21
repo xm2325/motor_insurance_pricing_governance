@@ -17,6 +17,7 @@ DEFAULT_THRESHOLDS: dict[str, float] = {
     "frequency_abs_log_ratio_p95": 0.75,
     "pure_premium_abs_log_ratio_p95": 1.00,
     "max_feature_psi": 0.25,
+    "min_feature_drift_records": 500.0,
 }
 
 
@@ -134,6 +135,9 @@ class ShadowTelemetry:
             request_count = self.request_count
             records_scored = self.records_scored
             feature_psi = self._feature_psi_unlocked()
+            feature_alert_eligible = records_scored >= int(
+                self.thresholds["min_feature_drift_records"]
+            )
             snapshot = {
                 "privacy_boundary": "aggregate_non_pii_only",
                 "request_count": request_count,
@@ -166,6 +170,8 @@ class ShadowTelemetry:
                     "max_psi_feature": (
                         max(feature_psi, key=feature_psi.get) if feature_psi else None
                     ),
+                    "alert_eligible": feature_alert_eligible,
+                    "minimum_records": int(self.thresholds["min_feature_drift_records"]),
                 },
                 "thresholds": dict(self.thresholds),
             }
@@ -188,7 +194,8 @@ class ShadowTelemetry:
             "pure_premium_disagreement": float(
                 snapshot["disagreement"]["pure_premium_abs_log_ratio_p95"]
             ) > self.thresholds["pure_premium_abs_log_ratio_p95"],
-            "feature_drift": float(snapshot["feature_drift"]["max_psi"])
+            "feature_drift": bool(snapshot["feature_drift"]["alert_eligible"])
+            and float(snapshot["feature_drift"]["max_psi"])
             > self.thresholds["max_feature_psi"],
         }
 
