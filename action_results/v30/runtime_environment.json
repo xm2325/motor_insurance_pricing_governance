@@ -1,6 +1,7 @@
 {
   "python": "3.12.14",
-  "distributions": [
+  "locked_application_distributions": 23,
+  "installed_distributions_including_pip": [
     {
       "name": "annotated-doc",
       "version": "0.0.5"
