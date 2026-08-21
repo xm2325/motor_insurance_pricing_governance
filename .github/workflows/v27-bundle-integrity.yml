@@ -1,0 +1,284 @@
+name: Motor pricing content-addressed bundle v0.27
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.27-content-addressed-bundle
+    paths:
+      - 'deployment/provenance.py'
+      - 'deployment/bundle.py'
+      - 'deployment/app.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'tests/test_bundle_integrity_v27.py'
+      - '.github/workflows/v27-bundle-integrity.yml'
+  pull_request:
+    paths:
+      - 'deployment/provenance.py'
+      - 'deployment/bundle.py'
+      - 'deployment/app.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'tests/test_bundle_integrity_v27.py'
+      - '.github/workflows/v27-bundle-integrity.yml'
+
+concurrency:
+  group: v27-bundle-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  bundle-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bundle integrity and existing deployment contracts
+        run: |
+          python -m unittest -v \
+            tests/test_bundle_integrity_v27.py \
+            tests/test_environment_compatibility_v26.py \
+            tests/test_deployment_contract.py \
+            tests/test_oot_contract.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build validated hybrid model bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Seal content-addressed v0.27 bundle
+        run: python build_bundle_lock_v27.py
+
+      - name: Verify sealed bundle without loading service
+        run: python verify_bundle_v27.py deployment_artifacts
+
+      - name: Exercise deliberate fail-closed tamper cases
+        run: |
+          mkdir -p results_v27
+          python - <<'PY'
+          import json
+          import shutil
+          import tempfile
+          from pathlib import Path
+
+          from deployment.provenance import verify_bundle_lock
+
+          source = Path('deployment_artifacts')
+          cases = {}
+
+          def expect_failure(name, mutate):
+              with tempfile.TemporaryDirectory() as directory:
+                  root = Path(directory) / 'bundle'
+                  shutil.copytree(source, root)
+                  mutate(root)
+                  try:
+                      verify_bundle_lock(root)
+                  except Exception as exc:
+                      cases[name] = {
+                          'status': 'FAIL_CLOSED_AS_EXPECTED',
+                          'exception_type': type(exc).__name__,
+                          'message': str(exc),
+                      }
+                      return
+                  raise AssertionError(f'{name} did not fail closed')
+
+          expect_failure(
+              'model_artifact_byte_tamper',
+              lambda root: (root / 'xgb_poisson_frequency.ubj').write_bytes(
+                  (root / 'xgb_poisson_frequency.ubj').read_bytes() + b'X'
+              ),
+          )
+          expect_failure(
+              'missing_locked_artifact',
+              lambda root: (root / 'poisson_glm_frequency.joblib').unlink(),
+          )
+          def mutate_lock(root):
+              path = root / 'bundle.lock.json'
+              document = json.loads(path.read_text())
+              document['governance_status'] = 'PROMOTE'
+              path.write_text(json.dumps(document, indent=2))
+          expect_failure('lock_self_tamper', mutate_lock)
+
+          result = {
+              'status': 'V27_TAMPER_TESTS_PASS',
+              'cases': cases,
+              'case_count': len(cases),
+          }
+          Path('results_v27/tamper_test_summary.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Build CPU-only runtime image
+        run: docker build -t motor-pricing-shadow:runtime-v27 .
+
+      - name: Verify container integrity status and same-fit HTTP parity
+        run: |
+          trap 'docker rm -f motor-pricing-runtime-v27 >/dev/null 2>&1 || true' EXIT
+          docker run -d --name motor-pricing-runtime-v27 \
+            -p 8000:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/deployment_artifacts:/models:ro" \
+            motor-pricing-shadow:runtime-v27
+          python - <<'PY'
+          import json
+          import time
+          from pathlib import Path
+          import httpx
+          import numpy as np
+
+          reference = json.loads(Path('deployment_artifacts/parity_reference.json').read_text())
+          lock = json.loads(Path('deployment_artifacts/bundle.lock.json').read_text())
+          fields = [
+              'reference_frequency',
+              'challenger_frequency',
+              'reference_pure_premium',
+              'challenger_pure_premium',
+          ]
+          with httpx.Client(base_url='http://127.0.0.1:8000', timeout=5.0) as client:
+              for _ in range(30):
+                  try:
+                      response = client.get('/health')
+                      if response.status_code == 200:
+                          break
+                  except Exception:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError('Runtime container did not become healthy')
+
+              health = response.json()
+              assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+              assert health['bundle_integrity'] == 'CONTENT_ADDRESSED_BUNDLE_VERIFIED'
+              assert health['bundle_lock_digest_sha256'] == lock['lock_digest_sha256']
+              assert health['environment_compatibility'] == 'HYBRID_MODEL_IO_COMPATIBLE'
+
+              max_abs_error = 0.0
+              for index, (record, expected) in enumerate(zip(reference['records'], reference['scores'])):
+                  scored = client.post('/score', json=record)
+                  scored.raise_for_status()
+                  body = scored.json()
+                  for field in fields:
+                      error = abs(float(body[field]) - float(expected[field]))
+                      max_abs_error = max(max_abs_error, error)
+                      if not np.isclose(float(body[field]), float(expected[field]), rtol=1e-12, atol=1e-12):
+                          raise AssertionError(
+                              f'HTTP parity mismatch record={index} field={field} error={error}'
+                          )
+
+              info = client.get('/model-info').json()
+              integrity = info['bundle_integrity']
+              assert integrity['status'] == 'CONTENT_ADDRESSED_BUNDLE_VERIFIED'
+              assert integrity['lock_digest_sha256'] == lock['lock_digest_sha256']
+
+          summary = {
+              'status': 'V27_CONTAINER_INTEGRITY_AND_HTTP_PARITY_PASS',
+              'governance_status': health['governance_status'],
+              'bundle_integrity': health['bundle_integrity'],
+              'lock_digest_sha256': health['bundle_lock_digest_sha256'],
+              'environment_compatibility': health['environment_compatibility'],
+              'records_tested': len(reference['records']),
+              'fields_per_record': len(fields),
+              'comparisons': len(reference['records']) * len(fields),
+              'max_absolute_error': max_abs_error,
+          }
+          Path('results_v27/container_integrity_summary.json').write_text(
+              json.dumps(summary, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Build v0.27 result summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lock = json.loads(Path('deployment_artifacts/bundle.lock.json').read_text())
+          build = json.loads(Path('deployment_artifacts/bundle_integrity_summary.json').read_text())
+          tamper = json.loads(Path('results_v27/tamper_test_summary.json').read_text())
+          container = json.loads(Path('results_v27/container_integrity_summary.json').read_text())
+          result = {
+              'status': 'V27_CONTENT_ADDRESSED_BUNDLE_PASS',
+              'bundle_lock': {
+                  'lock_version': lock['lock_version'],
+                  'lock_digest_sha256': lock['lock_digest_sha256'],
+                  'artifact_count': build['artifact_count'],
+                  'total_locked_bytes': build['total_locked_bytes'],
+                  'source_provenance': build['source_provenance'],
+                  'build_provenance': build['build_provenance'],
+              },
+              'tamper_tests': tamper,
+              'container': container,
+              'integrity_boundary': lock['integrity_boundary'],
+              'governance_boundary': 'HOLD / HOLD_SHADOW_ONLY remains unchanged',
+          }
+          Path('results_v27/bundle_integrity_result.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.27 evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v27
+          cp results_v27/*.json action_results/v27/
+          cp deployment_artifacts/bundle_integrity_summary.json action_results/v27/
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          Path('action_results/v27/ACTION_V27_STATUS.json').write_text(
+              json.dumps({
+                  'workflow': 'Motor pricing content-addressed bundle v0.27',
+                  'run_id': os.environ.get('GITHUB_RUN_ID'),
+                  'sha': os.environ.get('GITHUB_SHA'),
+                  'status': 'success',
+              }, indent=2), encoding='utf-8'
+          )
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v27
+          if git diff --cached --quiet; then
+            echo 'No v0.27 evidence changes'
+          else
+            git commit -m "Persist v0.27 bundle integrity run ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.27 evidence and sealed bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-content-addressed-v27
+          path: |
+            results_v27/
+            deployment_artifacts/
+          if-no-files-found: warn

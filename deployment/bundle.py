@@ -16,6 +16,7 @@ from deployment.environment import (
     EnvironmentCompatibility,
     require_model_environment_compatibility,
 )
+from deployment.provenance import BundleIntegrityReport, verify_bundle_lock
 
 
 def sha256_file(path: Path) -> str:
@@ -44,6 +45,7 @@ class ShadowModelBundle:
     manifest: dict[str, Any]
     models: dict[str, Any]
     environment_compatibility: EnvironmentCompatibility
+    bundle_integrity: BundleIntegrityReport | None = None
 
     @classmethod
     def load(cls, root: str | Path) -> "ShadowModelBundle":
@@ -52,6 +54,28 @@ class ShadowModelBundle:
         if not manifest_path.exists():
             raise FileNotFoundError(f"Missing deployment manifest: {manifest_path}")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        # v0.27 adds a content-addressed lock. Verify every locked file before any
+        # joblib deserialisation or native-model load. Older contract bundles remain
+        # readable so v0.21-v0.26 regression workflows can still exercise their own
+        # historical contracts.
+        bundle_integrity: BundleIntegrityReport | None = None
+        if str(manifest.get("bundle_contract_version")) == "0.27":
+            bundle_integrity = verify_bundle_lock(root)
+            lock_document = json.loads((root / "bundle.lock.json").read_text(encoding="utf-8"))
+            expected_pairs = {
+                "bundle_contract_version": str(manifest.get("bundle_contract_version")),
+                "model_version": manifest.get("model_version"),
+                "governance_status": manifest.get("governance_status"),
+                "feature_contract_hash": manifest.get("feature_contract_hash"),
+            }
+            for key, expected in expected_pairs.items():
+                observed = lock_document.get(key)
+                if observed != expected:
+                    raise RuntimeError(
+                        f"Bundle lock metadata mismatch for {key}: {observed!r} != {expected!r}"
+                    )
+
         if manifest.get("feature_contract_hash") != feature_contract_hash():
             raise RuntimeError("Deployment feature contract hash does not match service code")
 
@@ -110,6 +134,7 @@ class ShadowModelBundle:
             manifest=manifest,
             models=models,
             environment_compatibility=environment_compatibility,
+            bundle_integrity=bundle_integrity,
         )
 
     def _warnings_for_record(self, record: dict[str, Any]) -> list[str]:

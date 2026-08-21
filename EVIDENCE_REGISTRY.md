@@ -50,6 +50,11 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.26 runtime HTTP parity | **100 same-fit comparisons; max absolute error 0.0** | `action_results/v26/environment_compatibility_summary.json` |
 | v0.26 XGBoost serialization warning | cross-version pickle warning **not detected** after XGBoost native-model migration | `action_results/v26/serialization_warning_check.json` |
 | v0.26 historical retrain audit | max relative difference **0.0874%**; audit only, not serialization acceptance | `action_results/v26/retrain_drift_audit.json` |
+| v0.27 content-addressed bundle | **9 locked artifacts / 1,604,579 bytes** with canonical lock self-digest | `action_results/v27/bundle_integrity_result.json` |
+| v0.27 public source provenance | Mendeley `sw4jmdb2sm` v1; portfolio file **94,710,312 bytes**; SHA-256 `6a47d19d...f0faf4` | `action_results/v27/bundle_integrity_result.json` |
+| v0.27 fail-closed corruption tests | model-artifact byte tamper, missing GLM artifact and lock self-tamper all rejected | `action_results/v27/tamper_test_summary.json` |
+| v0.27 container integrity status | `CONTENT_ADDRESSED_BUNDLE_VERIFIED` + `HYBRID_MODEL_IO_COMPATIBLE` | `action_results/v27/container_integrity_summary.json` |
+| v0.27 integrity + HTTP parity | **25 records x 4 fields = 100 comparisons; max absolute error 0.0** | `action_results/v27/container_integrity_summary.json` |
 
 ## Interpretation rules
 
@@ -71,9 +76,12 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.26 allows the XGBoost 3.4.1 -> 3.4.0 patch difference only because the estimator is loaded through native model IO; the remaining joblib/pickle stack is still exact-version gated before deserialization.
 - The v0.26 historical retrain comparison is diagnostic only. Its 0.0874% maximum relative difference must not be described as serialization error or model improvement.
 - v0.26 changes model persistence and deployment reproducibility only. It does not alter the model-family `HOLD` decision or permit customer pricing.
+- v0.27 is a **content-addressed integrity and provenance contract**, not a cryptographic signature. Its lock digest identifies one sealed build and may change legitimately when code/build provenance or any locked artifact changes.
+- v0.27 detects missing/modified locked files when the lock digest is trusted; it does not claim resistance to an attacker able to replace both bundle artifacts and lockfile.
+- v0.27 integrity verification occurs before model deserialisation for contract `0.27`; the 0.0 parity result remains a same-fit serving check, not model approval.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py` and `tests/test_runtime_and_model_io_evidence.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime and model-IO headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py` and `tests/test_bundle_integrity_evidence_v27.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO and content-addressed-integrity headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.

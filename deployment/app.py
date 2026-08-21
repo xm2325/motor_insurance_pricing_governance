@@ -12,7 +12,7 @@ from deployment.bundle import ShadowModelBundle
 from deployment.contracts import BatchScoreRequest, PricingFeatures
 from deployment.monitoring import ShadowTelemetry
 
-SERVICE_VERSION = "0.26"
+SERVICE_VERSION = "0.27"
 
 app = FastAPI(
     title="Motor Pricing Shadow Scoring Service",
@@ -53,9 +53,20 @@ async def scoring_telemetry(request: Request, call_next):
     return response
 
 
+def _integrity_payload(bundle: ShadowModelBundle) -> dict[str, Any]:
+    if bundle.bundle_integrity is None:
+        return {
+            "status": "LEGACY_UNLOCKED_BUNDLE",
+            "lock_digest_sha256": None,
+            "artifact_count": None,
+        }
+    return bundle.bundle_integrity.as_dict()
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
     bundle = get_bundle()
+    integrity = _integrity_payload(bundle)
     return {
         "status": "ok",
         "service_version": SERVICE_VERSION,
@@ -63,6 +74,8 @@ def health() -> dict[str, Any]:
         "governance_status": bundle.manifest["governance_status"],
         "feature_contract_hash": bundle.manifest["feature_contract_hash"],
         "environment_compatibility": bundle.environment_compatibility.status,
+        "bundle_integrity": integrity["status"],
+        "bundle_lock_digest_sha256": integrity["lock_digest_sha256"],
     }
 
 
@@ -79,6 +92,8 @@ def model_info() -> dict[str, Any]:
         "evaluation_year": bundle.manifest["evaluation_year"],
         "models": bundle.manifest["models"],
         "serialization": bundle.manifest.get("serialization"),
+        "integrity_contract": bundle.manifest.get("integrity"),
+        "bundle_integrity": _integrity_payload(bundle),
         "environment_compatibility": bundle.environment_compatibility.as_dict(),
         "monitoring_baseline_source": bundle.manifest.get("monitoring_baseline", {}).get("source"),
         "interpretation_boundary": bundle.manifest["interpretation_boundary"],

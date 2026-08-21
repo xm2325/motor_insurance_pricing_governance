@@ -1,0 +1,11 @@
+{
+  "status": "V27_CONTAINER_INTEGRITY_AND_HTTP_PARITY_PASS",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "bundle_integrity": "CONTENT_ADDRESSED_BUNDLE_VERIFIED",
+  "lock_digest_sha256": "9d9d2b18b11dbb85306da99c691bccddd9aaa938a781e24ee44cba914175a5cd",
+  "environment_compatibility": "HYBRID_MODEL_IO_COMPATIBLE",
+  "records_tested": 25,
+  "fields_per_record": 4,
+  "comparisons": 100,
+  "max_absolute_error": 0.0
+}
