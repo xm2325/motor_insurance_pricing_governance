@@ -1,0 +1,18 @@
+{
+  "status": "SAME_FIT_SERIALIZATION_PARITY_PASS",
+  "records_tested": 25,
+  "fields_per_record": 4,
+  "comparisons": 100,
+  "max_absolute_error": 0.0,
+  "max_absolute_error_by_field": {
+    "reference_frequency": 0.0,
+    "challenger_frequency": 0.0,
+    "reference_pure_premium": 0.0,
+    "challenger_pure_premium": 0.0
+  },
+  "acceptance_tolerance": {
+    "rtol": 1e-12,
+    "atol": 1e-12
+  },
+  "interpretation": "This is a serialization migration gate on one fitted model set. It is not a retraining-reproducibility claim."
+}

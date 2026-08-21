@@ -1,0 +1,9 @@
+{
+  "source": "verified_pull_request_workflow_artifact",
+  "workflow": "Motor pricing hybrid model IO v0.26",
+  "run_id": 32519475249,
+  "head_sha": "671204a800359af55189c395a61d4c28e5198a37",
+  "artifact_id": 9460042916,
+  "artifact_digest": "sha256:c0c2211e2a45fb690e4d742030ddfed92eec6a3af4f43196ed742ff1d9b4a481",
+  "verified_status": "success"
+}

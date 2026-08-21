@@ -30,6 +30,7 @@ on:
       - 'tests/test_runtime_contract_v25.py'
       - 'tests/test_environment_static_v26.py'
       - 'tests/test_model_io_contract_v26.py'
+      - 'tests/test_runtime_and_model_io_evidence.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
@@ -63,6 +64,7 @@ on:
       - 'tests/test_runtime_contract_v25.py'
       - 'tests/test_environment_static_v26.py'
       - 'tests/test_model_io_contract_v26.py'
+      - 'tests/test_runtime_and_model_io_evidence.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
@@ -97,7 +99,8 @@ jobs:
             tests/test_download_cache_v24.py \
             tests/test_runtime_contract_v25.py \
             tests/test_environment_static_v26.py \
-            tests/test_model_io_contract_v26.py
+            tests/test_model_io_contract_v26.py \
+            tests/test_runtime_and_model_io_evidence.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
