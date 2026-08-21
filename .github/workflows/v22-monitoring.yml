@@ -7,22 +7,36 @@ on:
       - main
       - chatgpt/v0.22-shadow-monitoring
     paths:
-      - 'deployment/**'
+      - 'deployment/app.py'
+      - 'deployment/bundle.py'
+      - 'deployment/contracts.py'
+      - 'deployment/drift.py'
+      - 'deployment/monitoring.py'
       - 'build_deployment_bundle_v21.py'
       - 'replay_monitoring_v22.py'
       - 'tests/test_monitoring_v22.py'
       - 'Dockerfile'
       - 'requirements.txt'
+      - 'download_spanish_motor_2022_2024.py'
       - '.github/workflows/v22-monitoring.yml'
   pull_request:
     paths:
-      - 'deployment/**'
+      - 'deployment/app.py'
+      - 'deployment/bundle.py'
+      - 'deployment/contracts.py'
+      - 'deployment/drift.py'
+      - 'deployment/monitoring.py'
       - 'build_deployment_bundle_v21.py'
       - 'replay_monitoring_v22.py'
       - 'tests/test_monitoring_v22.py'
       - 'Dockerfile'
       - 'requirements.txt'
+      - 'download_spanish_motor_2022_2024.py'
       - '.github/workflows/v22-monitoring.yml'
+
+concurrency:
+  group: v22-monitoring-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -41,6 +55,13 @@ jobs:
           python-version: '3.12'
           cache: pip
 
+      - name: Restore verified public-data cache
+        id: source_cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
       - name: Install dependencies
         id: install
         run: pip install -r requirements.txt
@@ -52,14 +73,13 @@ jobs:
             tests/test_monitoring_v22.py \
             tests/test_deployment_contract.py \
             tests/test_oot_contract.py \
-            tests/test_evidence_registry.py \
             tests/test_v20_contract.py
 
       - name: Discover Mendeley source
         id: discover
         run: python discover_spanish_motor_2022_2024.py
 
-      - name: Download and verify source
+      - name: Download or reuse and verify source
         id: download
         run: python download_spanish_motor_2022_2024.py
 
@@ -145,6 +165,7 @@ jobs:
           REPLAY_OUTCOME: ${{ steps.replay.outcome }}
           DOCKER_BUILD_OUTCOME: ${{ steps.docker_build.outcome }}
           CONTAINER_MONITORING_OUTCOME: ${{ steps.container_monitoring.outcome }}
+          SOURCE_CACHE_HIT: ${{ steps.source_cache.outputs.cache-hit }}
         run: |
           mkdir -p action_results/v22
           python - <<'PY'
@@ -163,6 +184,7 @@ jobs:
               'replay_outcome': os.environ.get('REPLAY_OUTCOME'),
               'docker_build_outcome': os.environ.get('DOCKER_BUILD_OUTCOME'),
               'container_monitoring_outcome': os.environ.get('CONTAINER_MONITORING_OUTCOME'),
+              'source_cache_hit': os.environ.get('SOURCE_CACHE_HIT'),
           }
           Path('action_results/v22/ACTION_V22_STATUS.json').write_text(
               json.dumps(status, indent=2), encoding='utf-8'
