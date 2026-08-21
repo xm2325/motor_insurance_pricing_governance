@@ -9,15 +9,16 @@ on:
       - 'download_spanish_motor_2022_2024.py'
       - 'audit_spanish_motor_2022_2024.py'
       - 'run_spanish_oot_2024.py'
+      - 'requirements.txt'
       - '.github/workflows/spanish-oot-2024.yml'
 
 permissions:
   contents: write
 
 jobs:
-  discover:
+  oot_2024:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,6 +27,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
+
+      - name: Install modelling dependencies
+        id: install
+        run: pip install -r requirements.txt
 
       - name: Discover Mendeley files
         id: discover
@@ -39,25 +45,39 @@ jobs:
         id: schema_audit
         run: python audit_spanish_motor_2022_2024.py
 
-      - name: Persist discovery/download/schema status
+      - name: Run 2022 train - 2023 calibration - 2024 OOT
+        id: model_oot
+        run: python run_spanish_oot_2024.py
+
+      - name: Show OOT decision
+        if: always()
+        run: |
+          test -f results_oot_2024/oot_2024_summary.json && cat results_oot_2024/oot_2024_summary.json || true
+          test -f results_oot_2024/oot_2024_model_decision.json && cat results_oot_2024/oot_2024_model_decision.json || true
+
+      - name: Persist 2022-2024 OOT status and results
         if: always()
         env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
           DISCOVERY_OUTCOME: ${{ steps.discover.outcome }}
           DOWNLOAD_AUDIT_OUTCOME: ${{ steps.download_audit.outcome }}
           SCHEMA_AUDIT_OUTCOME: ${{ steps.schema_audit.outcome }}
+          MODEL_OOT_OUTCOME: ${{ steps.model_oot.outcome }}
         run: |
           python - <<'PY'
           import json, os
           from pathlib import Path
           status = {
               "workflow": "Spanish motor 2022-2024 discovery and OOT",
-              "stage": "schema_data_audit",
+              "stage": "full_2024_oot",
               "run_id": os.environ.get("GITHUB_RUN_ID"),
               "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
               "sha": os.environ.get("GITHUB_SHA"),
+              "install_outcome": os.environ.get("INSTALL_OUTCOME"),
               "discovery_outcome": os.environ.get("DISCOVERY_OUTCOME"),
               "download_audit_outcome": os.environ.get("DOWNLOAD_AUDIT_OUTCOME"),
               "schema_audit_outcome": os.environ.get("SCHEMA_AUDIT_OUTCOME"),
+              "model_oot_outcome": os.environ.get("MODEL_OOT_OUTCOME"),
           }
           Path("ACTION_RUN_STATUS_2024.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
           PY
@@ -69,17 +89,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- action_results/spanish_oot_2024
           if git diff --cached --quiet; then
-            echo "No 2022-2024 audit result changes"
+            echo "No 2022-2024 OOT result changes"
           else
-            git commit -m "Persist Spanish motor 2022-2024 audit run ${GITHUB_RUN_ID}"
+            git commit -m "Persist Spanish motor 2022-2024 OOT run ${GITHUB_RUN_ID}"
             git push origin HEAD:main
           fi
 
-      - name: Upload discovery result
+      - name: Upload OOT artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: spanish-motor-2022-2024-discovery
+          name: spanish-motor-2022-2024-oot
           path: |
             results_oot_2024/
             ACTION_RUN_STATUS_2024.json
