@@ -12,9 +12,11 @@ from deployment.bundle import ShadowModelBundle
 from deployment.contracts import BatchScoreRequest, PricingFeatures
 from deployment.monitoring import ShadowTelemetry
 
+SERVICE_VERSION = "0.22"
+
 app = FastAPI(
     title="Motor Pricing Shadow Scoring Service",
-    version="0.22",
+    version=SERVICE_VERSION,
     description=(
         "Reference/challenger risk scoring for governance and shadow comparison only. "
         "The current model-family decision is HOLD; this service does not set customer premiums."
@@ -30,7 +32,8 @@ def get_bundle() -> ShadowModelBundle:
 
 @lru_cache(maxsize=1)
 def get_telemetry() -> ShadowTelemetry:
-    return ShadowTelemetry()
+    bundle = get_bundle()
+    return ShadowTelemetry(monitoring_baseline=bundle.manifest.get("monitoring_baseline"))
 
 
 @app.middleware("http")
@@ -55,6 +58,7 @@ def health() -> dict[str, Any]:
     bundle = get_bundle()
     return {
         "status": "ok",
+        "service_version": SERVICE_VERSION,
         "model_version": bundle.manifest["model_version"],
         "governance_status": bundle.manifest["governance_status"],
         "feature_contract_hash": bundle.manifest["feature_contract_hash"],
@@ -65,12 +69,14 @@ def health() -> dict[str, Any]:
 def model_info() -> dict[str, Any]:
     bundle = get_bundle()
     return {
+        "service_version": SERVICE_VERSION,
         "model_version": bundle.manifest["model_version"],
         "governance_status": bundle.manifest["governance_status"],
         "train_year": bundle.manifest["train_year"],
         "calibration_year": bundle.manifest["calibration_year"],
         "evaluation_year": bundle.manifest["evaluation_year"],
         "models": bundle.manifest["models"],
+        "monitoring_baseline_source": bundle.manifest.get("monitoring_baseline", {}).get("source"),
         "interpretation_boundary": bundle.manifest["interpretation_boundary"],
     }
 
@@ -79,6 +85,7 @@ def model_info() -> dict[str, Any]:
 def monitoring() -> dict[str, Any]:
     bundle = get_bundle()
     return {
+        "service_version": SERVICE_VERSION,
         "model_version": bundle.manifest["model_version"],
         "governance_status": bundle.manifest["governance_status"],
         **get_telemetry().snapshot(),
@@ -87,8 +94,9 @@ def monitoring() -> dict[str, Any]:
 
 @app.post("/score")
 def score(policy: PricingFeatures) -> dict[str, Any]:
-    scores = get_bundle().score_records([policy.as_model_record()])
-    get_telemetry().record_scores(scores)
+    records = [policy.as_model_record()]
+    scores = get_bundle().score_records(records)
+    get_telemetry().record_scores(scores, records)
     return scores[0]
 
 
@@ -96,7 +104,7 @@ def score(policy: PricingFeatures) -> dict[str, Any]:
 def batch_score(request: BatchScoreRequest) -> dict[str, Any]:
     records = [policy.as_model_record() for policy in request.policies]
     scores = get_bundle().score_records(records)
-    get_telemetry().record_scores(scores)
+    get_telemetry().record_scores(scores, records)
     return {
         "count": len(scores),
         "model_version": get_bundle().manifest["model_version"],
