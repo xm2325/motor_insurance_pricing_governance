@@ -17,6 +17,7 @@ on:
       - 'action_results/v27/**'
       - 'action_results/v28/**'
       - 'action_results/v29/**'
+      - 'action_results/v30/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'Dockerfile'
       - 'requirements.txt'
@@ -40,12 +41,14 @@ on:
       - 'tests/test_bundle_integrity_evidence_v27.py'
       - 'tests/test_release_control_evidence_v28.py'
       - 'tests/test_artifact_attestation_evidence_v29.py'
+      - 'tests/test_runtime_sbom_evidence_v30.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
       - '.github/workflows/v26-environment.yml'
       - '.github/workflows/v27-bundle-integrity.yml'
       - '.github/workflows/v29-attestation.yml'
+      - '.github/workflows/v30-runtime-sbom.yml'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
@@ -62,6 +65,7 @@ on:
       - 'action_results/v27/**'
       - 'action_results/v28/**'
       - 'action_results/v29/**'
+      - 'action_results/v30/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'Dockerfile'
       - 'requirements.txt'
@@ -85,12 +89,14 @@ on:
       - 'tests/test_bundle_integrity_evidence_v27.py'
       - 'tests/test_release_control_evidence_v28.py'
       - 'tests/test_artifact_attestation_evidence_v29.py'
+      - 'tests/test_runtime_sbom_evidence_v30.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
       - '.github/workflows/v26-environment.yml'
       - '.github/workflows/v27-bundle-integrity.yml'
       - '.github/workflows/v29-attestation.yml'
+      - '.github/workflows/v30-runtime-sbom.yml'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -111,7 +117,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check leakage, evidence, cache, workflow, runtime, model-IO, bundle-integrity, release-control and attestation contracts
+      - name: Check leakage, evidence, cache, workflow, runtime, model-IO, bundle-integrity, release-control, attestation and SBOM contracts
         id: contract
         run: |
           python -m unittest -v \
@@ -125,7 +131,8 @@ jobs:
             tests/test_runtime_and_model_io_evidence.py \
             tests/test_bundle_integrity_evidence_v27.py \
             tests/test_release_control_evidence_v28.py \
-            tests/test_artifact_attestation_evidence_v29.py
+            tests/test_artifact_attestation_evidence_v29.py \
+            tests/test_runtime_sbom_evidence_v30.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
