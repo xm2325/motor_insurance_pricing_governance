@@ -17,6 +17,7 @@ from deployment.contracts import (
     SHADOW_GOVERNANCE_STATUS,
     feature_contract_hash,
 )
+from deployment.drift import build_monitoring_baseline
 from run_spanish_oot_2024 import DATA_PATH, load_data, locked_scale, make_pipeline
 
 OUTDIR = Path("deployment_artifacts")
@@ -154,6 +155,7 @@ def main() -> None:
         col: sorted(x_train[col].dropna().astype(str).unique().tolist())
         for col in CATEGORICAL_FEATURES
     }
+    monitoring_baseline = build_monitoring_baseline(x_train)
 
     parity_frame = x_test.head(25).copy()
     parity_records = records_from_frame(parity_frame)
@@ -183,6 +185,7 @@ def main() -> None:
         "feature_contract_hash": feature_contract_hash(),
         "features": FEATURES,
         "categorical_levels": categorical_levels,
+        "monitoring_baseline": monitoring_baseline,
         "models": manifest_models,
         "interpretation_boundary": (
             "Shadow comparison only. The v0.20 global model-family decision is HOLD. "
@@ -202,6 +205,7 @@ def main() -> None:
         "governance_status": manifest["governance_status"],
         "models": list(manifest_models),
         "parity_records": len(parity_records),
+        "monitoring_baseline_source": monitoring_baseline["source"],
     }, indent=2))
 
 

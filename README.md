@@ -2,7 +2,7 @@
 
 A reproducible insurance data-science case study asking one practical question:
 
-> **Does a more flexible ML challenger improve the pricing target reliably enough, across time and customer cohorts, to justify replacing a GLM — and can the models be deployed safely for shadow comparison without confusing deployability with approval?**
+> **Does a more flexible ML challenger improve the pricing target reliably enough, across time and customer cohorts, to justify replacing a GLM — and can the models be deployed and monitored safely in shadow mode without confusing deployability with approval?**
 
 ## 30-second result
 
@@ -17,17 +17,19 @@ A reproducible insurance data-science case study asking one practical question:
 | Pure-premium result | No stable XGBoost advantage; rolling-origin Tweedie deviance **93.1606 vs GLM 92.8213** |
 | v0.20 model-change pack | Tail, transport uncertainty and value-for-complexity checks all retain **HOLD** |
 | v0.21 shadow deployment | FastAPI + Docker; **25-record parity error 0.0**, deterministic 1,000-policy batch, container HTTP parity **pass** |
+| v0.22 shadow monitoring | Real 2024 replay: feature PSI **1.4116** (`business_type`) while model-disagreement p95 stayed near baseline; Docker `/monitoring` **pass** |
 | Model-family decision | **HOLD / NO PROMOTION**; serving status is **HOLD_SHADOW_ONLY** |
 
-The project deliberately separates three ideas that are often conflated:
+The project deliberately separates four ideas that are often conflated:
 
 1. **predictive/ranking uplift**;
 2. **evidence for a model-family change**;
-3. **technical deployability**.
+3. **technical deployability**;
+4. **operational monitoring after deployment to shadow mode**.
 
-A challenger can be deployable in shadow mode while still failing the statistical / pricing evidence required for promotion.
+A challenger can be deployable and observable in shadow mode while still failing the statistical / pricing evidence required for promotion.
 
-**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment evidence](DEPLOYMENT_V21.md)
+**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment evidence](DEPLOYMENT_V21.md) | [v0.22 monitoring evidence](RESULTS_V22.md)
 
 ---
 
@@ -114,7 +116,7 @@ The FastAPI service exposes:
 
 It deliberately exposes **no `/quote` or `/price` endpoint**. Each request returns GLM reference and XGBoost challenger frequency / pure-premium risk scores side by side for shadow comparison.
 
-Verified GitHub Actions run **32481705152**:
+Verified deployment evidence includes:
 
 - feature/leakage/deployment contracts: pass;
 - public data download and schema audit: pass;
@@ -128,11 +130,29 @@ Verified GitHub Actions run **32481705152**:
 
 The model manifest records training/calibration/evaluation years, feature-contract SHA-256 and SHA-256 hashes for every binary model artifact. The binary bundle is kept as an Actions artifact rather than committed.
 
-See [DEPLOYMENT_V21.md](DEPLOYMENT_V21.md) for the serving contract and reproduced evidence.
+See [DEPLOYMENT_V21.md](DEPLOYMENT_V21.md) for the serving contract.
+
+## Evidence track 6 — v0.22 shadow monitoring telemetry
+
+v0.22 adds operational observability without storing raw policy requests. `/monitoring` exposes aggregate, non-PII request/error/latency/batch statistics, unseen-category rate, reference/challenger disagreement and feature-distribution PSI.
+
+The monitoring baseline is stored as aggregate 2022 training histograms/category proportions in the model manifest. A feature-drift alert requires at least **500 scored records** so tiny smoke tests do not produce unstable PSI alerts.
+
+The replay distinguishes three cases:
+
+- **2022 control, 5,000 records:** GREEN; max PSI **0.00973**;
+- **real 2024 temporal replay, 5,000 records:** max PSI **1.4116**, driven by `business_type`; full-year mix changes from **97.91% NB / 2.09% P** in 2022 to **57.35% NB / 42.65% P** in 2024;
+- **synthetic stress, 5,000 scored records plus schema-invalid requests:** error, unseen-category and feature-drift alerts fire; reference/challenger disagreement p95 rises by **2.54×** for frequency and **2.87×** for pure premium.
+
+The real 2024 population drift does **not** coincide with a large change in reference/challenger disagreement: frequency disagreement p95 is **0.94×** the 2022 control and pure-premium disagreement p95 is **1.04×**. That separation is intentional: input drift and model disagreement are monitored as different risks.
+
+The Docker workflow also verifies `/monitoring` over HTTP. Five valid smoke-test requests remain **GREEN**, confirming the minimum-sample guard.
+
+See [RESULTS_V22.md](RESULTS_V22.md) for exact monitoring scope, caveats and replay evidence.
 
 ## Auditable claims and CI
 
-`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Automated tests verify modelling results, temporal/leakage contracts and v0.21 deployment evidence.
+`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Automated tests verify modelling results, temporal/leakage contracts, v0.21 deployment evidence and v0.22 monitoring evidence.
 
 ## Repository map
 
@@ -143,15 +163,17 @@ EVIDENCE_REGISTRY.md              headline claims -> persisted evidence
 MODEL_CARD.md                     intended use, limits and decision rules
 RESULTS_V20.md                    final offline model-change approval results
 DEPLOYMENT_V21.md                 shadow serving contract and verified deployment gates
-deployment/                       FastAPI contracts, model-bundle loader and scorer
-build_deployment_bundle_v21.py    reproducible locked model bundle
-smoke_test_deployment_v21.py      offline-online/API smoke tests
+RESULTS_V22.md                    shadow monitoring, temporal drift and stress evidence
+deployment/                       FastAPI contracts, bundle loader, drift and telemetry code
+build_deployment_bundle_v21.py    reproducible locked model bundle + monitoring baseline
+replay_monitoring_v22.py          2022 control / real 2024 / synthetic stress replay
 Dockerfile                        containerised shadow service
 action_results/v21/               persisted non-binary deployment evidence
-.github/workflows/                data, governance and deployment workflows
-tests/                            leakage, evidence, governance and deployment contracts
+action_results/v22/               persisted non-binary monitoring evidence
+.github/workflows/                data, governance, deployment and monitoring workflows
+tests/                            leakage, evidence, governance, deployment and monitoring contracts
 ```
 
 ## Scope
 
-This is a portfolio model-governance and shadow-deployment project, not a production pricing engine. It does not set real customer premiums and does not establish transfer to FIRST CENTRAL or the UK motor market. Pure-premium estimates do not include company-specific expenses, reinsurance, commercial adjustments or regulatory approval. Synthetic proposition simulations are labelled separately from observed insurance outcomes.
+This is a portfolio model-governance, shadow-deployment and monitoring project, not a production pricing engine. It does not set real customer premiums and does not establish transfer to FIRST CENTRAL or the UK motor market. Pure-premium estimates do not include company-specific expenses, reinsurance, commercial adjustments or regulatory approval. Monitoring thresholds are demonstration rules rather than insurer/regulatory limits, and synthetic stress replays are labelled separately from observed temporal data.

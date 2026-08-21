@@ -1,0 +1,9 @@
+{
+  "status": "success",
+  "container_image": "motor-pricing-shadow:v22",
+  "monitoring_http_verified": true,
+  "privacy_boundary": "aggregate_non_pii_only",
+  "request_count": 5,
+  "records_scored": 5,
+  "alert_status": "GREEN"
+}

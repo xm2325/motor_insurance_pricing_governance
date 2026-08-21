@@ -2,21 +2,21 @@
 
 ## Intended use
 
-Portfolio demonstration of insurance data-science reasoning: claim frequency, severity, expected loss, calibration, segment checks, temporal validation, incremental-data testing and model-promotion decisions.
+Portfolio demonstration of insurance data-science reasoning across claim frequency, severity, expected loss, calibration, temporal validation, model-change governance, shadow deployment and operational monitoring.
 
 ## Not intended for
 
 - setting real customer premiums;
 - underwriting decisions;
 - regulatory or actuarial sign-off;
-- inference about FIRST CENTRAL production models or thresholds;
+- inference about FIRST CENTRAL production models, SLAs or thresholds;
 - claiming transfer from a Spanish or French public portfolio to the UK market.
 
 ## Data
 
 Two public motor-insurance sources have different roles.
 
-1. `freMTPL2` is the detailed cross-sectional governance benchmark used for model architecture, calibration, monitoring, disagreement analysis and stress tests.
+1. `freMTPL2` is the detailed cross-sectional governance benchmark used for model architecture, calibration, disagreement analysis and stress tests.
 2. Mendeley dataset `sw4jmdb2sm`, version 1, supplies the main temporal evidence: **354,140 Spanish motor policy-year observations and 47 variables covering 2022, 2023 and 2024**.
 
 The Mendeley source is downloaded in GitHub Actions rather than committed. The verified main CSV is 94,710,312 bytes with SHA-256 `6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4`.
@@ -29,12 +29,29 @@ The Mendeley source is downloaded in GitHub Actions rather than committed. The v
 
 ## Feature policy
 
-The temporal models use selected driver, vehicle and policy characteristics:
+The temporal models use 14 selected driver, vehicle and policy characteristics.
 
-- numeric: driver age, vehicle age, age at driving licence, vehicle value, seats, power-to-weight ratio;
-- categorical: policy type, business type, payment frequency, bonus score, fuel type, vehicle brand, municipality type, circulation area.
+Numeric:
 
-The following are intentionally excluded from predictive features:
+- driver age;
+- vehicle age;
+- age at driving licence;
+- vehicle value;
+- seats;
+- power-to-weight ratio.
+
+Categorical:
+
+- policy type;
+- business type;
+- payment frequency;
+- bonus score;
+- fuel type;
+- vehicle brand;
+- municipality type;
+- circulation area.
+
+The following are intentionally excluded from predictive features and are rejected by the v0.21/v0.22 online schema:
 
 - `insured_id` and `year`;
 - `policy_status`, because its timing within the calendar observation period can be post-period;
@@ -82,7 +99,7 @@ The XGBoost ranking gain is small and does not improve locked OOT deviance. The 
 
 The 250-resample GLM-minus-XGBoost Tweedie-deviance difference has a 95% interval of **[-0.988, 0.856]**.
 
-## v0.14 rolling-origin stability
+## Rolling-origin stability
 
 The rolling-origin audit is a **model-family stability check**, not a replacement for the locked OOT gate.
 
@@ -104,9 +121,9 @@ No stable XGBoost advantage is present.
 - pure-premium calibration: **0.948 GLM vs 0.842 XGBoost**;
 - pure-premium bootstrap interval: **[-0.793, 0.160]**.
 
-The frequency advantage appears after adding 2023 to the training window, but the expected-loss challenger still does not show stable superiority. This is evidence against promoting a model family from one frequency metric alone.
+The frequency advantage appears after adding 2023 to the training window, but the expected-loss challenger still does not show stable superiority.
 
-## Transport checks
+## Transport and tail checks
 
 The 2024 evaluation includes both returning and new policy IDs:
 
@@ -115,38 +132,87 @@ The 2024 evaluation includes both returning and new policy IDs:
 
 Pure-premium calibration differs by transport cohort:
 
-- seen IDs: GLM **0.994**, XGBoost **0.950**;
-- unseen IDs: GLM **0.825**, XGBoost **0.881**.
+- returning IDs: GLM **0.994**, XGBoost **0.950**;
+- new IDs: GLM **0.825**, XGBoost **0.881**.
 
-An illustrative `[0.85, 1.15]` diagnostic is used only to expose portfolio transport differences; it is not a FIRST CENTRAL or regulatory threshold.
+v0.18 adds bootstrap intervals around these cohort estimates. v0.17 separately shows that the highest-loss 1% of positive-loss 2024 policy rows contribute **20.52%** of incurred, so severity-tail behaviour is treated as a model-risk issue rather than hidden by one cap.
 
-## Current decision
+## Value for complexity
+
+On the measured GitHub runner, XGBoost Tweedie is approximately **111x larger** on disk and about **3.65x slower** for 2024 inference than the Tweedie GLM while not improving locked OOT Tweedie deviance. These are environment-specific diagnostics, not universal model benchmarks.
+
+## Current model-family decision
 
 **KEEP HOLD / NO MODEL-FAMILY PROMOTION.**
 
-The locked gate requires both acceptable aggregate calibration and positive bootstrap evidence for challenger deviance improvement. The rolling-origin audit adds a second requirement: any model-family advantage should be directionally repeatable across temporal windows and should translate into expected-loss performance rather than only frequency ranking.
+The promotion gate requires stable expected-loss evidence, calibration, temporal repeatability, transport and acceptable value for additional complexity. The current evidence does not satisfy that standard.
 
-The current evidence does not satisfy that standard.
+## v0.21 shadow deployment boundary
+
+Technical deployability is separated from approval. v0.21 packages the four locked reference/challenger models into a versioned FastAPI/Docker shadow-scoring service.
+
+Serving status is:
+
+**`HOLD_SHADOW_ONLY`**
+
+The API exposes `/health`, `/model-info`, `/score` and `/batch-score`; it deliberately exposes no `/quote` or `/price` route. The model bundle records the feature-contract hash, locked calibration scales and SHA-256 digests for every serialised model artifact.
+
+Verified deployment controls include:
+
+- exact 25-record offline-online prediction parity (max absolute error **0.0**);
+- deterministic 1,000-policy batch scoring;
+- rejection of forbidden current-outcome fields;
+- unseen-category warnings;
+- Docker build and live HTTP scoring parity.
+
+These controls establish a deployable shadow demonstration, not approval for customer pricing.
+
+## v0.22 monitoring boundary
+
+v0.22 adds aggregate operational monitoring to the shadow service. Monitoring stores no raw request payloads, customer identifiers or policy rows.
+
+It tracks:
+
+- request/error rates;
+- latency and batch size;
+- unseen-category rate;
+- reference/challenger disagreement distributions;
+- feature-distribution PSI against an aggregate 2022 training baseline.
+
+The training baseline stores numeric quantile bins and categorical proportions only. Feature-drift alerts require at least **500 records**.
+
+A seeded 5,000-record 2022 control replay is GREEN with max PSI **0.00973**. A seeded real 5,000-record 2024 replay triggers feature drift with max PSI **1.4116** on `business_type`, while reference/challenger disagreement p95 remains near the 2022 control (**0.94x** frequency, **1.04x** pure premium).
+
+Full-year business-type mix shifts from **97.91% new business / 2.09% existing-renewal** in 2022 to **57.35% / 42.65%** in 2024. This identifies a portfolio-composition change; it does not by itself establish predictive deterioration.
+
+An explicitly synthetic stress replay verifies error-rate, unseen-category, feature-drift and relative disagreement alerts. These are monitoring-behaviour tests, not observed production incidents.
+
+Monitoring thresholds, including PSI 0.25 and the 500-record minimum, are project demonstration rules rather than insurer/regulatory limits.
 
 ## Key risks and limits
 
 - claim severity remains heavy-tailed;
 - aggregate calibration can hide transport-segment error;
+- feature drift can occur without an immediate model-disagreement shift and requires later outcome monitoring;
 - the public Spanish portfolio represents one insurer and does not establish UK-market transport;
 - policy-year data do not provide the full operational data lineage of a production insurer;
 - bonus score is treated as an available rating characteristic, but its exact production as-of construction is source-specific;
-- model-selection thresholds in this repository are demonstration rules, not insurer policy;
-- synthetic proposition simulations are not observed business outcomes.
+- model-selection and monitoring thresholds in this repository are demonstration rules, not insurer policy;
+- synthetic proposition and monitoring-stress simulations are not observed business outcomes/incidents.
 
 ## Engineering controls
 
-`tests/test_oot_contract.py` and the lightweight GitHub Actions CI protect the modelling contract by checking:
+The repository tests and GitHub Actions workflows protect:
 
-- forbidden current premium/outcome/post-period fields are not used as predictors;
-- the locked 2022/2023/2024 temporal roles remain in place;
-- the model-change gate still requires calibration plus bootstrap evidence;
-- rolling-origin windows use only prior years and reuse the locked feature contract.
+- forbidden current premium/outcome/post-period fields;
+- the locked 2022/2023/2024 temporal roles;
+- evidence-registry headline values;
+- model-bundle hashes and offline-online parity;
+- batch determinism and unknown-category handling;
+- aggregate-only monitoring telemetry;
+- feature PSI alert behaviour and minimum sample gating;
+- Docker/network serving and monitoring endpoints.
 
 ## Required work before any production-like claim
 
-UK/company-specific data validation, rating-factor lineage, fairness/proxy review, actuarial review, pricing governance, operational monitoring, expense/reinsurance treatment, regulatory review, business-owner approval and prospective validation on the target portfolio.
+UK/company-specific data validation, rating-factor lineage, fairness/proxy review, actuarial review, pricing governance, external telemetry storage/aggregation design, outcome-linked monitoring, expense/reinsurance treatment, security review, regulatory review, business-owner approval and prospective validation on the target portfolio.

@@ -1,0 +1,191 @@
+name: Motor pricing shadow monitoring v0.22
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.22-shadow-monitoring
+    paths:
+      - 'deployment/**'
+      - 'build_deployment_bundle_v21.py'
+      - 'replay_monitoring_v22.py'
+      - 'tests/test_monitoring_v22.py'
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - '.github/workflows/v22-monitoring.yml'
+  pull_request:
+    paths:
+      - 'deployment/**'
+      - 'build_deployment_bundle_v21.py'
+      - 'replay_monitoring_v22.py'
+      - 'tests/test_monitoring_v22.py'
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - '.github/workflows/v22-monitoring.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  shadow-monitoring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        id: install
+        run: pip install -r requirements.txt
+
+      - name: Run monitoring and governance contracts
+        id: contracts
+        run: |
+          python -m unittest -v \
+            tests/test_monitoring_v22.py \
+            tests/test_deployment_contract.py \
+            tests/test_oot_contract.py \
+            tests/test_evidence_registry.py \
+            tests/test_v20_contract.py
+
+      - name: Discover Mendeley source
+        id: discover
+        run: python discover_spanish_motor_2022_2024.py
+
+      - name: Download and verify source
+        id: download
+        run: python download_spanish_motor_2022_2024.py
+
+      - name: Audit source schema
+        id: audit
+        run: python audit_spanish_motor_2022_2024.py
+
+      - name: Build locked shadow model bundle
+        id: bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Run baseline and stress replay
+        id: replay
+        run: python replay_monitoring_v22.py
+
+      - name: Build service container
+        id: docker_build
+        run: docker build -t motor-pricing-shadow:v22 .
+
+      - name: Verify container monitoring endpoint
+        id: container_monitoring
+        run: |
+          docker run -d --name motor-pricing-shadow-v22 \
+            -p 8000:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/deployment_artifacts:/models:ro" \
+            motor-pricing-shadow:v22
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          import httpx
+
+          parity = json.loads(Path('deployment_artifacts/parity_reference.json').read_text())
+          with httpx.Client(base_url='http://127.0.0.1:8000', timeout=5.0) as client:
+              for _ in range(30):
+                  try:
+                      response = client.get('/health')
+                      if response.status_code == 200:
+                          break
+                  except Exception:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError('Container service did not become healthy')
+
+              for record in parity['records'][:5]:
+                  scored = client.post('/score', json=record)
+                  scored.raise_for_status()
+              monitor = client.get('/monitoring')
+              monitor.raise_for_status()
+              body = monitor.json()
+              assert body['governance_status'] == 'HOLD_SHADOW_ONLY'
+              assert body['privacy_boundary'] == 'aggregate_non_pii_only'
+              assert body['request_count'] == 5
+              assert body['records_scored'] == 5
+              assert 'records' not in body and 'features' not in body and 'payload' not in body
+              summary = {
+                  'status': 'success',
+                  'container_image': 'motor-pricing-shadow:v22',
+                  'monitoring_http_verified': True,
+                  'privacy_boundary': body['privacy_boundary'],
+                  'request_count': body['request_count'],
+                  'records_scored': body['records_scored'],
+                  'alert_status': body['alert_status'],
+              }
+              Path('results_v22/container_monitoring_summary.json').write_text(
+                  json.dumps(summary, indent=2), encoding='utf-8'
+              )
+              print(json.dumps(summary, indent=2))
+          PY
+          docker logs motor-pricing-shadow-v22
+          docker rm -f motor-pricing-shadow-v22
+
+      - name: Persist monitoring evidence
+        if: always() && github.event_name == 'push'
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          CONTRACT_OUTCOME: ${{ steps.contracts.outcome }}
+          DISCOVER_OUTCOME: ${{ steps.discover.outcome }}
+          DOWNLOAD_OUTCOME: ${{ steps.download.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+          BUNDLE_OUTCOME: ${{ steps.bundle.outcome }}
+          REPLAY_OUTCOME: ${{ steps.replay.outcome }}
+          DOCKER_BUILD_OUTCOME: ${{ steps.docker_build.outcome }}
+          CONTAINER_MONITORING_OUTCOME: ${{ steps.container_monitoring.outcome }}
+        run: |
+          mkdir -p action_results/v22
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status = {
+              'workflow': 'Motor pricing shadow monitoring v0.22',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'install_outcome': os.environ.get('INSTALL_OUTCOME'),
+              'contract_outcome': os.environ.get('CONTRACT_OUTCOME'),
+              'discover_outcome': os.environ.get('DISCOVER_OUTCOME'),
+              'download_outcome': os.environ.get('DOWNLOAD_OUTCOME'),
+              'audit_outcome': os.environ.get('AUDIT_OUTCOME'),
+              'bundle_outcome': os.environ.get('BUNDLE_OUTCOME'),
+              'replay_outcome': os.environ.get('REPLAY_OUTCOME'),
+              'docker_build_outcome': os.environ.get('DOCKER_BUILD_OUTCOME'),
+              'container_monitoring_outcome': os.environ.get('CONTAINER_MONITORING_OUTCOME'),
+          }
+          Path('action_results/v22/ACTION_V22_STATUS.json').write_text(
+              json.dumps(status, indent=2), encoding='utf-8'
+          )
+          PY
+          test -d results_v22 && cp -R results_v22/. action_results/v22/ || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v22
+          if git diff --cached --quiet; then
+            echo 'No v0.22 monitoring evidence changes'
+          else
+            git commit -m "Persist v0.22 shadow monitoring run ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload monitoring artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-shadow-monitoring-v22
+          path: |
+            results_v22/
+            deployment_artifacts/manifest.json
+            deployment_artifacts/parity_reference.json
+          if-no-files-found: warn
