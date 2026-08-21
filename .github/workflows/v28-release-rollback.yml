@@ -1,0 +1,286 @@
+name: Motor pricing shadow release rollback v0.28
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.28-shadow-release-rollback
+    paths:
+      - 'deployment/release_registry.py'
+      - 'run_release_rollback_v28.py'
+      - 'build_bundle_lock_v27.py'
+      - 'tests/test_release_registry_v28.py'
+      - '.github/workflows/v28-release-rollback.yml'
+  pull_request:
+    paths:
+      - 'deployment/release_registry.py'
+      - 'run_release_rollback_v28.py'
+      - 'build_bundle_lock_v27.py'
+      - 'tests/test_release_registry_v28.py'
+      - '.github/workflows/v28-release-rollback.yml'
+
+concurrency:
+  group: v28-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  release-rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run release, integrity and deployment contracts
+        run: |
+          python -m unittest -v \
+            tests/test_release_registry_v28.py \
+            tests/test_bundle_integrity_v27.py \
+            tests/test_environment_compatibility_v26.py \
+            tests/test_deployment_contract.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build one validated hybrid model set
+        run: python build_deployment_bundle_v21.py
+
+      - name: Seal last-known-good release A
+        env:
+          RELEASE_LABEL: shadow-release-a
+        run: |
+          rm -rf releases
+          mkdir -p releases
+          python build_bundle_lock_v27.py
+          cp -a deployment_artifacts releases/v28-release-a
+          python verify_bundle_v27.py releases/v28-release-a
+
+      - name: Seal candidate release B from identical model artifacts
+        env:
+          RELEASE_LABEL: shadow-release-b
+        run: |
+          python build_bundle_lock_v27.py
+          cp -a deployment_artifacts releases/v28-release-b
+          python verify_bundle_v27.py releases/v28-release-b
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a = json.loads(Path('releases/v28-release-a/bundle.lock.json').read_text())
+          b = json.loads(Path('releases/v28-release-b/bundle.lock.json').read_text())
+          assert a['lock_digest_sha256'] != b['lock_digest_sha256']
+          ah = {x['path']: x['sha256'] for x in a['artifacts']}
+          bh = {x['path']: x['sha256'] for x in b['artifacts']}
+          assert ah == bh
+          print(json.dumps({
+              'status': 'DISTINCT_RELEASE_IDENTITY_IDENTICAL_ARTIFACTS_PASS',
+              'release_a_lock': a['lock_digest_sha256'],
+              'release_b_lock': b['lock_digest_sha256'],
+              'artifact_count': len(ah),
+          }, indent=2))
+          PY
+
+      - name: Run deterministic review-to-rollback registry replay
+        run: |
+          python run_release_rollback_v28.py \
+            --release-a releases/v28-release-a \
+            --release-b releases/v28-release-b \
+            --outdir results_v28
+
+      - name: Build CPU-only shadow runtime once
+        run: docker build -t motor-pricing-shadow:runtime-v28 .
+
+      - name: Verify candidate B then operator-authorised rollback to A over HTTP
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry = json.loads(Path('results_v28/release_registry.json').read_text())
+          assert registry['active_release_id'] == 'shadow-release-a'
+          assert registry['last_known_good_release_id'] == 'shadow-release-a'
+          assert registry['releases']['shadow-release-b']['review_status'] == 'OPEN'
+          PY
+
+          trap 'docker rm -f motor-pricing-v28 >/dev/null 2>&1 || true' EXIT
+
+          docker run -d --name motor-pricing-v28 \
+            -p 8000:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/releases/v28-release-b:/models:ro" \
+            motor-pricing-shadow:runtime-v28
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          import httpx
+          import numpy as np
+
+          bundle = Path('releases/v28-release-b')
+          lock = json.loads((bundle / 'bundle.lock.json').read_text())
+          reference = json.loads((bundle / 'parity_reference.json').read_text())
+          fields = ['reference_frequency','challenger_frequency','reference_pure_premium','challenger_pure_premium']
+          with httpx.Client(base_url='http://127.0.0.1:8000', timeout=5.0) as client:
+              for _ in range(30):
+                  try:
+                      response = client.get('/health')
+                      if response.status_code == 200:
+                          break
+                  except Exception:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError('Candidate B container did not become healthy')
+              health = response.json()
+              assert health['bundle_lock_digest_sha256'] == lock['lock_digest_sha256']
+              assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+              max_error = 0.0
+              for record, expected in zip(reference['records'], reference['scores']):
+                  body = client.post('/score', json=record).json()
+                  for field in fields:
+                      error = abs(float(body[field]) - float(expected[field]))
+                      max_error = max(max_error, error)
+                      assert np.isclose(float(body[field]), float(expected[field]), rtol=1e-12, atol=1e-12)
+          Path('results_v28/candidate_b_http.json').write_text(json.dumps({
+              'status': 'CANDIDATE_B_HTTP_PASS',
+              'lock_digest_sha256': lock['lock_digest_sha256'],
+              'comparisons': len(reference['records']) * len(fields),
+              'max_absolute_error': max_error,
+          }, indent=2))
+          PY
+
+          docker rm -f motor-pricing-v28
+          docker run -d --name motor-pricing-v28 \
+            -p 8000:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/releases/v28-release-a:/models:ro" \
+            motor-pricing-shadow:runtime-v28
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          import httpx
+          import numpy as np
+
+          bundle = Path('releases/v28-release-a')
+          lock = json.loads((bundle / 'bundle.lock.json').read_text())
+          reference = json.loads((bundle / 'parity_reference.json').read_text())
+          fields = ['reference_frequency','challenger_frequency','reference_pure_premium','challenger_pure_premium']
+          with httpx.Client(base_url='http://127.0.0.1:8000', timeout=5.0) as client:
+              for _ in range(30):
+                  try:
+                      response = client.get('/health')
+                      if response.status_code == 200:
+                          break
+                  except Exception:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError('Rollback A container did not become healthy')
+              health = response.json()
+              assert health['bundle_lock_digest_sha256'] == lock['lock_digest_sha256']
+              assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+              max_error = 0.0
+              for record, expected in zip(reference['records'], reference['scores']):
+                  body = client.post('/score', json=record).json()
+                  for field in fields:
+                      error = abs(float(body[field]) - float(expected[field]))
+                      max_error = max(max_error, error)
+                      assert np.isclose(float(body[field]), float(expected[field]), rtol=1e-12, atol=1e-12)
+          candidate = json.loads(Path('results_v28/candidate_b_http.json').read_text())
+          result = {
+              'status': 'V28_CONTAINER_ROLLBACK_SWITCH_PASS',
+              'candidate_b_lock_digest_sha256': candidate['lock_digest_sha256'],
+              'rollback_a_lock_digest_sha256': lock['lock_digest_sha256'],
+              'distinct_release_identities': candidate['lock_digest_sha256'] != lock['lock_digest_sha256'],
+              'candidate_b_comparisons': candidate['comparisons'],
+              'candidate_b_max_absolute_error': candidate['max_absolute_error'],
+              'rollback_a_comparisons': len(reference['records']) * len(fields),
+              'rollback_a_max_absolute_error': max_error,
+              'governance_status': health['governance_status'],
+              'model_retraining_during_switch': False,
+              'pricing_change_during_switch': False,
+          }
+          Path('results_v28/container_rollback_summary.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Build v0.28 result summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          replay = json.loads(Path('results_v28/release_rollback_summary.json').read_text())
+          container = json.loads(Path('results_v28/container_rollback_summary.json').read_text())
+          result = {
+              'status': 'V28_SHADOW_RELEASE_CONTROL_PASS',
+              'registry': replay,
+              'container_switch': container,
+              'governance_boundary': 'HOLD / HOLD_SHADOW_ONLY remains unchanged',
+              'automation_boundary': (
+                  'The synthetic review signal did not switch serving. The unauthorised rollback '
+                  'was rejected; only an explicitly operator-authorised rollback selected the '
+                  'previous integrity-verified last-known-good shadow release.'
+              ),
+          }
+          Path('results_v28/release_control_result.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.28 evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v28
+          cp results_v28/*.json action_results/v28/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v28/ACTION_V28_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing shadow release rollback v0.28',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v28
+          if git diff --cached --quiet; then
+            echo 'No v0.28 evidence changes'
+          else
+            git commit -m "Persist v0.28 shadow release control run ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.28 release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-shadow-release-v28
+          path: |
+            results_v28/
+            releases/v28-release-a/bundle.lock.json
+            releases/v28-release-b/bundle.lock.json
+          if-no-files-found: warn

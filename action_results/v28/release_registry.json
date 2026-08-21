@@ -1,0 +1,123 @@
+{
+  "version": "0.28",
+  "governance_boundary": "HOLD_SHADOW_ONLY",
+  "active_release_id": "shadow-release-a",
+  "last_known_good_release_id": "shadow-release-a",
+  "releases": {
+    "shadow-release-a": {
+      "release_id": "shadow-release-a",
+      "bundle_ref": "releases/v28-release-a",
+      "bundle_lock_digest_sha256": "0356e556b8862c6e2490ddce33a985702350035c7ebd2a3fabac400c5fc55f56",
+      "bundle_contract_version": "0.27",
+      "model_version": "v0.21-shadow-2022-train-2023-calibration",
+      "governance_status": "HOLD_SHADOW_ONLY",
+      "bundle_integrity_status": "CONTENT_ADDRESSED_BUNDLE_VERIFIED",
+      "review_status": "NONE",
+      "review_reason": null
+    },
+    "shadow-release-b": {
+      "release_id": "shadow-release-b",
+      "bundle_ref": "releases/v28-release-b",
+      "bundle_lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
+      "bundle_contract_version": "0.27",
+      "model_version": "v0.21-shadow-2022-train-2023-calibration",
+      "governance_status": "HOLD_SHADOW_ONLY",
+      "bundle_integrity_status": "CONTENT_ADDRESSED_BUNDLE_VERIFIED",
+      "review_status": "OPEN",
+      "review_reason": "synthetic_release_control_test"
+    }
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "event_type": "REGISTER_VERIFIED_SHADOW_RELEASE",
+      "release_id": "shadow-release-a",
+      "actor": "release-engineer",
+      "details": {
+        "bundle_lock_digest_sha256": "0356e556b8862c6e2490ddce33a985702350035c7ebd2a3fabac400c5fc55f56",
+        "bundle_ref": "releases/v28-release-a"
+      },
+      "previous_event_sha256": null,
+      "event_sha256": "5370e98746cb6a844af460724059f64d669326957303c3ae27ce1da512ad1c80"
+    },
+    {
+      "sequence": 2,
+      "event_type": "REGISTER_VERIFIED_SHADOW_RELEASE",
+      "release_id": "shadow-release-b",
+      "actor": "release-engineer",
+      "details": {
+        "bundle_lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
+        "bundle_ref": "releases/v28-release-b"
+      },
+      "previous_event_sha256": "5370e98746cb6a844af460724059f64d669326957303c3ae27ce1da512ad1c80",
+      "event_sha256": "76fe6bf1d0b2db0b7fc7e1bed71e443203291e69bede79020544f4d7840b29bb"
+    },
+    {
+      "sequence": 3,
+      "event_type": "ACTIVATE_SHADOW_RELEASE",
+      "release_id": "shadow-release-a",
+      "actor": "release-engineer",
+      "details": {
+        "previous_active_release_id": null
+      },
+      "previous_event_sha256": "76fe6bf1d0b2db0b7fc7e1bed71e443203291e69bede79020544f4d7840b29bb",
+      "event_sha256": "dd48f94f7792c4845e16623f57321b893dfcf24ee7622a95153e871f0fe34c24"
+    },
+    {
+      "sequence": 4,
+      "event_type": "MARK_LAST_KNOWN_GOOD",
+      "release_id": "shadow-release-a",
+      "actor": "model-governance-reviewer",
+      "details": {
+        "monitoring_status": "GREEN"
+      },
+      "previous_event_sha256": "dd48f94f7792c4845e16623f57321b893dfcf24ee7622a95153e871f0fe34c24",
+      "event_sha256": "e936122ef996ba51d6b0aa22912ea728c0d217e829a35ec2a9c112519ab52d39"
+    },
+    {
+      "sequence": 5,
+      "event_type": "ACTIVATE_SHADOW_RELEASE",
+      "release_id": "shadow-release-b",
+      "actor": "release-engineer",
+      "details": {
+        "previous_active_release_id": "shadow-release-a"
+      },
+      "previous_event_sha256": "e936122ef996ba51d6b0aa22912ea728c0d217e829a35ec2a9c112519ab52d39",
+      "event_sha256": "066ee66806da0b75c64b03900cadbb26f86adca5f4aa717894d1a79b9682d58b"
+    },
+    {
+      "sequence": 6,
+      "event_type": "OPEN_SHADOW_RELEASE_REVIEW",
+      "release_id": "shadow-release-b",
+      "actor": "monitoring-review-controller",
+      "details": {
+        "reason": "synthetic_release_control_test",
+        "severity": "HIGH",
+        "evidence_ref": "v0.28 synthetic review-required signal",
+        "serving_change": "NONE"
+      },
+      "previous_event_sha256": "066ee66806da0b75c64b03900cadbb26f86adca5f4aa717894d1a79b9682d58b",
+      "event_sha256": "2c25af895392438aa854b4c61864f8bc7e06278611e11f91703cae30b4f9464f"
+    },
+    {
+      "sequence": 7,
+      "event_type": "ACTIVATE_SHADOW_ROLLBACK",
+      "release_id": "shadow-release-a",
+      "actor": "release-engineer",
+      "details": {
+        "previous_active_release_id": "shadow-release-b",
+        "reason": "operator-authorised synthetic rollback replay",
+        "model_retraining": false,
+        "pricing_change": false
+      },
+      "previous_event_sha256": "2c25af895392438aa854b4c61864f8bc7e06278611e11f91703cae30b4f9464f",
+      "event_sha256": "eaf34a5c44f1ef924dcb977112b67f6370413d913ef51dd2621bd6b8bc458153"
+    }
+  ],
+  "event_chain": {
+    "status": "RELEASE_EVENT_CHAIN_VERIFIED",
+    "event_count": 7,
+    "head_event_sha256": "eaf34a5c44f1ef924dcb977112b67f6370413d913ef51dd2621bd6b8bc458153"
+  },
+  "automation_boundary": "Review and rollback selection do not change serving automatically. Activation requires explicit operator_authorised=True; no customer pricing or model-family promotion is performed."
+}
