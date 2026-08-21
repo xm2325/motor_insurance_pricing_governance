@@ -44,20 +44,26 @@ jobs:
           .runtime-v30/bin/python -m pip install --upgrade pip
           .runtime-v30/bin/pip install -r requirements-runtime.txt
           mkdir -p results_v30
-          .runtime-v30/bin/pip freeze --all | LC_ALL=C sort > results_v30/runtime-lock-v30.txt
+          # Normal pip freeze intentionally omits pip itself, so this lock describes
+          # the deployable application dependency set audited below.
+          .runtime-v30/bin/pip freeze | LC_ALL=C sort > results_v30/runtime-lock-v30.txt
           .runtime-v30/bin/python - <<'PY'
           import importlib.metadata as md
           import json
           from pathlib import Path
-          distributions = sorted(
+          locked = [line.strip() for line in Path('results_v30/runtime-lock-v30.txt').read_text().splitlines() if line.strip()]
+          installed = sorted(
               ({'name': d.metadata.get('Name', d.name), 'version': d.version} for d in md.distributions()),
               key=lambda item: item['name'].lower(),
           )
           Path('results_v30/runtime_environment.json').write_text(
-              json.dumps({'python': __import__('platform').python_version(), 'distributions': distributions}, indent=2),
-              encoding='utf-8',
+              json.dumps({
+                  'python': __import__('platform').python_version(),
+                  'locked_application_distributions': len(locked),
+                  'installed_distributions_including_pip': installed,
+              }, indent=2), encoding='utf-8'
           )
-          print(json.dumps({'runtime_distribution_count': len(distributions)}, indent=2))
+          print(json.dumps({'locked_application_distributions': len(locked)}, indent=2))
           PY
 
       - name: Install isolated audit tooling
@@ -72,16 +78,12 @@ jobs:
         run: |
           set +e
           .audit-v30/bin/pip-audit \
-            -r results_v30/runtime-lock-v30.txt \
-            --no-deps \
-            --format json \
-            --output results_v30/pip_audit.json
+            -r results_v30/runtime-lock-v30.txt --no-deps \
+            --format json --output results_v30/pip_audit.json
           AUDIT_EXIT=$?
           .audit-v30/bin/pip-audit \
-            -r results_v30/runtime-lock-v30.txt \
-            --no-deps \
-            --format cyclonedx-json \
-            --output results_v30/runtime_sbom.cdx.json
+            -r results_v30/runtime-lock-v30.txt --no-deps \
+            --format cyclonedx-json --output results_v30/runtime_sbom.cdx.json
           SBOM_EXIT=$?
           set -e
           echo "audit_exit=${AUDIT_EXIT}" >> "$GITHUB_OUTPUT"
@@ -89,36 +91,32 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
+          lock = [line.strip() for line in Path('results_v30/runtime-lock-v30.txt').read_text().splitlines() if line.strip()]
           audit = json.loads(Path('results_v30/pip_audit.json').read_text())
           deps = audit.get('dependencies', audit if isinstance(audit, list) else [])
-          vulnerabilities = []
-          for dep in deps:
-              for vuln in dep.get('vulns', []):
-                  vulnerabilities.append({
-                      'package': dep.get('name'),
-                      'version': dep.get('version'),
-                      'id': vuln.get('id'),
-                      'fix_versions': vuln.get('fix_versions', []),
-                  })
+          vulnerabilities = [
+              {'package': dep.get('name'), 'version': dep.get('version'), 'id': vuln.get('id'), 'fix_versions': vuln.get('fix_versions', [])}
+              for dep in deps for vuln in dep.get('vulns', [])
+          ]
           sbom = json.loads(Path('results_v30/runtime_sbom.cdx.json').read_text())
+          components = sbom.get('components', [])
           summary = {
               'status': 'RUNTIME_DEPENDENCY_AUDIT_COMPLETE',
+              'runtime_lock_distribution_count': len(lock),
               'dependency_records': len(deps),
               'known_vulnerability_count': len(vulnerabilities),
               'vulnerabilities': vulnerabilities,
               'cyclonedx_bom_format': sbom.get('bomFormat'),
               'cyclonedx_spec_version': sbom.get('specVersion'),
-              'cyclonedx_component_count': len(sbom.get('components', [])),
+              'cyclonedx_component_count': len(components),
               'audit_tool': 'pip-audit 2.10.1',
-              'audit_scope': 'exact frozen Python runtime distributions only',
+              'audit_scope': 'exact frozen Python application runtime dependencies; audit tooling isolated',
           }
-          Path('results_v30/runtime_security_summary.json').write_text(
-              json.dumps(summary, indent=2), encoding='utf-8'
-          )
+          Path('results_v30/runtime_security_summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
           print(json.dumps(summary, indent=2))
           PY
 
-      - name: Enforce zero-known-vulnerability runtime gate
+      - name: Enforce zero-known-vulnerability and inventory-alignment gate
         env:
           AUDIT_EXIT: ${{ steps.audit.outputs.audit_exit }}
           SBOM_EXIT: ${{ steps.audit.outputs.sbom_exit }}
@@ -126,17 +124,17 @@ jobs:
           python - <<'PY'
           import json, os
           from pathlib import Path
-          summary = json.loads(Path('results_v30/runtime_security_summary.json').read_text())
-          if int(os.environ['AUDIT_EXIT']) != 0 or summary['known_vulnerability_count'] != 0:
+          s = json.loads(Path('results_v30/runtime_security_summary.json').read_text())
+          counts = (s['runtime_lock_distribution_count'], s['dependency_records'], s['cyclonedx_component_count'])
+          if len(set(counts)) != 1:
+              raise SystemExit(f'Runtime lock/audit/SBOM counts disagree: {counts}')
+          if int(os.environ['AUDIT_EXIT']) != 0 or s['known_vulnerability_count'] != 0:
               raise SystemExit(
-                  f"Runtime vulnerability gate failed: audit_exit={os.environ['AUDIT_EXIT']} "
-                  f"known_vulnerabilities={summary['known_vulnerability_count']}"
+                  f"Runtime vulnerability gate failed: audit_exit={os.environ['AUDIT_EXIT']} known_vulnerabilities={s['known_vulnerability_count']}"
               )
-          if int(os.environ['SBOM_EXIT']) != 0:
-              raise SystemExit(f"CycloneDX generation failed with exit {os.environ['SBOM_EXIT']}")
-          if summary['cyclonedx_bom_format'] != 'CycloneDX':
-              raise SystemExit('Unexpected SBOM format')
-          print('ZERO_KNOWN_VULNERABILITY_RUNTIME_GATE_PASS')
+          if int(os.environ['SBOM_EXIT']) != 0 or s['cyclonedx_bom_format'] != 'CycloneDX':
+              raise SystemExit('CycloneDX generation gate failed')
+          print(f"ZERO_KNOWN_VULNERABILITY_RUNTIME_GATE_PASS dependencies={counts[0]}")
           PY
 
       - name: Restore verified public-data cache
@@ -169,23 +167,17 @@ jobs:
           ARCHIVE_BYTES=$(stat -c '%s' dist/motor-pricing-shadow-bundle-v30.tar.gz)
           echo "archive_sha256=${ARCHIVE_SHA}" >> "$GITHUB_OUTPUT"
           echo "archive_bytes=${ARCHIVE_BYTES}" >> "$GITHUB_OUTPUT"
-          printf '%s  %s\n' "$ARCHIVE_SHA" 'motor-pricing-shadow-bundle-v30.tar.gz' \
-            > results_v30/release_archive.sha256
+          printf '%s  %s\n' "$ARCHIVE_SHA" 'motor-pricing-shadow-bundle-v30.tar.gz' > results_v30/release_archive.sha256
           python - <<'PY'
           import tarfile
           from pathlib import Path
-          path = Path('dist/motor-pricing-shadow-bundle-v30.tar.gz')
-          with tarfile.open(path, 'r:gz') as archive:
+          with tarfile.open('dist/motor-pricing-shadow-bundle-v30.tar.gz', 'r:gz') as archive:
               names = archive.getnames()
-          required = {
-              'deployment_artifacts/bundle.lock.json',
-              'deployment_artifacts/manifest.json',
-              'deployment_artifacts/parity_reference.json',
-          }
+          required = {'deployment_artifacts/bundle.lock.json', 'deployment_artifacts/manifest.json', 'deployment_artifacts/parity_reference.json'}
           missing = required.difference(names)
           if missing:
               raise AssertionError(f'Missing sealed bundle members: {sorted(missing)}')
-          if any('data_spanish_2022_2024' in name or 'Dataset_of_motor_insurance_portfolio.csv' in name for name in names):
+          if any('data_spanish_2022_2024' in n or 'Dataset_of_motor_insurance_portfolio.csv' in n for n in names):
               raise AssertionError('Raw training data leaked into release archive')
           print({'archive_members': len(names), 'raw_data_members': 0})
           PY
@@ -205,16 +197,14 @@ jobs:
           sbom-path: results_v30/runtime_sbom.cdx.json
           show-summary: true
 
-      - name: Verify provenance and SBOM attestations
+      - name: Verify provenance and CycloneDX SBOM attestations
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh attestation verify dist/motor-pricing-shadow-bundle-v30.tar.gz \
-            --repo "$GITHUB_REPOSITORY" \
-            --format json > results_v30/provenance_verification.json
+            --repo "$GITHUB_REPOSITORY" --format json > results_v30/provenance_verification.json
           gh attestation verify dist/motor-pricing-shadow-bundle-v30.tar.gz \
-            --repo "$GITHUB_REPOSITORY" \
-            --predicate-type https://cyclonedx.org/bom \
+            --repo "$GITHUB_REPOSITORY" --predicate-type https://cyclonedx.org/bom \
             --format json > results_v30/sbom_attestation_verification.json
           jq -e 'length > 0' results_v30/provenance_verification.json >/dev/null
           jq -e 'length > 0' results_v30/sbom_attestation_verification.json >/dev/null
@@ -235,10 +225,10 @@ jobs:
           lock = json.loads(Path('deployment_artifacts/bundle.lock.json').read_text())
           provenance = json.loads(Path('results_v30/provenance_verification.json').read_text())
           sbom_verify = json.loads(Path('results_v30/sbom_attestation_verification.json').read_text())
-          runtime_lock = [line.strip() for line in Path('results_v30/runtime-lock-v30.txt').read_text().splitlines() if line.strip()]
           result = {
               'status': 'V30_RUNTIME_SBOM_AND_VULNERABILITY_GATE_PASS',
-              'runtime_lock_distribution_count': len(runtime_lock),
+              'runtime_lock_distribution_count': security['runtime_lock_distribution_count'],
+              'audited_dependency_count': security['dependency_records'],
               'known_vulnerability_count': security['known_vulnerability_count'],
               'audit_tool': security['audit_tool'],
               'audit_scope': security['audit_scope'],
@@ -256,20 +246,20 @@ jobs:
               'sbom_predicate_type': 'https://cyclonedx.org/bom',
               'governance_status': 'HOLD_SHADOW_ONLY',
               'security_boundary': (
-                  'pip-audit checks the exact Python runtime dependency set against known vulnerability data; '
+                  'pip-audit checks the exact Python application runtime dependency set against known vulnerability data; '
                   'the CycloneDX attestation cryptographically links the SBOM to this release archive. '
-                  'Neither is static code analysis, malicious-package detection, exploitability analysis, '
-                  'regulatory approval or evidence that the pricing model is safe for customer use.'
+                  'Neither is static code analysis, malicious-package detection, exploitability analysis, regulatory approval '
+                  'or evidence that the pricing model is safe for customer use.'
               ),
           }
-          Path('results_v30/runtime_sbom_result.json').write_text(
-              json.dumps(result, indent=2), encoding='utf-8'
-          )
+          Path('results_v30/runtime_sbom_result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
           print(json.dumps(result, indent=2))
           PY
 
       - name: Persist v0.30 evidence
         if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
           mkdir -p action_results/v30
           for f in \
@@ -303,8 +293,6 @@ jobs:
             git commit -m "Persist v0.30 runtime SBOM audit ${GITHUB_RUN_ID}"
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
-        env:
-          JOB_STATUS: ${{ job.status }}
 
       - name: Upload v0.30 security evidence
         if: always()
