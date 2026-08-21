@@ -1,0 +1,9 @@
+{
+  "status": "FULL_VS_CPU_RUNTIME_HTTP_PARITY_PASS",
+  "records_tested": 25,
+  "full_vs_runtime_numeric_fields_per_record": 6,
+  "offline_reference_numeric_fields_per_record": 4,
+  "full_vs_runtime_max_abs_error": 0.0,
+  "runtime_vs_offline_max_abs_error": 0.0,
+  "governance_status": "HOLD_SHADOW_ONLY"
+}
