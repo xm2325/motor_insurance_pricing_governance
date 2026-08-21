@@ -1,0 +1,11 @@
+{
+  "status": "RUNTIME_DEPENDENCY_AUDIT_COMPLETE",
+  "dependency_records": 23,
+  "known_vulnerability_count": 0,
+  "vulnerabilities": [],
+  "cyclonedx_bom_format": "CycloneDX",
+  "cyclonedx_spec_version": "1.4",
+  "cyclonedx_component_count": 23,
+  "audit_tool": "pip-audit 2.10.1",
+  "audit_scope": "exact frozen Python runtime distributions only"
+}

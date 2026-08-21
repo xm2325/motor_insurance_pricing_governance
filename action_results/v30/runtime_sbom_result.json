@@ -1,0 +1,21 @@
+{
+  "status": "V30_RUNTIME_SBOM_AND_VULNERABILITY_GATE_PASS",
+  "runtime_lock_distribution_count": 24,
+  "known_vulnerability_count": 0,
+  "audit_tool": "pip-audit 2.10.1",
+  "audit_scope": "exact frozen Python runtime distributions only",
+  "cyclonedx_spec_version": "1.4",
+  "cyclonedx_component_count": 23,
+  "release_archive_sha256": "b12b8c76ebf1e1249b5a73d95d0005c780dff3a92fb01c78ccd129f8b3a687d2",
+  "release_archive_bytes": 386595,
+  "sealed_bundle_lock_digest_sha256": "27fc1160febd10af43fc232eded5846eb3ee309e29f4dbbe7d2e014b318aecd5",
+  "build_provenance_attestation_id": "42234035",
+  "build_provenance_attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42234035",
+  "sbom_attestation_id": "42234038",
+  "sbom_attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42234038",
+  "provenance_verification_records": 1,
+  "sbom_verification_records": 1,
+  "sbom_predicate_type": "https://cyclonedx.org/bom",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "security_boundary": "pip-audit checks the exact Python runtime dependency set against known vulnerability data; the CycloneDX attestation cryptographically links the SBOM to this release archive. Neither is static code analysis, malicious-package detection, exploitability analysis, regulatory approval or evidence that the pricing model is safe for customer use."
+}
