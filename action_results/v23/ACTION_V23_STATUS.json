@@ -1,7 +1,7 @@
 {
   "workflow": "Motor pricing review lifecycle v0.23",
-  "run_id": "32502417535",
-  "sha": "32b338ba9975cac5810000825d1c26d85d14e9b6",
+  "run_id": "32520374827",
+  "sha": "1e6bfd33148d9dcd85edca86f75b9d2bbc7e927b",
   "contract_outcome": "success",
   "replay_outcome": "success",
   "validate_outcome": "success"
