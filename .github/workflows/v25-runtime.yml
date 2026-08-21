@@ -1,0 +1,278 @@
+name: Motor pricing runtime slimming v0.25
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.25-runtime-slimming
+    paths:
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - 'requirements-runtime.txt'
+      - 'deployment/app.py'
+      - 'deployment/bundle.py'
+      - 'deployment/contracts.py'
+      - 'deployment/drift.py'
+      - 'deployment/monitoring.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'tests/test_runtime_contract_v25.py'
+      - '.github/workflows/v25-runtime.yml'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - 'requirements-runtime.txt'
+      - 'deployment/app.py'
+      - 'deployment/bundle.py'
+      - 'deployment/contracts.py'
+      - 'deployment/drift.py'
+      - 'deployment/monitoring.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'tests/test_runtime_contract_v25.py'
+      - '.github/workflows/v25-runtime.yml'
+
+concurrency:
+  group: v25-runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  runtime-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training and benchmark dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check runtime contract
+        run: python -m unittest -v tests/test_runtime_contract_v25.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build locked model bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Build full baseline image
+        run: |
+          cat > /tmp/Dockerfile.full <<'DOCKERFILE'
+          FROM python:3.12-slim
+          ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 MODEL_BUNDLE_DIR=/models
+          WORKDIR /app
+          COPY requirements.txt ./
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY deployment ./deployment
+          EXPOSE 8000
+          CMD ["uvicorn", "deployment.app:app", "--host", "0.0.0.0", "--port", "8000"]
+          DOCKERFILE
+          docker build -f /tmp/Dockerfile.full -t motor-pricing-shadow:full-baseline .
+
+      - name: Build CPU-only runtime image
+        run: docker build -t motor-pricing-shadow:runtime-v25 .
+
+      - name: Inspect image sizes and runtime packages
+        run: |
+          mkdir -p results_v25
+          FULL_BYTES=$(docker image inspect motor-pricing-shadow:full-baseline --format='{{.Size}}')
+          SLIM_BYTES=$(docker image inspect motor-pricing-shadow:runtime-v25 --format='{{.Size}}')
+          docker run --rm motor-pricing-shadow:runtime-v25 python -m pip list --format=json > results_v25/runtime_packages.json
+          FULL_BYTES="$FULL_BYTES" SLIM_BYTES="$SLIM_BYTES" python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          full_bytes = int(os.environ['FULL_BYTES'])
+          slim_bytes = int(os.environ['SLIM_BYTES'])
+          reduction = 1.0 - slim_bytes / full_bytes
+          packages = json.loads(Path('results_v25/runtime_packages.json').read_text())
+          names = {p['name'].lower() for p in packages}
+          forbidden = {'matplotlib', 'pytest', 'tabulate', 'httpx', 'nvidia-nccl-cu13'}
+          present_forbidden = sorted(forbidden & names)
+          if 'xgboost-cpu' not in names:
+              raise AssertionError(f'xgboost-cpu missing from runtime image; packages={sorted(names)}')
+          if present_forbidden:
+              raise AssertionError(f'Non-runtime packages present: {present_forbidden}')
+          if reduction < 0.20:
+              raise AssertionError(f'Runtime image reduction {reduction:.1%} is below 20% acceptance gate')
+
+          summary = {
+              'status': 'IMAGE_SIZE_AND_PACKAGE_GATE_PASS',
+              'full_image_bytes': full_bytes,
+              'runtime_image_bytes': slim_bytes,
+              'absolute_bytes_removed': full_bytes - slim_bytes,
+              'relative_size_reduction': reduction,
+              'minimum_required_reduction': 0.20,
+              'runtime_distribution': 'xgboost-cpu',
+              'forbidden_packages_checked': sorted(forbidden),
+              'forbidden_packages_present': present_forbidden,
+          }
+          Path('results_v25/image_size_summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Verify full vs slim HTTP prediction parity
+        run: |
+          docker run -d --name motor-pricing-full \
+            -p 8001:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/deployment_artifacts:/models:ro" \
+            motor-pricing-shadow:full-baseline
+          docker run -d --name motor-pricing-runtime \
+            -p 8002:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/deployment_artifacts:/models:ro" \
+            motor-pricing-shadow:runtime-v25
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          import httpx
+          import numpy as np
+
+          parity = json.loads(Path('deployment_artifacts/parity_reference.json').read_text())
+          fields = [
+              'reference_frequency',
+              'challenger_frequency',
+              'reference_pure_premium',
+              'challenger_pure_premium',
+              'frequency_log_ratio',
+              'pure_premium_log_ratio',
+          ]
+
+          clients = {
+              'full': httpx.Client(base_url='http://127.0.0.1:8001', timeout=5.0),
+              'runtime': httpx.Client(base_url='http://127.0.0.1:8002', timeout=5.0),
+          }
+          try:
+              for name, client in clients.items():
+                  for _ in range(30):
+                      try:
+                          response = client.get('/health')
+                          if response.status_code == 200:
+                              break
+                      except Exception:
+                          pass
+                      time.sleep(1)
+                  else:
+                      raise RuntimeError(f'{name} container did not become healthy')
+                  health = response.json()
+                  assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+
+              max_abs_error_full_vs_runtime = 0.0
+              max_abs_error_runtime_vs_offline = 0.0
+              for record, expected in zip(parity['records'], parity['scores']):
+                  full = clients['full'].post('/score', json=record)
+                  runtime = clients['runtime'].post('/score', json=record)
+                  full.raise_for_status()
+                  runtime.raise_for_status()
+                  full_body = full.json()
+                  runtime_body = runtime.json()
+                  assert full_body['warnings'] == runtime_body['warnings']
+                  for field in fields:
+                      full_value = float(full_body[field])
+                      runtime_value = float(runtime_body[field])
+                      expected_value = float(expected[field])
+                      max_abs_error_full_vs_runtime = max(
+                          max_abs_error_full_vs_runtime,
+                          abs(full_value - runtime_value),
+                      )
+                      max_abs_error_runtime_vs_offline = max(
+                          max_abs_error_runtime_vs_offline,
+                          abs(runtime_value - expected_value),
+                      )
+                      assert np.isclose(full_value, runtime_value, rtol=1e-12, atol=1e-12)
+                      assert np.isclose(runtime_value, expected_value, rtol=1e-10, atol=1e-10)
+
+              result = {
+                  'status': 'FULL_VS_CPU_RUNTIME_HTTP_PARITY_PASS',
+                  'records_tested': len(parity['records']),
+                  'numeric_fields_per_record': len(fields),
+                  'full_vs_runtime_max_abs_error': max_abs_error_full_vs_runtime,
+                  'runtime_vs_offline_max_abs_error': max_abs_error_runtime_vs_offline,
+                  'governance_status': 'HOLD_SHADOW_ONLY',
+              }
+              Path('results_v25/http_parity_summary.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+              print(json.dumps(result, indent=2))
+          finally:
+              for client in clients.values():
+                  client.close()
+          PY
+          docker logs motor-pricing-full
+          docker logs motor-pricing-runtime
+          docker rm -f motor-pricing-full motor-pricing-runtime
+
+      - name: Build v0.25 result summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          image = json.loads(Path('results_v25/image_size_summary.json').read_text())
+          parity = json.loads(Path('results_v25/http_parity_summary.json').read_text())
+          result = {
+              'status': 'V25_RUNTIME_SLIMMING_PASS',
+              'image': image,
+              'parity': parity,
+              'interpretation_boundary': (
+                  'Runtime optimisation only. It does not alter the model-family HOLD decision, '
+                  'pricing logic, calibration gates, or monitoring thresholds.'
+              ),
+          }
+          Path('results_v25/runtime_slimming_result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.25 evidence
+        if: github.event_name == 'push'
+        env:
+          GITHUB_RUN_ID_VALUE: ${{ github.run_id }}
+          GITHUB_SHA_VALUE: ${{ github.sha }}
+        run: |
+          mkdir -p action_results/v25
+          cp results_v25/*.json action_results/v25/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload = {
+              'workflow': 'Motor pricing runtime slimming v0.25',
+              'run_id': os.environ['GITHUB_RUN_ID_VALUE'],
+              'sha': os.environ['GITHUB_SHA_VALUE'],
+              'status': 'success',
+          }
+          Path('action_results/v25/ACTION_V25_STATUS.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v25
+          if git diff --cached --quiet; then
+            echo 'No v0.25 evidence changes'
+          else
+            git commit -m "Persist v0.25 runtime benchmark ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.25 benchmark artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-runtime-v25
+          path: results_v25/
+          if-no-files-found: warn
