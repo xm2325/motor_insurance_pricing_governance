@@ -1,0 +1,110 @@
+{
+  "status": "success",
+  "interpretation": "Synthetic replay validation only. Alerts demonstrate monitoring behaviour; they are not observed production incidents or insurer thresholds.",
+  "baseline": {
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "privacy_boundary": "aggregate_non_pii_only",
+    "request_count": 10,
+    "error_count": 0,
+    "error_rate": 0.0,
+    "records_scored": 250,
+    "unseen_warning_records": 0,
+    "unseen_category_rate": 0.0,
+    "latency_ms": {
+      "median": 27.650948000001563,
+      "p95": 555.5118064999978,
+      "max": 986.0519839999995
+    },
+    "batch_size": {
+      "median": 25.0,
+      "p95": 25.0,
+      "max": 25.0
+    },
+    "disagreement": {
+      "frequency_abs_log_ratio_p50": 0.07567455039508895,
+      "frequency_abs_log_ratio_p95": 0.22885003743733062,
+      "pure_premium_abs_log_ratio_p50": 0.34126546795854207,
+      "pure_premium_abs_log_ratio_p95": 0.7677986115535468
+    },
+    "thresholds": {
+      "error_rate": 0.02,
+      "unseen_category_rate": 0.01,
+      "p95_latency_ms": 200.0,
+      "frequency_abs_log_ratio_p95": 0.75,
+      "pure_premium_abs_log_ratio_p95": 1.0
+    },
+    "alerts": {
+      "error_rate": false,
+      "unseen_category_rate": false,
+      "p95_latency_ms": true,
+      "frequency_disagreement": false,
+      "pure_premium_disagreement": false
+    },
+    "alert_status": "RED"
+  },
+  "stress": {
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "privacy_boundary": "aggregate_non_pii_only",
+    "request_count": 30,
+    "error_count": 20,
+    "error_rate": 0.6666666666666666,
+    "records_scored": 250,
+    "unseen_warning_records": 250,
+    "unseen_category_rate": 1.0,
+    "latency_ms": {
+      "median": 0.5698575000039341,
+      "p95": 27.654513200003805,
+      "max": 28.21468900000923
+    },
+    "batch_size": {
+      "median": 25.0,
+      "p95": 25.0,
+      "max": 25.0
+    },
+    "disagreement": {
+      "frequency_abs_log_ratio_p50": 0.36924153847353414,
+      "frequency_abs_log_ratio_p95": 0.7481351170420393,
+      "pure_premium_abs_log_ratio_p50": 1.5311187416970624,
+      "pure_premium_abs_log_ratio_p95": 2.225284237373298
+    },
+    "thresholds": {
+      "error_rate": 0.02,
+      "unseen_category_rate": 0.01,
+      "p95_latency_ms": 200.0,
+      "frequency_abs_log_ratio_p95": 0.75,
+      "pure_premium_abs_log_ratio_p95": 1.0
+    },
+    "alerts": {
+      "error_rate": true,
+      "unseen_category_rate": true,
+      "p95_latency_ms": false,
+      "frequency_disagreement": false,
+      "pure_premium_disagreement": true
+    },
+    "alert_status": "RED"
+  },
+  "disagreement_shift": {
+    "frequency_p95_baseline": 0.22885003743733062,
+    "frequency_p95_stress": 0.7481351170420393,
+    "frequency_ratio": 3.269106378219021,
+    "pure_premium_p95_baseline": 0.7677986115535468,
+    "pure_premium_p95_stress": 2.225284237373298,
+    "pure_premium_ratio": 2.898265513753284,
+    "relative_alert_rule": "stress p95 > max(1.5 * baseline p95, baseline p95 + 0.10)",
+    "frequency_relative_alert": true,
+    "pure_premium_relative_alert": true
+  },
+  "checks": {
+    "baseline_privacy_boundary": true,
+    "stress_privacy_boundary": true,
+    "baseline_records_scored": 250,
+    "stress_records_scored": 250,
+    "stress_error_rate_alert": true,
+    "stress_unseen_category_alert": true,
+    "stress_unseen_category_rate": 1.0,
+    "frequency_relative_alert": true,
+    "pure_premium_relative_alert": true
+  }
+}
