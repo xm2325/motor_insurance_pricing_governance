@@ -108,6 +108,52 @@ class TestEvidenceRegistry(unittest.TestCase):
         for metadata in manifest["models"].values():
             self.assertEqual(len(metadata["sha256"]), 64)
 
+    def test_v22_shadow_monitoring_evidence(self) -> None:
+        replay = load_json("action_results/v22/monitoring_replay_summary.json")
+        container = load_json("action_results/v22/container_monitoring_summary.json")
+
+        self.assertEqual(replay["status"], "success")
+        self.assertEqual(replay["sample_size_per_replay"], 5000)
+        baseline = replay["baseline_2022"]
+        temporal = replay["temporal_2024"]
+        stress = replay["synthetic_stress"]
+
+        self.assertEqual(baseline["privacy_boundary"], "aggregate_non_pii_only")
+        self.assertEqual(baseline["alert_status"], "GREEN")
+        self.assertAlmostEqual(baseline["feature_drift"]["max_psi"], 0.009732760622960532)
+        self.assertEqual(baseline["records_scored"], 5000)
+
+        self.assertEqual(temporal["records_scored"], 5000)
+        self.assertTrue(temporal["alerts"]["feature_drift"])
+        self.assertFalse(temporal["alerts"]["frequency_disagreement"])
+        self.assertFalse(temporal["alerts"]["pure_premium_disagreement"])
+        self.assertEqual(temporal["feature_drift"]["max_psi_feature"], "business_type")
+        self.assertAlmostEqual(temporal["feature_drift"]["max_psi"], 1.4115752423025838)
+
+        mix = replay["business_type_distribution_full_year"]
+        self.assertAlmostEqual(mix["2022"]["NB"], 0.979053460570782)
+        self.assertAlmostEqual(mix["2024"]["P"], 0.42653419400898357)
+        temporal_shift = replay["temporal_disagreement_shift"]
+        self.assertAlmostEqual(temporal_shift["frequency_ratio"], 0.936055832958704)
+        self.assertAlmostEqual(temporal_shift["pure_premium_ratio"], 1.0426489836175252)
+        self.assertFalse(temporal_shift["frequency_relative_alert"])
+        self.assertFalse(temporal_shift["pure_premium_relative_alert"])
+
+        self.assertEqual(stress["alert_status"], "RED")
+        self.assertTrue(stress["alerts"]["error_rate"])
+        self.assertTrue(stress["alerts"]["unseen_category_rate"])
+        self.assertTrue(stress["alerts"]["feature_drift"])
+        self.assertEqual(stress["unseen_category_rate"], 1.0)
+        stress_shift = replay["stress_disagreement_shift"]
+        self.assertGreater(stress_shift["frequency_ratio"], 2.5)
+        self.assertGreater(stress_shift["pure_premium_ratio"], 2.8)
+
+        self.assertEqual(temporal["feature_drift"]["minimum_records"], 500)
+        self.assertTrue(container["monitoring_http_verified"])
+        self.assertEqual(container["privacy_boundary"], "aggregate_non_pii_only")
+        self.assertEqual(container["records_scored"], 5)
+        self.assertEqual(container["alert_status"], "GREEN")
+
 
 if __name__ == "__main__":
     unittest.main()
