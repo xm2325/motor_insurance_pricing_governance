@@ -1,0 +1,122 @@
+{
+  "status": "COMPLETED_ROLLING_ORIGIN_V14",
+  "purpose": "Model-family temporal stability check. This does not replace the locked 2022 train -> 2023 calibration -> 2024 untouched OOT deployment gate.",
+  "windows": [
+    {
+      "train_years": [
+        2022
+      ],
+      "test_year": 2023,
+      "n_train": 67171,
+      "n_test": 118835,
+      "frequency": [
+        {
+          "model": "Poisson_GLM",
+          "deviance": 1.136192274989586,
+          "calibration_ratio": 0.987751957085295,
+          "top10_capture": 0.24950314015422528
+        },
+        {
+          "model": "XGBoost_Poisson",
+          "deviance": 1.1364573360199082,
+          "calibration_ratio": 0.9729920874613176,
+          "top10_capture": 0.24894665712695763
+        }
+      ],
+      "pure_premium": [
+        {
+          "model": "Tweedie_GLM",
+          "deviance": 92.69698471652345,
+          "calibration_ratio": 1.093942336712838,
+          "top10_capture": 0.2080477290937928
+        },
+        {
+          "model": "XGBoost_Tweedie",
+          "deviance": 93.27072687842211,
+          "calibration_ratio": 0.8281194572042241,
+          "top10_capture": 0.2098997088810694
+        }
+      ],
+      "frequency_bootstrap_glm_minus_xgb": {
+        "mean": -0.00043244885253958086,
+        "ci95_low": -0.0018917892529777933,
+        "ci95_high": 0.0009510310374525656,
+        "p_gt_0": 0.315
+      },
+      "pure_premium_bootstrap_glm_minus_xgb": {
+        "mean": -0.5885611775141114,
+        "ci95_low": -2.148673013353659,
+        "ci95_high": 0.8798235009651109,
+        "p_gt_0": 0.22
+      }
+    },
+    {
+      "train_years": [
+        2022,
+        2023
+      ],
+      "test_year": 2024,
+      "n_train": 186006,
+      "n_test": 168085,
+      "frequency": [
+        {
+          "model": "Poisson_GLM",
+          "deviance": 1.1119905788380475,
+          "calibration_ratio": 0.9757682028408121,
+          "top10_capture": 0.26975761279152666
+        },
+        {
+          "model": "XGBoost_Poisson",
+          "deviance": 1.1084267849406437,
+          "calibration_ratio": 0.9707362056680966,
+          "top10_capture": 0.2741623383236582
+        }
+      ],
+      "pure_premium": [
+        {
+          "model": "Tweedie_GLM",
+          "deviance": 92.82132255492648,
+          "calibration_ratio": 0.9475983706794172,
+          "top10_capture": 0.2200723881402271
+        },
+        {
+          "model": "XGBoost_Tweedie",
+          "deviance": 93.16063717468647,
+          "calibration_ratio": 0.8416020675912909,
+          "top10_capture": 0.22769631003884452
+        }
+      ],
+      "frequency_bootstrap_glm_minus_xgb": {
+        "mean": 0.0035541593249547466,
+        "ci95_low": 0.002361624689424613,
+        "ci95_high": 0.005130347502668337,
+        "p_gt_0": 1.0
+      },
+      "pure_premium_bootstrap_glm_minus_xgb": {
+        "mean": -0.3604536118815649,
+        "ci95_low": -0.7930985908542446,
+        "ci95_high": 0.16008433988479723,
+        "p_gt_0": 0.085
+      }
+    }
+  ],
+  "new_vs_existing_business_gate": {
+    "status": "DIAGNOSTIC_ONLY",
+    "threshold_note": "Illustrative portfolio diagnostic only; not a FIRST CENTRAL or regulatory threshold.",
+    "cohorts": {
+      "seen": {
+        "glm_loss_calibration": 0.9936423068976924,
+        "xgb_loss_calibration": 0.9501469893851712,
+        "glm_within_illustrative_0_85_1_15": true,
+        "xgb_within_illustrative_0_85_1_15": true
+      },
+      "unseen": {
+        "glm_loss_calibration": 0.8245942340289352,
+        "xgb_loss_calibration": 0.8811744180057263,
+        "glm_within_illustrative_0_85_1_15": false,
+        "xgb_within_illustrative_0_85_1_15": true
+      }
+    }
+  },
+  "decision_rule": "Do not promote a challenger unless directionally better performance is repeatable across temporal windows and the locked 2024 gate is cleared."
+}

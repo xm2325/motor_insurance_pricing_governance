@@ -1,12 +1,13 @@
 {
   "workflow": "Spanish motor 2022-2024 discovery and OOT",
-  "stage": "full_2024_oot",
-  "run_id": "32472624710",
+  "stage": "full_2024_oot_plus_v14_rolling_origin",
+  "run_id": "32474497836",
   "run_attempt": "1",
-  "sha": "5cfcbddf0b1d992c53d9b58cff186a0a923c445d",
+  "sha": "a7272265c71a74444f48588a5e0c052d98171868",
   "install_outcome": "success",
   "discovery_outcome": "success",
   "download_audit_outcome": "success",
   "schema_audit_outcome": "success",
-  "model_oot_outcome": "success"
+  "model_oot_outcome": "success",
+  "rolling_origin_outcome": "success"
 }
