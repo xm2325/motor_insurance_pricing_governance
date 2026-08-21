@@ -9,6 +9,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+from xgboost import XGBRegressor
 
 from deployment.contracts import CATEGORICAL_FEATURES, FEATURES, feature_contract_hash
 from deployment.environment import (
@@ -23,6 +24,18 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+@dataclass
+class NativeXGBPipeline:
+    """Inference wrapper: sklearn preprocessing + XGBoost native model IO."""
+
+    preprocessor: Any
+    model: XGBRegressor
+
+    def predict(self, frame: pd.DataFrame) -> np.ndarray:
+        transformed = self.preprocessor.transform(frame)
+        return self.model.predict(transformed)
 
 
 @dataclass
@@ -42,9 +55,8 @@ class ShadowModelBundle:
         if manifest.get("feature_contract_hash") != feature_contract_hash():
             raise RuntimeError("Deployment feature contract hash does not match service code")
 
-        # The persisted objects are sklearn Pipelines saved through joblib/pickle. Check
-        # the model stack before any artifact is deserialised so a version mismatch fails
-        # closed rather than merely emitting a warning after the object has been loaded.
+        # v0.26 deliberately keeps XGBoost out of pickle. Check the exact sklearn/joblib
+        # stack and the native-XGBoost compatibility rule before any joblib object is loaded.
         expected_environment = manifest.get("training_environment")
         if not isinstance(expected_environment, dict):
             raise RuntimeError(
@@ -56,13 +68,43 @@ class ShadowModelBundle:
 
         models: dict[str, Any] = {}
         for model_name, metadata in manifest["models"].items():
-            artifact_path = root / metadata["artifact"]
-            actual_hash = sha256_file(artifact_path)
-            if actual_hash != metadata["sha256"]:
-                raise RuntimeError(
-                    f"Artifact hash mismatch for {model_name}: {actual_hash} != {metadata['sha256']}"
-                )
-            models[model_name] = joblib.load(artifact_path)
+            serialization = metadata.get("serialization", "joblib_pipeline")
+
+            if serialization == "joblib_pipeline":
+                artifact_path = root / metadata["artifact"]
+                actual_hash = sha256_file(artifact_path)
+                if actual_hash != metadata["sha256"]:
+                    raise RuntimeError(
+                        f"Artifact hash mismatch for {model_name}: {actual_hash} != {metadata['sha256']}"
+                    )
+                models[model_name] = joblib.load(artifact_path)
+                continue
+
+            if serialization == "sklearn_preprocessor_plus_xgboost_ubj":
+                prep_path = root / metadata["preprocessor_artifact"]
+                native_path = root / metadata["native_model_artifact"]
+                prep_hash = sha256_file(prep_path)
+                native_hash = sha256_file(native_path)
+                if prep_hash != metadata["preprocessor_sha256"]:
+                    raise RuntimeError(
+                        f"Preprocessor hash mismatch for {model_name}: "
+                        f"{prep_hash} != {metadata['preprocessor_sha256']}"
+                    )
+                if native_hash != metadata["native_model_sha256"]:
+                    raise RuntimeError(
+                        f"Native model hash mismatch for {model_name}: "
+                        f"{native_hash} != {metadata['native_model_sha256']}"
+                    )
+                preprocessor = joblib.load(prep_path)
+                native_model = XGBRegressor()
+                native_model.load_model(str(native_path))
+                models[model_name] = NativeXGBPipeline(preprocessor, native_model)
+                continue
+
+            raise RuntimeError(
+                f"Unsupported serialization mode for {model_name}: {serialization}"
+            )
+
         return cls(
             root=root,
             manifest=manifest,
