@@ -55,6 +55,11 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.27 fail-closed corruption tests | model-artifact byte tamper, missing GLM artifact and lock self-tamper all rejected | `action_results/v27/tamper_test_summary.json` |
 | v0.27 container integrity status | `CONTENT_ADDRESSED_BUNDLE_VERIFIED` + `HYBRID_MODEL_IO_COMPATIBLE` | `action_results/v27/container_integrity_summary.json` |
 | v0.27 integrity + HTTP parity | **25 records x 4 fields = 100 comparisons; max absolute error 0.0** | `action_results/v27/container_integrity_summary.json` |
+| v0.28 release packaging | A/B have **distinct lock digests** but **identical hashes across 9 locked artifacts** | `action_results/v28/release_control_result.json` |
+| v0.28 review/rollback automation boundary | synthetic review leaves B active; unauthorised rollback rejected; authorised target is last-known-good A | `action_results/v28/release_control_result.json` |
+| v0.28 release event lineage | **7-event SHA-256 chain verified** | `action_results/v28/release_control_result.json`, `action_results/v28/release_registry.json` |
+| v0.28 container bundle switch | candidate B **100 comparisons / max error 0.0** -> rollback A **100 comparisons / max error 0.0**, same runtime image | `action_results/v28/container_rollback_summary.json` |
+| v0.28 rollback side-effect boundary | **no model retraining and no pricing change** during release switch | `action_results/v28/release_control_result.json` |
 
 ## Interpretation rules
 
@@ -79,9 +84,13 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.27 is a **content-addressed integrity and provenance contract**, not a cryptographic signature. Its lock digest identifies one sealed build and may change legitimately when code/build provenance or any locked artifact changes.
 - v0.27 detects missing/modified locked files when the lock digest is trusted; it does not claim resistance to an attacker able to replace both bundle artifacts and lockfile.
 - v0.27 integrity verification occurs before model deserialisation for contract `0.27`; the 0.0 parity result remains a same-fit serving check, not model approval.
+- v0.28 is a **synthetic shadow release-control replay**, not a production incident. It verifies release selection and rollback mechanics over already integrity-verified bundles.
+- v0.28 opening a review does not switch serving automatically. An unauthorised rollback is rejected; only the explicit project flag `operator_authorised=True` permits the switch to last-known-good.
+- `operator_authorised=True` is a demonstration governance contract, **not an authentication/IAM system** or evidence of production separation of duties.
+- v0.28 rollback does not retrain models, approve the challenger or change customer pricing; it only selects a previously sealed shadow bundle.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py` and `tests/test_bundle_integrity_evidence_v27.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO and content-addressed-integrity headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py` and `tests/test_release_control_evidence_v28.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity and shadow-release-control headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
