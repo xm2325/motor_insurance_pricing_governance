@@ -30,21 +30,27 @@ jobs:
         id: discover
         run: python discover_spanish_motor_2022_2024.py
 
-      - name: Persist discovery status
+      - name: Download files and audit binary format
+        id: download_audit
+        run: python download_spanish_motor_2022_2024.py
+
+      - name: Persist discovery/download status
         if: always()
         env:
           DISCOVERY_OUTCOME: ${{ steps.discover.outcome }}
+          DOWNLOAD_AUDIT_OUTCOME: ${{ steps.download_audit.outcome }}
         run: |
           python - <<'PY'
           import json, os
           from pathlib import Path
           status = {
               "workflow": "Spanish motor 2022-2024 discovery and OOT",
-              "stage": "discovery",
+              "stage": "download_format_audit",
               "run_id": os.environ.get("GITHUB_RUN_ID"),
               "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
               "sha": os.environ.get("GITHUB_SHA"),
               "discovery_outcome": os.environ.get("DISCOVERY_OUTCOME"),
+              "download_audit_outcome": os.environ.get("DOWNLOAD_AUDIT_OUTCOME"),
           }
           Path("ACTION_RUN_STATUS_2024.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
           PY
@@ -56,9 +62,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- action_results/spanish_oot_2024
           if git diff --cached --quiet; then
-            echo "No discovery result changes"
+            echo "No 2022-2024 audit result changes"
           else
-            git commit -m "Persist Spanish motor 2022-2024 discovery run ${GITHUB_RUN_ID}"
+            git commit -m "Persist Spanish motor 2022-2024 audit run ${GITHUB_RUN_ID}"
             git push origin HEAD:main
           fi
 
