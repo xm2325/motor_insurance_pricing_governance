@@ -65,6 +65,7 @@ def main() -> None:
         "code_sha": git_sha(),
         "github_run_id": os.environ.get("GITHUB_RUN_ID"),
         "github_workflow": os.environ.get("GITHUB_WORKFLOW"),
+        "release_label": os.environ.get("RELEASE_LABEL"),
         "builder": "build_deployment_bundle_v21.py + build_bundle_lock_v27.py",
     }
 
