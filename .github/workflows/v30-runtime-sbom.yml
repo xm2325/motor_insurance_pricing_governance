@@ -1,0 +1,317 @@
+name: Motor pricing runtime SBOM and vulnerability gate v0.30
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.30-runtime-sbom-audit
+    paths:
+      - '.github/workflows/v30-runtime-sbom.yml'
+      - 'requirements-runtime.txt'
+      - 'requirements.txt'
+      - 'Dockerfile'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'deployment/**'
+
+concurrency:
+  group: v30-sbom-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  runtime-sbom-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Build isolated CPU runtime environment
+        run: |
+          python -m venv .runtime-v30
+          .runtime-v30/bin/python -m pip install --upgrade pip
+          .runtime-v30/bin/pip install -r requirements-runtime.txt
+          mkdir -p results_v30
+          .runtime-v30/bin/pip freeze --all | LC_ALL=C sort > results_v30/runtime-lock-v30.txt
+          .runtime-v30/bin/python - <<'PY'
+          import importlib.metadata as md
+          import json
+          from pathlib import Path
+          distributions = sorted(
+              ({'name': d.metadata.get('Name', d.name), 'version': d.version} for d in md.distributions()),
+              key=lambda item: item['name'].lower(),
+          )
+          Path('results_v30/runtime_environment.json').write_text(
+              json.dumps({'python': __import__('platform').python_version(), 'distributions': distributions}, indent=2),
+              encoding='utf-8',
+          )
+          print(json.dumps({'runtime_distribution_count': len(distributions)}, indent=2))
+          PY
+
+      - name: Install isolated audit tooling
+        run: |
+          python -m venv .audit-v30
+          .audit-v30/bin/python -m pip install --upgrade pip
+          .audit-v30/bin/pip install pip-audit==2.10.1
+          .audit-v30/bin/pip-audit --version
+
+      - name: Audit exact runtime lock and generate CycloneDX SBOM
+        id: audit
+        run: |
+          set +e
+          .audit-v30/bin/pip-audit \
+            -r results_v30/runtime-lock-v30.txt \
+            --no-deps \
+            --format json \
+            --output results_v30/pip_audit.json
+          AUDIT_EXIT=$?
+          .audit-v30/bin/pip-audit \
+            -r results_v30/runtime-lock-v30.txt \
+            --no-deps \
+            --format cyclonedx-json \
+            --output results_v30/runtime_sbom.cdx.json
+          SBOM_EXIT=$?
+          set -e
+          echo "audit_exit=${AUDIT_EXIT}" >> "$GITHUB_OUTPUT"
+          echo "sbom_exit=${SBOM_EXIT}" >> "$GITHUB_OUTPUT"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit = json.loads(Path('results_v30/pip_audit.json').read_text())
+          deps = audit.get('dependencies', audit if isinstance(audit, list) else [])
+          vulnerabilities = []
+          for dep in deps:
+              for vuln in dep.get('vulns', []):
+                  vulnerabilities.append({
+                      'package': dep.get('name'),
+                      'version': dep.get('version'),
+                      'id': vuln.get('id'),
+                      'fix_versions': vuln.get('fix_versions', []),
+                  })
+          sbom = json.loads(Path('results_v30/runtime_sbom.cdx.json').read_text())
+          summary = {
+              'status': 'RUNTIME_DEPENDENCY_AUDIT_COMPLETE',
+              'dependency_records': len(deps),
+              'known_vulnerability_count': len(vulnerabilities),
+              'vulnerabilities': vulnerabilities,
+              'cyclonedx_bom_format': sbom.get('bomFormat'),
+              'cyclonedx_spec_version': sbom.get('specVersion'),
+              'cyclonedx_component_count': len(sbom.get('components', [])),
+              'audit_tool': 'pip-audit 2.10.1',
+              'audit_scope': 'exact frozen Python runtime distributions only',
+          }
+          Path('results_v30/runtime_security_summary.json').write_text(
+              json.dumps(summary, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Enforce zero-known-vulnerability runtime gate
+        env:
+          AUDIT_EXIT: ${{ steps.audit.outputs.audit_exit }}
+          SBOM_EXIT: ${{ steps.audit.outputs.sbom_exit }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          summary = json.loads(Path('results_v30/runtime_security_summary.json').read_text())
+          if int(os.environ['AUDIT_EXIT']) != 0 or summary['known_vulnerability_count'] != 0:
+              raise SystemExit(
+                  f"Runtime vulnerability gate failed: audit_exit={os.environ['AUDIT_EXIT']} "
+                  f"known_vulnerabilities={summary['known_vulnerability_count']}"
+              )
+          if int(os.environ['SBOM_EXIT']) != 0:
+              raise SystemExit(f"CycloneDX generation failed with exit {os.environ['SBOM_EXIT']}")
+          if summary['cyclonedx_bom_format'] != 'CycloneDX':
+              raise SystemExit('Unexpected SBOM format')
+          print('ZERO_KNOWN_VULNERABILITY_RUNTIME_GATE_PASS')
+          PY
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify source and build sealed shadow release
+        env:
+          RELEASE_LABEL: sbom-attested-shadow-release-v30
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+          python build_deployment_bundle_v21.py
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Build deterministic sealed release archive
+        id: package
+        run: |
+          mkdir -p dist
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -cf - deployment_artifacts | gzip -n > dist/motor-pricing-shadow-bundle-v30.tar.gz
+          ARCHIVE_SHA=$(sha256sum dist/motor-pricing-shadow-bundle-v30.tar.gz | awk '{print $1}')
+          ARCHIVE_BYTES=$(stat -c '%s' dist/motor-pricing-shadow-bundle-v30.tar.gz)
+          echo "archive_sha256=${ARCHIVE_SHA}" >> "$GITHUB_OUTPUT"
+          echo "archive_bytes=${ARCHIVE_BYTES}" >> "$GITHUB_OUTPUT"
+          printf '%s  %s\n' "$ARCHIVE_SHA" 'motor-pricing-shadow-bundle-v30.tar.gz' \
+            > results_v30/release_archive.sha256
+          python - <<'PY'
+          import tarfile
+          from pathlib import Path
+          path = Path('dist/motor-pricing-shadow-bundle-v30.tar.gz')
+          with tarfile.open(path, 'r:gz') as archive:
+              names = archive.getnames()
+          required = {
+              'deployment_artifacts/bundle.lock.json',
+              'deployment_artifacts/manifest.json',
+              'deployment_artifacts/parity_reference.json',
+          }
+          missing = required.difference(names)
+          if missing:
+              raise AssertionError(f'Missing sealed bundle members: {sorted(missing)}')
+          if any('data_spanish_2022_2024' in name or 'Dataset_of_motor_insurance_portfolio.csv' in name for name in names):
+              raise AssertionError('Raw training data leaked into release archive')
+          print({'archive_members': len(names), 'raw_data_members': 0})
+          PY
+
+      - name: Attest build provenance
+        id: provenance
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/motor-pricing-shadow-bundle-v30.tar.gz
+          show-summary: true
+
+      - name: Attest CycloneDX runtime SBOM
+        id: sbom_attest
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/motor-pricing-shadow-bundle-v30.tar.gz
+          sbom-path: results_v30/runtime_sbom.cdx.json
+          show-summary: true
+
+      - name: Verify provenance and SBOM attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify dist/motor-pricing-shadow-bundle-v30.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --format json > results_v30/provenance_verification.json
+          gh attestation verify dist/motor-pricing-shadow-bundle-v30.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --predicate-type https://cyclonedx.org/bom \
+            --format json > results_v30/sbom_attestation_verification.json
+          jq -e 'length > 0' results_v30/provenance_verification.json >/dev/null
+          jq -e 'length > 0' results_v30/sbom_attestation_verification.json >/dev/null
+
+      - name: Build v0.30 result summary
+        env:
+          ARCHIVE_SHA: ${{ steps.package.outputs.archive_sha256 }}
+          ARCHIVE_BYTES: ${{ steps.package.outputs.archive_bytes }}
+          PROVENANCE_ID: ${{ steps.provenance.outputs.attestation-id }}
+          PROVENANCE_URL: ${{ steps.provenance.outputs.attestation-url }}
+          SBOM_ATTESTATION_ID: ${{ steps.sbom_attest.outputs.attestation-id }}
+          SBOM_ATTESTATION_URL: ${{ steps.sbom_attest.outputs.attestation-url }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          security = json.loads(Path('results_v30/runtime_security_summary.json').read_text())
+          lock = json.loads(Path('deployment_artifacts/bundle.lock.json').read_text())
+          provenance = json.loads(Path('results_v30/provenance_verification.json').read_text())
+          sbom_verify = json.loads(Path('results_v30/sbom_attestation_verification.json').read_text())
+          runtime_lock = [line.strip() for line in Path('results_v30/runtime-lock-v30.txt').read_text().splitlines() if line.strip()]
+          result = {
+              'status': 'V30_RUNTIME_SBOM_AND_VULNERABILITY_GATE_PASS',
+              'runtime_lock_distribution_count': len(runtime_lock),
+              'known_vulnerability_count': security['known_vulnerability_count'],
+              'audit_tool': security['audit_tool'],
+              'audit_scope': security['audit_scope'],
+              'cyclonedx_spec_version': security['cyclonedx_spec_version'],
+              'cyclonedx_component_count': security['cyclonedx_component_count'],
+              'release_archive_sha256': os.environ['ARCHIVE_SHA'],
+              'release_archive_bytes': int(os.environ['ARCHIVE_BYTES']),
+              'sealed_bundle_lock_digest_sha256': lock['lock_digest_sha256'],
+              'build_provenance_attestation_id': os.environ.get('PROVENANCE_ID'),
+              'build_provenance_attestation_url': os.environ.get('PROVENANCE_URL'),
+              'sbom_attestation_id': os.environ.get('SBOM_ATTESTATION_ID'),
+              'sbom_attestation_url': os.environ.get('SBOM_ATTESTATION_URL'),
+              'provenance_verification_records': len(provenance),
+              'sbom_verification_records': len(sbom_verify),
+              'sbom_predicate_type': 'https://cyclonedx.org/bom',
+              'governance_status': 'HOLD_SHADOW_ONLY',
+              'security_boundary': (
+                  'pip-audit checks the exact Python runtime dependency set against known vulnerability data; '
+                  'the CycloneDX attestation cryptographically links the SBOM to this release archive. '
+                  'Neither is static code analysis, malicious-package detection, exploitability analysis, '
+                  'regulatory approval or evidence that the pricing model is safe for customer use.'
+              ),
+          }
+          Path('results_v30/runtime_sbom_result.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.30 evidence
+        if: always()
+        run: |
+          mkdir -p action_results/v30
+          for f in \
+            results_v30/runtime-lock-v30.txt \
+            results_v30/runtime_environment.json \
+            results_v30/pip_audit.json \
+            results_v30/runtime_sbom.cdx.json \
+            results_v30/runtime_security_summary.json \
+            results_v30/release_archive.sha256 \
+            results_v30/provenance_verification.json \
+            results_v30/sbom_attestation_verification.json \
+            results_v30/runtime_sbom_result.json; do
+            if [ -f "$f" ]; then cp "$f" action_results/v30/; fi
+          done
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v30/ACTION_V30_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing runtime SBOM and vulnerability gate v0.30',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': os.environ.get('JOB_STATUS', 'unknown'),
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v30
+          if git diff --cached --quiet; then
+            echo 'No v0.30 evidence changes'
+          else
+            git commit -m "Persist v0.30 runtime SBOM audit ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+        env:
+          JOB_STATUS: ${{ job.status }}
+
+      - name: Upload v0.30 security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-runtime-sbom-v30
+          path: |
+            results_v30/
+            dist/
+          if-no-files-found: warn
