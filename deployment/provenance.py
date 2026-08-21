@@ -174,29 +174,34 @@ def verify_bundle_lock(root: str | Path) -> BundleIntegrityReport:
         )
 
     verified: list[str] = []
+    seen_paths: set[str] = set()
     total_bytes = 0
     for artifact in document.get("artifacts", []):
         if not isinstance(artifact, dict):
             raise RuntimeError("Malformed artifact entry in bundle lock")
         relative = _safe_relative_path(str(artifact.get("path", "")))
+        relative_key = relative.as_posix()
+        if relative_key in seen_paths:
+            raise RuntimeError(f"Duplicate artifact path in bundle lock: {relative_key}")
+        seen_paths.add(relative_key)
         path = root / relative
         if not path.is_file():
-            raise RuntimeError(f"Locked bundle artifact is missing: {relative.as_posix()}")
+            raise RuntimeError(f"Locked bundle artifact is missing: {relative_key}")
         observed_bytes = path.stat().st_size
         expected_bytes = int(artifact.get("bytes", -1))
         if observed_bytes != expected_bytes:
             raise RuntimeError(
-                f"Locked artifact size mismatch for {relative.as_posix()}: "
+                f"Locked artifact size mismatch for {relative_key}: "
                 f"{observed_bytes} != {expected_bytes}"
             )
         observed_hash = sha256_file(path)
         expected_hash = str(artifact.get("sha256", ""))
         if observed_hash != expected_hash:
             raise RuntimeError(
-                f"Locked artifact hash mismatch for {relative.as_posix()}: "
+                f"Locked artifact hash mismatch for {relative_key}: "
                 f"{observed_hash} != {expected_hash}"
             )
-        verified.append(relative.as_posix())
+        verified.append(relative_key)
         total_bytes += observed_bytes
 
     if not verified:
