@@ -49,6 +49,42 @@ class TestShadowTelemetry(unittest.TestCase):
         self.assertTrue(snapshot["alerts"]["frequency_disagreement"])
         self.assertTrue(snapshot["alerts"]["pure_premium_disagreement"])
 
+    def test_feature_psi_uses_aggregate_bins(self) -> None:
+        baseline = {
+            "numeric": {
+                "driver_age": {
+                    "cut_points": [30.0, 50.0],
+                    "expected_proportions": [0.3, 0.4, 0.3, 0.0],
+                    "missing_bucket": 3,
+                }
+            },
+            "categorical": {
+                "vehicle_brand": {
+                    "expected_proportions": {
+                        "A": 0.5,
+                        "B": 0.5,
+                        "__MISSING__": 0.0,
+                        "__UNSEEN__": 0.0,
+                    }
+                }
+            },
+        }
+        telemetry = ShadowTelemetry(monitoring_baseline=baseline)
+        scores = [
+            {"frequency_log_ratio": 0.1, "pure_premium_log_ratio": 0.1, "warnings": []}
+            for _ in range(20)
+        ]
+        records = [
+            {"driver_age": 80.0, "vehicle_brand": "NEW"}
+            for _ in range(20)
+        ]
+        telemetry.record_scores(scores, records)
+        snapshot = telemetry.snapshot()
+        self.assertGreater(snapshot["feature_drift"]["max_psi"], 0.25)
+        self.assertTrue(snapshot["alerts"]["feature_drift"])
+        self.assertIn(snapshot["feature_drift"]["max_psi_feature"], {"driver_age", "vehicle_brand"})
+        self.assertNotIn("records", snapshot["feature_drift"])
+
     def test_reset_clears_aggregates(self) -> None:
         telemetry = ShadowTelemetry()
         telemetry.record_request(10.0)
