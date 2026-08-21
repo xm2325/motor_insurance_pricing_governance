@@ -106,6 +106,7 @@ jobs:
           reduction = 1.0 - slim_bytes / full_bytes
           packages = json.loads(Path('results_v25/runtime_packages.json').read_text())
           names = {p['name'].lower() for p in packages}
+          versions = {p['name'].lower(): p['version'] for p in packages}
           forbidden = {'matplotlib', 'pytest', 'tabulate', 'httpx', 'nvidia-nccl-cu13'}
           present_forbidden = sorted(forbidden & names)
           if 'xgboost-cpu' not in names:
@@ -123,6 +124,7 @@ jobs:
               'relative_size_reduction': reduction,
               'minimum_required_reduction': 0.20,
               'runtime_distribution': 'xgboost-cpu',
+              'runtime_xgboost_version': versions['xgboost-cpu'],
               'forbidden_packages_checked': sorted(forbidden),
               'forbidden_packages_present': present_forbidden,
           }
@@ -132,6 +134,7 @@ jobs:
 
       - name: Verify full vs slim HTTP prediction parity
         run: |
+          trap 'docker rm -f motor-pricing-full motor-pricing-runtime >/dev/null 2>&1 || true' EXIT
           docker run -d --name motor-pricing-full \
             -p 8001:8000 \
             -e MODEL_BUNDLE_DIR=/models \
@@ -149,7 +152,7 @@ jobs:
           import numpy as np
 
           parity = json.loads(Path('deployment_artifacts/parity_reference.json').read_text())
-          fields = [
+          full_vs_runtime_fields = [
               'reference_frequency',
               'challenger_frequency',
               'reference_pure_premium',
@@ -157,12 +160,19 @@ jobs:
               'frequency_log_ratio',
               'pure_premium_log_ratio',
           ]
+          offline_reference_fields = [
+              'reference_frequency',
+              'challenger_frequency',
+              'reference_pure_premium',
+              'challenger_pure_premium',
+          ]
 
           clients = {
               'full': httpx.Client(base_url='http://127.0.0.1:8001', timeout=5.0),
               'runtime': httpx.Client(base_url='http://127.0.0.1:8002', timeout=5.0),
           }
           try:
+              health_payloads = {}
               for name, client in clients.items():
                   for _ in range(30):
                       try:
@@ -176,10 +186,12 @@ jobs:
                       raise RuntimeError(f'{name} container did not become healthy')
                   health = response.json()
                   assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+                  health_payloads[name] = health
 
+              assert health_payloads['full'] == health_payloads['runtime']
               max_abs_error_full_vs_runtime = 0.0
               max_abs_error_runtime_vs_offline = 0.0
-              for record, expected in zip(parity['records'], parity['scores']):
+              for record_index, (record, expected) in enumerate(zip(parity['records'], parity['scores'])):
                   full = clients['full'].post('/score', json=record)
                   runtime = clients['runtime'].post('/score', json=record)
                   full.raise_for_status()
@@ -187,25 +199,34 @@ jobs:
                   full_body = full.json()
                   runtime_body = runtime.json()
                   assert full_body['warnings'] == runtime_body['warnings']
-                  for field in fields:
+
+                  for field in full_vs_runtime_fields:
                       full_value = float(full_body[field])
                       runtime_value = float(runtime_body[field])
+                      error = abs(full_value - runtime_value)
+                      max_abs_error_full_vs_runtime = max(max_abs_error_full_vs_runtime, error)
+                      if not np.isclose(full_value, runtime_value, rtol=1e-12, atol=1e-12):
+                          raise AssertionError(
+                              f'full/runtime mismatch record={record_index} field={field} '
+                              f'full={full_value} runtime={runtime_value} abs_error={error}'
+                          )
+
+                  for field in offline_reference_fields:
+                      runtime_value = float(runtime_body[field])
                       expected_value = float(expected[field])
-                      max_abs_error_full_vs_runtime = max(
-                          max_abs_error_full_vs_runtime,
-                          abs(full_value - runtime_value),
-                      )
-                      max_abs_error_runtime_vs_offline = max(
-                          max_abs_error_runtime_vs_offline,
-                          abs(runtime_value - expected_value),
-                      )
-                      assert np.isclose(full_value, runtime_value, rtol=1e-12, atol=1e-12)
-                      assert np.isclose(runtime_value, expected_value, rtol=1e-10, atol=1e-10)
+                      error = abs(runtime_value - expected_value)
+                      max_abs_error_runtime_vs_offline = max(max_abs_error_runtime_vs_offline, error)
+                      if not np.isclose(runtime_value, expected_value, rtol=1e-10, atol=1e-10):
+                          raise AssertionError(
+                              f'runtime/offline mismatch record={record_index} field={field} '
+                              f'runtime={runtime_value} offline={expected_value} abs_error={error}'
+                          )
 
               result = {
                   'status': 'FULL_VS_CPU_RUNTIME_HTTP_PARITY_PASS',
                   'records_tested': len(parity['records']),
-                  'numeric_fields_per_record': len(fields),
+                  'full_vs_runtime_numeric_fields_per_record': len(full_vs_runtime_fields),
+                  'offline_reference_numeric_fields_per_record': len(offline_reference_fields),
                   'full_vs_runtime_max_abs_error': max_abs_error_full_vs_runtime,
                   'runtime_vs_offline_max_abs_error': max_abs_error_runtime_vs_offline,
                   'governance_status': 'HOLD_SHADOW_ONLY',
@@ -218,7 +239,6 @@ jobs:
           PY
           docker logs motor-pricing-full
           docker logs motor-pricing-runtime
-          docker rm -f motor-pricing-full motor-pricing-runtime
 
       - name: Build v0.25 result summary
         run: |
