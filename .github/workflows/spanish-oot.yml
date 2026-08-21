@@ -1,0 +1,48 @@
+name: Spanish motor out-of-time validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'download_spanish_motor.py'
+      - 'run_spanish_oot.py'
+      - 'requirements.txt'
+      - '.github/workflows/spanish-oot.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  oot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download and audit Spanish motor data
+        run: python download_spanish_motor.py
+
+      - name: Run genuine calendar out-of-time validation
+        run: python run_spanish_oot.py
+
+      - name: Show audit and summary
+        if: always()
+        run: |
+          test -f results_oot/spanish_data_audit.json && cat results_oot/spanish_data_audit.json || true
+          test -f results_oot/oot_summary.json && cat results_oot/oot_summary.json || true
+
+      - name: Upload OOT results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spanish-motor-oot-results
+          path: results_oot/
+          if-no-files-found: warn
