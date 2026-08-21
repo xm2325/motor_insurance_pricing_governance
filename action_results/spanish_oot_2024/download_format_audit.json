@@ -1,0 +1,66 @@
+{
+  "status": "MENDELEY_DOWNLOAD_AND_FORMAT_AUDIT_OK",
+  "dataset_id": "sw4jmdb2sm",
+  "version": 1,
+  "files": [
+    {
+      "id": "3dc64675-b6bd-4e8e-bfba-b64e585c6599",
+      "api_keys": [
+        "content_details",
+        "filename",
+        "id",
+        "last_modified_date",
+        "size",
+        "status"
+      ],
+      "api_filename": "Dataset of motor insurance portfolio.csv",
+      "content_disposition": "attachment; filename=\"Dataset of motor insurance portfolio.csv\"",
+      "content_type": "text/csv",
+      "reported_content_length": "94710312",
+      "api_size": 94710312,
+      "downloaded_bytes": 94710312,
+      "sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+      "local_filename": "Dataset_of_motor_insurance_portfolio.csv",
+      "first_32_bytes_hex": "22696e73757265645f6964223b2279656172223b22706f6c6963795f74797065",
+      "container": "text_or_other",
+      "text_preview": "\"insured_id\";\"year\";\"policy_type\";\"policy_status\";\"business_type\";\"payment_frequency\";\"bonus_score\";\"driver_age\";\"vehicle_age\";\"age_driving_licence\";\"fuel_type\";\"vehicle_value\";\"seats\";\"power_to_weight_ratio\";\"vehicle_brand\";\"municipality_type\";\"circulation_area\";\"total_premium\";\"liability_premium\";\"property_damage_premium\";\"theft_premium\";\"fire_premium\";\"glass_premium\";\"legal_protection_premium\";\"occupants_premium\";\"total_claims\";\"liability_claims\";\"liability_property_claims\";\"liability_injury_"
+    },
+    {
+      "id": "b34f32d4-cbe8-4a4e-bd09-9b59796e7fa3",
+      "api_keys": [
+        "content_details",
+        "filename",
+        "id",
+        "last_modified_date",
+        "size",
+        "status"
+      ],
+      "api_filename": "Descriptive of variables.xlsx",
+      "content_disposition": "attachment; filename=\"Descriptive of variables.xlsx\"",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "reported_content_length": "15413",
+      "api_size": 15413,
+      "downloaded_bytes": 15413,
+      "sha256": "cde44e797a7fd34de29199c78c9301d6f00ed94fd725b4fe8e67e6c2c4cc2e41",
+      "local_filename": "Descriptive_of_variables.xlsx",
+      "first_32_bytes_hex": "504b030414000600080000002100413782cf6e01000004050000130008025b43",
+      "container": "zip",
+      "zip_member_count": 12,
+      "zip_members_preview": [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "xl/workbook.xml",
+        "xl/_rels/workbook.xml.rels",
+        "xl/worksheets/sheet1.xml",
+        "xl/theme/theme1.xml",
+        "xl/styles.xml",
+        "xl/sharedStrings.xml",
+        "xl/worksheets/_rels/sheet1.xml.rels",
+        "xl/printerSettings/printerSettings1.bin",
+        "docProps/core.xml",
+        "docProps/app.xml"
+      ],
+      "looks_like_xlsx": true
+    }
+  ]
+}
