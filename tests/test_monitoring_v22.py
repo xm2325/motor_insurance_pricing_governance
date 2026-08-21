@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from deployment.monitoring import ShadowTelemetry
+from deployment.monitoring import DEFAULT_THRESHOLDS, ShadowTelemetry
 
 
 class TestShadowTelemetry(unittest.TestCase):
@@ -49,7 +49,7 @@ class TestShadowTelemetry(unittest.TestCase):
         self.assertTrue(snapshot["alerts"]["frequency_disagreement"])
         self.assertTrue(snapshot["alerts"]["pure_premium_disagreement"])
 
-    def test_feature_psi_uses_aggregate_bins(self) -> None:
+    def test_feature_psi_uses_aggregate_bins_and_minimum_sample_gate(self) -> None:
         baseline = {
             "numeric": {
                 "driver_age": {
@@ -69,7 +69,9 @@ class TestShadowTelemetry(unittest.TestCase):
                 }
             },
         }
-        telemetry = ShadowTelemetry(monitoring_baseline=baseline)
+        thresholds = dict(DEFAULT_THRESHOLDS)
+        thresholds["min_feature_drift_records"] = 10.0
+        telemetry = ShadowTelemetry(monitoring_baseline=baseline, thresholds=thresholds)
         scores = [
             {"frequency_log_ratio": 0.1, "pure_premium_log_ratio": 0.1, "warnings": []}
             for _ in range(20)
@@ -81,9 +83,29 @@ class TestShadowTelemetry(unittest.TestCase):
         telemetry.record_scores(scores, records)
         snapshot = telemetry.snapshot()
         self.assertGreater(snapshot["feature_drift"]["max_psi"], 0.25)
+        self.assertTrue(snapshot["feature_drift"]["alert_eligible"])
         self.assertTrue(snapshot["alerts"]["feature_drift"])
         self.assertIn(snapshot["feature_drift"]["max_psi_feature"], {"driver_age", "vehicle_brand"})
         self.assertNotIn("records", snapshot["feature_drift"])
+
+    def test_feature_drift_does_not_alert_on_tiny_sample(self) -> None:
+        baseline = {
+            "numeric": {
+                "driver_age": {
+                    "cut_points": [30.0, 50.0],
+                    "expected_proportions": [0.3, 0.4, 0.3, 0.0],
+                    "missing_bucket": 3,
+                }
+            },
+            "categorical": {},
+        }
+        telemetry = ShadowTelemetry(monitoring_baseline=baseline)
+        score = {"frequency_log_ratio": 0.1, "pure_premium_log_ratio": 0.1, "warnings": []}
+        telemetry.record_scores([score] * 5, [{"driver_age": 80.0}] * 5)
+        snapshot = telemetry.snapshot()
+        self.assertGreater(snapshot["feature_drift"]["max_psi"], 0.25)
+        self.assertFalse(snapshot["feature_drift"]["alert_eligible"])
+        self.assertFalse(snapshot["alerts"]["feature_drift"])
 
     def test_reset_clears_aggregates(self) -> None:
         telemetry = ShadowTelemetry()
