@@ -1,152 +1,301 @@
 {
   "status": "success",
-  "interpretation": "Synthetic replay validation only. Cold start is recorded separately from the steady-state baseline. Alerts demonstrate monitoring behaviour; they are not observed production incidents or insurer thresholds.",
+  "interpretation": "The 2022 sample is a monitoring-control replay, the 2024 sample is real temporal feature/score transport, and the final stress is synthetic. Cold start is recorded separately. Alert thresholds are project demonstration rules, not insurer SLAs or regulatory thresholds.",
+  "sample_size_per_replay": 5000,
   "cold_start": {
+    "service_version": "0.22",
     "model_version": "v0.21-shadow-2022-train-2023-calibration",
     "governance_status": "HOLD_SHADOW_ONLY",
     "privacy_boundary": "aggregate_non_pii_only",
     "request_count": 1,
     "error_count": 0,
     "error_rate": 0.0,
-    "records_scored": 25,
+    "records_scored": 100,
     "unseen_warning_records": 0,
     "unseen_category_rate": 0.0,
     "latency_ms": {
-      "median": 967.1710740000208,
-      "p95": 967.1710740000208,
-      "max": 967.1710740000208
+      "median": 48.62698399999488,
+      "p95": 48.62698399999488,
+      "max": 48.62698399999488
     },
     "batch_size": {
-      "median": 25.0,
-      "p95": 25.0,
-      "max": 25.0
+      "median": 100.0,
+      "p95": 100.0,
+      "max": 100.0
     },
     "disagreement": {
-      "frequency_abs_log_ratio_p50": 0.07567455039508895,
-      "frequency_abs_log_ratio_p95": 0.22204840735417364,
-      "pure_premium_abs_log_ratio_p50": 0.34126546795854207,
-      "pure_premium_abs_log_ratio_p95": 0.7395185940407553
+      "frequency_abs_log_ratio_p50": 0.07955991812775105,
+      "frequency_abs_log_ratio_p95": 0.4094384038317177,
+      "pure_premium_abs_log_ratio_p50": 0.23036180673813497,
+      "pure_premium_abs_log_ratio_p95": 0.8610787463325023
+    },
+    "feature_drift": {
+      "psi_by_feature": {
+        "driver_age": 0.16317594304679195,
+        "vehicle_age": 0.05966897581054494,
+        "age_driving_licence": 0.061591237642798356,
+        "vehicle_value": 0.0930723989249364,
+        "seats": 0.02250451939584857,
+        "power_to_weight_ratio": 0.13427935614728517,
+        "policy_type": 0.0049231228774783775,
+        "business_type": 0.20885596717756733,
+        "payment_frequency": 0.015043628807522844,
+        "bonus_score": 0.029670960145067718,
+        "fuel_type": 0.0377827534557564,
+        "vehicle_brand": 1.0977754046506218,
+        "municipality_type": 0.037349943151782174,
+        "circulation_area": 0.00034394953855600315
+      },
+      "max_psi": 1.0977754046506218,
+      "max_psi_feature": "vehicle_brand"
     },
     "thresholds": {
       "error_rate": 0.02,
       "unseen_category_rate": 0.01,
       "p95_latency_ms": 200.0,
       "frequency_abs_log_ratio_p95": 0.75,
-      "pure_premium_abs_log_ratio_p95": 1.0
-    },
-    "alerts": {
-      "error_rate": false,
-      "unseen_category_rate": false,
-      "p95_latency_ms": true,
-      "frequency_disagreement": false,
-      "pure_premium_disagreement": false
-    },
-    "alert_status": "RED"
-  },
-  "baseline": {
-    "model_version": "v0.21-shadow-2022-train-2023-calibration",
-    "governance_status": "HOLD_SHADOW_ONLY",
-    "privacy_boundary": "aggregate_non_pii_only",
-    "request_count": 10,
-    "error_count": 0,
-    "error_rate": 0.0,
-    "records_scored": 250,
-    "unseen_warning_records": 0,
-    "unseen_category_rate": 0.0,
-    "latency_ms": {
-      "median": 27.527972500010378,
-      "p95": 27.761650800000837,
-      "max": 27.77506800001106
-    },
-    "batch_size": {
-      "median": 25.0,
-      "p95": 25.0,
-      "max": 25.0
-    },
-    "disagreement": {
-      "frequency_abs_log_ratio_p50": 0.07567455039508895,
-      "frequency_abs_log_ratio_p95": 0.22885003743733062,
-      "pure_premium_abs_log_ratio_p50": 0.34126546795854207,
-      "pure_premium_abs_log_ratio_p95": 0.7677986115535468
-    },
-    "thresholds": {
-      "error_rate": 0.02,
-      "unseen_category_rate": 0.01,
-      "p95_latency_ms": 200.0,
-      "frequency_abs_log_ratio_p95": 0.75,
-      "pure_premium_abs_log_ratio_p95": 1.0
+      "pure_premium_abs_log_ratio_p95": 1.0,
+      "max_feature_psi": 0.25
     },
     "alerts": {
       "error_rate": false,
       "unseen_category_rate": false,
       "p95_latency_ms": false,
       "frequency_disagreement": false,
-      "pure_premium_disagreement": false
+      "pure_premium_disagreement": false,
+      "feature_drift": true
     },
-    "alert_status": "GREEN"
+    "alert_status": "RED"
   },
-  "stress": {
+  "baseline_2022": {
+    "service_version": "0.22",
     "model_version": "v0.21-shadow-2022-train-2023-calibration",
     "governance_status": "HOLD_SHADOW_ONLY",
     "privacy_boundary": "aggregate_non_pii_only",
-    "request_count": 30,
-    "error_count": 20,
-    "error_rate": 0.6666666666666666,
-    "records_scored": 250,
-    "unseen_warning_records": 250,
-    "unseen_category_rate": 1.0,
+    "request_count": 5,
+    "error_count": 0,
+    "error_rate": 0.0,
+    "records_scored": 5000,
+    "unseen_warning_records": 0,
+    "unseen_category_rate": 0.0,
     "latency_ms": {
-      "median": 0.5005864999958476,
-      "p95": 27.836784899996303,
-      "max": 28.030333000003793
+      "median": 77.88125300000104,
+      "p95": 81.9801966,
+      "max": 82.69588699999986
     },
     "batch_size": {
-      "median": 25.0,
-      "p95": 25.0,
-      "max": 25.0
+      "median": 1000.0,
+      "p95": 1000.0,
+      "max": 1000.0
     },
     "disagreement": {
-      "frequency_abs_log_ratio_p50": 0.36924153847353414,
-      "frequency_abs_log_ratio_p95": 0.7481351170420393,
-      "pure_premium_abs_log_ratio_p50": 1.5311187416970624,
-      "pure_premium_abs_log_ratio_p95": 2.225284237373298
+      "frequency_abs_log_ratio_p50": 0.07642525533743436,
+      "frequency_abs_log_ratio_p95": 0.29007507040537484,
+      "pure_premium_abs_log_ratio_p50": 0.2410847818827795,
+      "pure_premium_abs_log_ratio_p95": 0.7918991109117568
+    },
+    "feature_drift": {
+      "psi_by_feature": {
+        "driver_age": 0.0010619191802636303,
+        "vehicle_age": 0.0006680401562953145,
+        "age_driving_licence": 0.0022495249956813877,
+        "vehicle_value": 0.0013110857508485962,
+        "seats": 1.4911777400494554e-06,
+        "power_to_weight_ratio": 0.0013391737009204707,
+        "policy_type": 0.0011289095465433635,
+        "business_type": 0.00045553003500682616,
+        "payment_frequency": 0.0005307758139944589,
+        "bonus_score": 0.0003768597079804695,
+        "fuel_type": 0.0001323980148920299,
+        "vehicle_brand": 0.009732760622960532,
+        "municipality_type": 0.00019513120140675957,
+        "circulation_area": 0.000223173437115946
+      },
+      "max_psi": 0.009732760622960532,
+      "max_psi_feature": "vehicle_brand"
     },
     "thresholds": {
       "error_rate": 0.02,
       "unseen_category_rate": 0.01,
       "p95_latency_ms": 200.0,
       "frequency_abs_log_ratio_p95": 0.75,
-      "pure_premium_abs_log_ratio_p95": 1.0
+      "pure_premium_abs_log_ratio_p95": 1.0,
+      "max_feature_psi": 0.25
+    },
+    "alerts": {
+      "error_rate": false,
+      "unseen_category_rate": false,
+      "p95_latency_ms": false,
+      "frequency_disagreement": false,
+      "pure_premium_disagreement": false,
+      "feature_drift": false
+    },
+    "alert_status": "GREEN"
+  },
+  "temporal_2024": {
+    "service_version": "0.22",
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "privacy_boundary": "aggregate_non_pii_only",
+    "request_count": 5,
+    "error_count": 0,
+    "error_rate": 0.0,
+    "records_scored": 5000,
+    "unseen_warning_records": 0,
+    "unseen_category_rate": 0.0,
+    "latency_ms": {
+      "median": 76.90768300000173,
+      "p95": 77.7750329999975,
+      "max": 77.95169499999588
+    },
+    "batch_size": {
+      "median": 1000.0,
+      "p95": 1000.0,
+      "max": 1000.0
+    },
+    "disagreement": {
+      "frequency_abs_log_ratio_p50": 0.07531749211697752,
+      "frequency_abs_log_ratio_p95": 0.27152646164885785,
+      "pure_premium_abs_log_ratio_p50": 0.2437991560786998,
+      "pure_premium_abs_log_ratio_p95": 0.8256728031197651
+    },
+    "feature_drift": {
+      "psi_by_feature": {
+        "driver_age": 0.05337002237475094,
+        "vehicle_age": 0.04075218277146127,
+        "age_driving_licence": 0.005605764856317969,
+        "vehicle_value": 0.0020436873259759756,
+        "seats": 0.0003607261188366915,
+        "power_to_weight_ratio": 0.003981634446873955,
+        "policy_type": 0.009690652796573702,
+        "business_type": 1.4115752423025838,
+        "payment_frequency": 0.025789953758636318,
+        "bonus_score": 0.029373124930177553,
+        "fuel_type": 0.0019267554429274437,
+        "vehicle_brand": 0.018832678969365656,
+        "municipality_type": 0.00145636308286233,
+        "circulation_area": 0.00034394953855600315
+      },
+      "max_psi": 1.4115752423025838,
+      "max_psi_feature": "business_type"
+    },
+    "thresholds": {
+      "error_rate": 0.02,
+      "unseen_category_rate": 0.01,
+      "p95_latency_ms": 200.0,
+      "frequency_abs_log_ratio_p95": 0.75,
+      "pure_premium_abs_log_ratio_p95": 1.0,
+      "max_feature_psi": 0.25
+    },
+    "alerts": {
+      "error_rate": false,
+      "unseen_category_rate": false,
+      "p95_latency_ms": false,
+      "frequency_disagreement": false,
+      "pure_premium_disagreement": false,
+      "feature_drift": true
+    },
+    "alert_status": "RED"
+  },
+  "synthetic_stress": {
+    "service_version": "0.22",
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "privacy_boundary": "aggregate_non_pii_only",
+    "request_count": 25,
+    "error_count": 20,
+    "error_rate": 0.8,
+    "records_scored": 5000,
+    "unseen_warning_records": 5000,
+    "unseen_category_rate": 1.0,
+    "latency_ms": {
+      "median": 0.4923850000011498,
+      "p95": 77.59534900000347,
+      "max": 79.06206299999496
+    },
+    "batch_size": {
+      "median": 1000.0,
+      "p95": 1000.0,
+      "max": 1000.0
+    },
+    "disagreement": {
+      "frequency_abs_log_ratio_p50": 0.353024076374025,
+      "frequency_abs_log_ratio_p95": 0.7376316433998011,
+      "pure_premium_abs_log_ratio_p50": 1.6554529040503223,
+      "pure_premium_abs_log_ratio_p95": 2.26889828153985
+    },
+    "feature_drift": {
+      "psi_by_feature": {
+        "driver_age": 12.943062587440327,
+        "vehicle_age": 12.312647878145903,
+        "age_driving_licence": 0.0022495249956813877,
+        "vehicle_value": 12.425441651234333,
+        "seats": 1.4911777400494554e-06,
+        "power_to_weight_ratio": 12.463929131784447,
+        "policy_type": 0.0011289095465433635,
+        "business_type": 0.00045553003500682616,
+        "payment_frequency": 0.0005307758139944589,
+        "bonus_score": 0.0003768597079804695,
+        "fuel_type": 0.0001323980148920299,
+        "vehicle_brand": 24.583521462013813,
+        "municipality_type": 0.00019513120140675957,
+        "circulation_area": 0.000223173437115946
+      },
+      "max_psi": 24.583521462013813,
+      "max_psi_feature": "vehicle_brand"
+    },
+    "thresholds": {
+      "error_rate": 0.02,
+      "unseen_category_rate": 0.01,
+      "p95_latency_ms": 200.0,
+      "frequency_abs_log_ratio_p95": 0.75,
+      "pure_premium_abs_log_ratio_p95": 1.0,
+      "max_feature_psi": 0.25
     },
     "alerts": {
       "error_rate": true,
       "unseen_category_rate": true,
       "p95_latency_ms": false,
       "frequency_disagreement": false,
-      "pure_premium_disagreement": true
+      "pure_premium_disagreement": true,
+      "feature_drift": true
     },
     "alert_status": "RED"
   },
-  "disagreement_shift": {
-    "frequency_p95_baseline": 0.22885003743733062,
-    "frequency_p95_stress": 0.7481351170420393,
-    "frequency_ratio": 3.269106378219021,
-    "pure_premium_p95_baseline": 0.7677986115535468,
-    "pure_premium_p95_stress": 2.225284237373298,
-    "pure_premium_ratio": 2.898265513753284,
-    "relative_alert_rule": "stress p95 > max(1.5 * baseline p95, baseline p95 + 0.10)",
+  "temporal_disagreement_shift": {
+    "frequency_p95_baseline": 0.29007507040537484,
+    "frequency_p95_comparison": 0.27152646164885785,
+    "frequency_ratio": 0.936055832958704,
+    "pure_premium_p95_baseline": 0.7918991109117568,
+    "pure_premium_p95_comparison": 0.8256728031197651,
+    "pure_premium_ratio": 1.0426489836175252,
+    "relative_alert_rule": "comparison p95 > max(1.5 * baseline p95, baseline p95 + 0.10)",
+    "frequency_relative_alert": false,
+    "pure_premium_relative_alert": false
+  },
+  "stress_disagreement_shift": {
+    "frequency_p95_baseline": 0.29007507040537484,
+    "frequency_p95_comparison": 0.7376316433998011,
+    "frequency_ratio": 2.5428991273499437,
+    "pure_premium_p95_baseline": 0.7918991109117568,
+    "pure_premium_p95_comparison": 2.26889828153985,
+    "pure_premium_ratio": 2.8651355333983686,
+    "relative_alert_rule": "comparison p95 > max(1.5 * baseline p95, baseline p95 + 0.10)",
     "frequency_relative_alert": true,
     "pure_premium_relative_alert": true
   },
   "checks": {
     "cold_start_recorded_separately": true,
     "baseline_privacy_boundary": true,
+    "temporal_privacy_boundary": true,
     "stress_privacy_boundary": true,
     "baseline_alert_status": "GREEN",
-    "baseline_records_scored": 250,
-    "stress_records_scored": 250,
+    "baseline_records_scored": 5000,
+    "temporal_records_scored": 5000,
+    "stress_records_scored": 5000,
     "stress_error_rate_alert": true,
     "stress_unseen_category_alert": true,
+    "stress_feature_drift_alert": true,
     "stress_unseen_category_rate": 1.0,
     "frequency_relative_alert": true,
     "pure_premium_relative_alert": true

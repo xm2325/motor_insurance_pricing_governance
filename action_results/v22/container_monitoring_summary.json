@@ -5,5 +5,5 @@
   "privacy_boundary": "aggregate_non_pii_only",
   "request_count": 5,
   "records_scored": 5,
-  "alert_status": "GREEN"
+  "alert_status": "RED"
 }
