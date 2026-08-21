@@ -54,16 +54,28 @@ def disagreement_shift(baseline: dict, comparison: dict) -> dict:
     }
 
 
+def categorical_distribution(frame, field: str) -> dict[str, float]:
+    counts = frame[field].astype("string").fillna("__MISSING__").value_counts(normalize=True)
+    return {str(key): float(value) for key, value in counts.sort_index().items()}
+
+
 def main() -> None:
     OUTDIR.mkdir(parents=True, exist_ok=True)
     client = TestClient(app)
     telemetry = get_telemetry()
     df = load_data()
 
-    train_sample = df[df["year"] == 2022].sample(SAMPLE_SIZE, random_state=42)
-    test_sample = df[df["year"] == 2024].sample(SAMPLE_SIZE, random_state=42)
+    train_full = df[df["year"] == 2022]
+    test_full = df[df["year"] == 2024]
+    train_sample = train_full.sample(SAMPLE_SIZE, random_state=42)
+    test_sample = test_full.sample(SAMPLE_SIZE, random_state=42)
     train_records = records_from_frame(canonicalise_features(train_sample))
     temporal_records = records_from_frame(canonicalise_features(test_sample))
+
+    business_mix = {
+        "2022": categorical_distribution(train_full, "business_type"),
+        "2024": categorical_distribution(test_full, "business_type"),
+    }
 
     # Warm model execution separately from steady-state monitoring.
     warmup = client.post("/batch-score", json={"policies": train_records[:100]})
@@ -137,6 +149,7 @@ def main() -> None:
             "regulatory thresholds."
         ),
         "sample_size_per_replay": SAMPLE_SIZE,
+        "business_type_distribution_full_year": business_mix,
         "cold_start": cold_start_snapshot,
         "baseline_2022": baseline,
         "temporal_2024": temporal_2024,
@@ -151,6 +164,7 @@ def main() -> None:
     print(json.dumps({
         "status": "success",
         "checks": checks,
+        "business_type_distribution_full_year": business_mix,
         "temporal_feature_drift": temporal_2024["feature_drift"],
         "temporal_disagreement_shift": temporal_shift,
         "stress_disagreement_shift": stress_shift,
