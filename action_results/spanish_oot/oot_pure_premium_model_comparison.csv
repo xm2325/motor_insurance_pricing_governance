@@ -1,0 +1,2 @@
+model,train_years,test_year,n_train,n_test,tweedie_deviance_p1_5,loss_calibration_ratio,top10_loss_capture
+Tweedie_GLM,"2015,2016,2017",2018,69740,35815,107.14189916794835,37117.59511792548,0.7352780424198074

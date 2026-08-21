@@ -1,0 +1,17 @@
+{
+  "status": "DOWNLOAD_AND_AUDIT_OK",
+  "source_url": "https://raw.githubusercontent.com/Niekrenz82/IntML_Pro1/main/data/Motor%20vehicle%20insurance%20data.csv",
+  "sha256": "6d6e33b46e1fb9c4e37d7192b3a35058f79715ecb8b4f86bc117fbc60b5ac9e2",
+  "bytes": 14452365,
+  "rows": 105555,
+  "columns": 30,
+  "date_last_renewal_min": "2015-11-02",
+  "date_last_renewal_max": "2018-11-30",
+  "unique_renewal_years": [
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "missing_required_columns": []
+}

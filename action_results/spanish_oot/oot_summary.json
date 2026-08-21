@@ -1,0 +1,47 @@
+{
+  "status": "COMPLETED_REAL_CALENDAR_OOT",
+  "train_years": [
+    2015,
+    2016,
+    2017
+  ],
+  "test_year": 2018,
+  "rows_by_year": {
+    "2015": 4559,
+    "2016": 31428,
+    "2017": 33753,
+    "2018": 35815
+  },
+  "frequency_results": [
+    {
+      "model": "Poisson_GLM",
+      "train_years": "2015,2016,2017",
+      "test_year": 2018,
+      "n_train": 69740,
+      "n_test": 35815,
+      "poisson_deviance": 4.25529285146236,
+      "claim_calibration_ratio": 13.806999447214894,
+      "top10_claim_capture": 0.6875484871993793
+    },
+    {
+      "model": "XGBoost_Poisson",
+      "train_years": "2015,2016,2017",
+      "test_year": 2018,
+      "n_train": 69740,
+      "n_test": 35815,
+      "poisson_deviance": 0.6044229471018173,
+      "claim_calibration_ratio": 3.129994308457631,
+      "top10_claim_capture": 0.7430178432893716
+    }
+  ],
+  "pure_premium_result": {
+    "model": "Tweedie_GLM",
+    "train_years": "2015,2016,2017",
+    "test_year": 2018,
+    "n_train": 69740,
+    "n_test": 35815,
+    "tweedie_deviance_p1_5": 107.14189916794835,
+    "loss_calibration_ratio": 37117.59511792548,
+    "top10_loss_capture": 0.7352780424198074
+  }
+}

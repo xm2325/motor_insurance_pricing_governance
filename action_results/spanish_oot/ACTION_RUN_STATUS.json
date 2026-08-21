@@ -1,0 +1,9 @@
+{
+  "workflow": "Spanish motor out-of-time validation",
+  "run_id": "32471762947",
+  "run_attempt": "1",
+  "sha": "9ee7664432b474d445abffb226676e8e276e91ef",
+  "install_outcome": "success",
+  "download_outcome": "success",
+  "oot_outcome": "success"
+}
