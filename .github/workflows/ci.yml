@@ -6,13 +6,21 @@ on:
     paths:
       - 'run_spanish_oot_2024.py'
       - 'run_rolling_origin_v14.py'
+      - 'results/fremtpl2_full_frequency_benchmark.csv'
+      - 'action_results/spanish_oot_2024/**'
+      - 'EVIDENCE_REGISTRY.md'
       - 'tests/test_oot_contract.py'
+      - 'tests/test_evidence_registry.py'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
       - 'run_spanish_oot_2024.py'
       - 'run_rolling_origin_v14.py'
+      - 'results/fremtpl2_full_frequency_benchmark.csv'
+      - 'action_results/spanish_oot_2024/**'
+      - 'EVIDENCE_REGISTRY.md'
       - 'tests/test_oot_contract.py'
+      - 'tests/test_evidence_registry.py'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -29,9 +37,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check leakage, calendar OOT and rolling-origin contracts
+      - name: Check leakage, temporal design and registered evidence
         id: contract
-        run: python -m unittest -v tests/test_oot_contract.py
+        run: |
+          python -m unittest -v \
+            tests/test_oot_contract.py \
+            tests/test_evidence_registry.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
