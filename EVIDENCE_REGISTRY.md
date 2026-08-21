@@ -26,7 +26,7 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.21 batch contract | deterministic **1,000-policy** batch tested | `action_results/v21/deployment_smoke_summary.json` |
 | v0.21 safety/data-contract checks | forbidden current-outcome field rejected; unseen category warning emitted | `action_results/v21/deployment_smoke_summary.json` |
 | v0.21 container/network check | Docker build + HTTP score parity **success** | `action_results/v21/ACTION_V21_STATUS.json`, `action_results/v21/container_smoke_summary.json` |
-| v0.21 artifact integrity | four serialised models have registered SHA-256 digests | `action_results/v21/manifest.json` |
+| v0.21 artifact integrity | all persisted model components have registered SHA-256 digests | `action_results/v21/manifest.json` |
 | v0.22 monitoring privacy boundary | aggregate non-PII telemetry only; no policy rows/payloads retained in monitoring snapshot | `action_results/v22/monitoring_replay_summary.json`, `tests/test_monitoring_v22.py` |
 | v0.22 2022 monitoring control | 5,000 records; **GREEN**; max feature PSI **0.00973** | `action_results/v22/monitoring_replay_summary.json` |
 | v0.22 real 2024 temporal drift | 5,000 records; max feature PSI **1.4116**, driven by `business_type` | `action_results/v22/monitoring_replay_summary.json` |
@@ -44,6 +44,12 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.25 CPU-only dependency gate | `xgboost-cpu 3.4.0`; no `httpx`, `matplotlib`, `nvidia-nccl-cu13`, `pytest` or `tabulate` in runtime image | `action_results/v25/image_size_summary.json` |
 | v0.25 full-vs-runtime HTTP parity | **25 records x 6 numeric fields; max absolute error 0.0** | `action_results/v25/http_parity_summary.json` |
 | v0.25 runtime-vs-offline parity | **25 records x 4 core prediction fields; max absolute error 0.0** | `action_results/v25/http_parity_summary.json` |
+| v0.26 XGBoost persistence | challengers use sklearn-preprocessor joblib + native XGBoost UBJSON; XGBoost estimator removed from pickle | `action_results/v26/environment_compatibility_result.json`, `RESULTS_V26.md` |
+| v0.26 same-fit serialization parity | **25 records x 4 fields = 100 comparisons; max absolute error 0.0** | `action_results/v26/serialization_parity_summary.json` |
+| v0.26 CPU runtime native compatibility | training XGBoost **3.4.1** -> CPU runtime **3.4.0**; `HYBRID_MODEL_IO_COMPATIBLE`; no pickle-stack mismatch | `action_results/v26/environment_compatibility_summary.json` |
+| v0.26 runtime HTTP parity | **100 same-fit comparisons; max absolute error 0.0** | `action_results/v26/environment_compatibility_summary.json` |
+| v0.26 XGBoost serialization warning | cross-version pickle warning **not detected** after XGBoost native-model migration | `action_results/v26/serialization_warning_check.json` |
+| v0.26 historical retrain audit | max relative difference **0.0874%**; audit only, not serialization acceptance | `action_results/v26/retrain_drift_audit.json` |
 
 ## Interpretation rules
 
@@ -60,10 +66,14 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.23 review actions are recommendations only. The controller never changes customer pricing, model approval, rollback state or serving configuration automatically.
 - The v0.23 synthetic high-severity review validates controller behaviour and is not an observed production incident.
 - v0.25 is a **runtime/dependency optimisation**, not model approval. The model-family status remains `HOLD` and serving remains `HOLD_SHADOW_ONLY`.
-- v0.25 exact parity is evidence for the locked 25-record test set and current bundle; it does **not** prove arbitrary cross-version portability. The successful benchmark still emitted an XGBoost warning when loading the joblib/pickle-serialised model across the training/runtime XGBoost version difference.
+- v0.25 exact parity is evidence for the locked 25-record test set and current bundle; it did **not** establish arbitrary cross-version pickle portability and exposed the XGBoost serialization warning addressed in v0.26.
+- v0.26's strict **0.0 same-fit parity** is a serialization-migration result, not a retraining-reproducibility result.
+- v0.26 allows the XGBoost 3.4.1 -> 3.4.0 patch difference only because the estimator is loaded through native model IO; the remaining joblib/pickle stack is still exact-version gated before deserialization.
+- The v0.26 historical retrain comparison is diagnostic only. Its 0.0874% maximum relative difference must not be described as serialization error or model improvement.
+- v0.26 changes model persistence and deployment reproducibility only. It does not alter the model-family `HOLD` decision or permit customer pricing.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py` recomputes / verifies the main modelling, deployment, monitoring, review-lifecycle and runtime headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py` and `tests/test_runtime_and_model_io_evidence.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime and model-IO headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.

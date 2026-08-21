@@ -9,8 +9,13 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+from xgboost import XGBRegressor
 
 from deployment.contracts import CATEGORICAL_FEATURES, FEATURES, feature_contract_hash
+from deployment.environment import (
+    EnvironmentCompatibility,
+    require_model_environment_compatibility,
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -22,10 +27,23 @@ def sha256_file(path: Path) -> str:
 
 
 @dataclass
+class NativeXGBPipeline:
+    """Inference wrapper: sklearn preprocessing + XGBoost native model IO."""
+
+    preprocessor: Any
+    model: XGBRegressor
+
+    def predict(self, frame: pd.DataFrame) -> np.ndarray:
+        transformed = self.preprocessor.transform(frame)
+        return self.model.predict(transformed)
+
+
+@dataclass
 class ShadowModelBundle:
     root: Path
     manifest: dict[str, Any]
     models: dict[str, Any]
+    environment_compatibility: EnvironmentCompatibility
 
     @classmethod
     def load(cls, root: str | Path) -> "ShadowModelBundle":
@@ -37,16 +55,62 @@ class ShadowModelBundle:
         if manifest.get("feature_contract_hash") != feature_contract_hash():
             raise RuntimeError("Deployment feature contract hash does not match service code")
 
+        # v0.26 deliberately keeps XGBoost out of pickle. Check the exact sklearn/joblib
+        # stack and the native-XGBoost compatibility rule before any joblib object is loaded.
+        expected_environment = manifest.get("training_environment")
+        if not isinstance(expected_environment, dict):
+            raise RuntimeError(
+                "Deployment manifest is missing training_environment; refuse joblib deserialization"
+            )
+        environment_compatibility = require_model_environment_compatibility(
+            expected_environment
+        )
+
         models: dict[str, Any] = {}
         for model_name, metadata in manifest["models"].items():
-            artifact_path = root / metadata["artifact"]
-            actual_hash = sha256_file(artifact_path)
-            if actual_hash != metadata["sha256"]:
-                raise RuntimeError(
-                    f"Artifact hash mismatch for {model_name}: {actual_hash} != {metadata['sha256']}"
-                )
-            models[model_name] = joblib.load(artifact_path)
-        return cls(root=root, manifest=manifest, models=models)
+            serialization = metadata.get("serialization", "joblib_pipeline")
+
+            if serialization == "joblib_pipeline":
+                artifact_path = root / metadata["artifact"]
+                actual_hash = sha256_file(artifact_path)
+                if actual_hash != metadata["sha256"]:
+                    raise RuntimeError(
+                        f"Artifact hash mismatch for {model_name}: {actual_hash} != {metadata['sha256']}"
+                    )
+                models[model_name] = joblib.load(artifact_path)
+                continue
+
+            if serialization == "sklearn_preprocessor_plus_xgboost_ubj":
+                prep_path = root / metadata["preprocessor_artifact"]
+                native_path = root / metadata["native_model_artifact"]
+                prep_hash = sha256_file(prep_path)
+                native_hash = sha256_file(native_path)
+                if prep_hash != metadata["preprocessor_sha256"]:
+                    raise RuntimeError(
+                        f"Preprocessor hash mismatch for {model_name}: "
+                        f"{prep_hash} != {metadata['preprocessor_sha256']}"
+                    )
+                if native_hash != metadata["native_model_sha256"]:
+                    raise RuntimeError(
+                        f"Native model hash mismatch for {model_name}: "
+                        f"{native_hash} != {metadata['native_model_sha256']}"
+                    )
+                preprocessor = joblib.load(prep_path)
+                native_model = XGBRegressor()
+                native_model.load_model(str(native_path))
+                models[model_name] = NativeXGBPipeline(preprocessor, native_model)
+                continue
+
+            raise RuntimeError(
+                f"Unsupported serialization mode for {model_name}: {serialization}"
+            )
+
+        return cls(
+            root=root,
+            manifest=manifest,
+            models=models,
+            environment_compatibility=environment_compatibility,
+        )
 
     def _warnings_for_record(self, record: dict[str, Any]) -> list[str]:
         warnings: list[str] = []

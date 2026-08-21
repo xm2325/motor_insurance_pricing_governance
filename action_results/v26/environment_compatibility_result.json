@@ -1,0 +1,37 @@
+{
+  "status": "V26_HYBRID_MODEL_IO_PASS",
+  "serialization_migration": {
+    "status": "V26_SERIALIZATION_MIGRATION_GATE_PASS",
+    "same_fit_serialization": {
+      "status": "SAME_FIT_SERIALIZATION_PARITY_PASS",
+      "records_tested": 25,
+      "fields_per_record": 4,
+      "comparisons": 100,
+      "max_absolute_error": 0.0,
+      "acceptance_tolerance": {"rtol": 1e-12, "atol": 1e-12}
+    }
+  },
+  "historical_retrain_drift_audit": {
+    "status": "HISTORICAL_RETRAIN_DRIFT_AUDIT_RECORDED",
+    "max_absolute_error": 0.4795733975596477,
+    "max_relative_error": 0.0008742430412423132,
+    "acceptance_gate": false
+  },
+  "runtime_environment": {
+    "status": "V26_HYBRID_RUNTIME_HTTP_PARITY_PASS",
+    "environment_compatibility": "HYBRID_MODEL_IO_COMPATIBLE",
+    "training_xgboost": "3.4.1",
+    "runtime_xgboost": "3.4.0",
+    "pickle_mismatches": {},
+    "xgboost_native_compatible": true,
+    "records_tested": 25,
+    "fields_per_record": 4,
+    "comparisons": 100,
+    "http_max_absolute_error_vs_same_fit_reference": 0.0
+  },
+  "serialization_warning_check": {
+    "status": "NO_XGBOOST_PICKLE_VERSION_WARNING",
+    "warning_detected": false
+  },
+  "governance_boundary": "HOLD / HOLD_SHADOW_ONLY remains unchanged"
+}

@@ -1,0 +1,37 @@
+{
+  "status": "HISTORICAL_RETRAIN_DRIFT_AUDIT_RECORDED",
+  "acceptance_gate": false,
+  "historical_fixture": "tests/fixtures/v26_locked_parity_reference.json",
+  "historical_source_head_sha": "09a7a2d1f949bae161ff440731afd4f82e67f434",
+  "historical_artifact_digest": "sha256:04a7fefcd4a8aaf1f48ef1a9d082a5338bb860b2dcd3c62599e623b464b771e8",
+  "records_compared": 25,
+  "fields_per_record": 4,
+  "comparisons": 100,
+  "max_absolute_error": 0.4795733975596477,
+  "max_relative_error": 0.0008742430412423132,
+  "max_error_location": {
+    "record_index": 16,
+    "field": "reference_pure_premium",
+    "historical": 548.5584384842987,
+    "rebuilt": 548.078865086739
+  },
+  "by_field": {
+    "reference_frequency": {
+      "max_absolute_error": 8.740313250932275e-09,
+      "max_relative_error": 3.2016946929712856e-08
+    },
+    "challenger_frequency": {
+      "max_absolute_error": 0.0,
+      "max_relative_error": 0.0
+    },
+    "reference_pure_premium": {
+      "max_absolute_error": 0.4795733975596477,
+      "max_relative_error": 0.0008742430412423132
+    },
+    "challenger_pure_premium": {
+      "max_absolute_error": 0.0,
+      "max_relative_error": 0.0
+    }
+  },
+  "interpretation": "Historical-vs-retrained prediction differences are recorded but are not used as the serialization migration gate. Refit reproducibility and model IO parity are separate controls. Material model changes remain covered by the existing OOT/governance regression workflows."
+}

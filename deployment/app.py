@@ -12,7 +12,7 @@ from deployment.bundle import ShadowModelBundle
 from deployment.contracts import BatchScoreRequest, PricingFeatures
 from deployment.monitoring import ShadowTelemetry
 
-SERVICE_VERSION = "0.22"
+SERVICE_VERSION = "0.26"
 
 app = FastAPI(
     title="Motor Pricing Shadow Scoring Service",
@@ -62,6 +62,7 @@ def health() -> dict[str, Any]:
         "model_version": bundle.manifest["model_version"],
         "governance_status": bundle.manifest["governance_status"],
         "feature_contract_hash": bundle.manifest["feature_contract_hash"],
+        "environment_compatibility": bundle.environment_compatibility.status,
     }
 
 
@@ -70,12 +71,15 @@ def model_info() -> dict[str, Any]:
     bundle = get_bundle()
     return {
         "service_version": SERVICE_VERSION,
+        "bundle_contract_version": bundle.manifest.get("bundle_contract_version"),
         "model_version": bundle.manifest["model_version"],
         "governance_status": bundle.manifest["governance_status"],
         "train_year": bundle.manifest["train_year"],
         "calibration_year": bundle.manifest["calibration_year"],
         "evaluation_year": bundle.manifest["evaluation_year"],
         "models": bundle.manifest["models"],
+        "serialization": bundle.manifest.get("serialization"),
+        "environment_compatibility": bundle.environment_compatibility.as_dict(),
         "monitoring_baseline_source": bundle.manifest.get("monitoring_baseline", {}).get("source"),
         "interpretation_boundary": bundle.manifest["interpretation_boundary"],
     }

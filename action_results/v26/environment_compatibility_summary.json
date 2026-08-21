@@ -1,0 +1,31 @@
+{
+  "status": "V26_HYBRID_RUNTIME_HTTP_PARITY_PASS",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "environment_compatibility": "HYBRID_MODEL_IO_COMPATIBLE",
+  "training_environment": {
+    "python_major_minor": "3.12",
+    "python_full": "3.12.14",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.9.0",
+    "xgboost": "3.4.1",
+    "joblib": "1.5.3"
+  },
+  "runtime_environment": {
+    "python_major_minor": "3.12",
+    "python_full": "3.12.14",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.9.0",
+    "xgboost": "3.4.0",
+    "joblib": "1.5.3"
+  },
+  "pickle_mismatches": {},
+  "xgboost_native_compatible": true,
+  "records_tested": 25,
+  "fields_per_record": 4,
+  "comparisons": 100,
+  "http_max_absolute_error_vs_same_fit_reference": 0.0
+}

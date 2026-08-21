@@ -1,0 +1,307 @@
+name: Motor pricing hybrid model IO v0.26
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.26-environment-compatibility
+    paths:
+      - 'requirements.txt'
+      - 'requirements-runtime.txt'
+      - 'Dockerfile'
+      - 'deployment/app.py'
+      - 'deployment/bundle.py'
+      - 'deployment/environment.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'verify_environment_parity_v26.py'
+      - 'tests/test_environment_compatibility_v26.py'
+      - 'tests/fixtures/v26_locked_parity_reference.json'
+      - '.github/workflows/v26-environment.yml'
+  pull_request:
+    paths:
+      - 'requirements.txt'
+      - 'requirements-runtime.txt'
+      - 'Dockerfile'
+      - 'deployment/app.py'
+      - 'deployment/bundle.py'
+      - 'deployment/environment.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'verify_environment_parity_v26.py'
+      - 'tests/test_environment_compatibility_v26.py'
+      - 'tests/fixtures/v26_locked_parity_reference.json'
+      - '.github/workflows/v26-environment.yml'
+
+concurrency:
+  group: v26-model-io-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  hybrid-model-io:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install pinned training environment
+        run: pip install -r requirements.txt
+
+      - name: Run model-IO and deployment contracts
+        run: |
+          python -m unittest -v \
+            tests/test_environment_compatibility_v26.py \
+            tests/test_deployment_contract.py \
+            tests/test_oot_contract.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build hybrid environment-stamped bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Verify same-fit serialization gate and record retrain drift
+        run: python verify_environment_parity_v26.py
+
+      - name: Validate hybrid bundle manifest
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path('deployment_artifacts/manifest.json').read_text())
+          env = manifest['training_environment']
+          expected = {
+              'python_major_minor': '3.12',
+              'numpy': '2.5.2',
+              'pandas': '3.0.5',
+              'scipy': '1.18.0',
+              'scikit_learn': '1.9.0',
+              'xgboost': '3.4.1',
+              'joblib': '1.5.3',
+          }
+          for key, value in expected.items():
+              assert env[key] == value, (key, env[key], value)
+
+          serialization = manifest['serialization']
+          assert serialization['format'] == 'hybrid_sklearn_joblib_plus_xgboost_native_ubj'
+          assert serialization['pickle_compatibility_policy'] == 'exact_match_for_joblib_pickle_stack'
+          assert serialization['xgboost_compatibility_policy'] == 'same_major_minor_for_native_model_io'
+          assert serialization['environment_check_before_deserialization'] is True
+          assert serialization['xgboost_removed_from_pickle'] is True
+
+          for name in ['xgb_poisson_frequency', 'xgb_tweedie_pure_premium']:
+              metadata = manifest['models'][name]
+              assert metadata['serialization'] == 'sklearn_preprocessor_plus_xgboost_ubj'
+              assert metadata['native_model_artifact'].endswith('.ubj')
+              assert len(metadata['native_model_sha256']) == 64
+              assert len(metadata['preprocessor_sha256']) == 64
+
+          for name in ['poisson_glm_frequency', 'tweedie_glm_pure_premium']:
+              assert manifest['models'][name]['serialization'] == 'joblib_pipeline'
+
+          same_fit = json.loads(
+              Path('deployment_artifacts/serialization_parity_summary.json').read_text()
+          )
+          assert same_fit['status'] == 'SAME_FIT_SERIALIZATION_PARITY_PASS'
+          assert same_fit['comparisons'] == 100
+          print(json.dumps({
+              'status': 'HYBRID_BUNDLE_MANIFEST_PASS',
+              'training_environment': env,
+              'same_fit_serialization': same_fit,
+          }, indent=2))
+          PY
+
+      - name: Build CPU-only runtime image
+        run: docker build -t motor-pricing-shadow:runtime-v26 .
+
+      - name: Verify runtime compatibility and same-fit HTTP parity
+        run: |
+          mkdir -p results_v26
+          trap 'docker rm -f motor-pricing-runtime-v26 >/dev/null 2>&1 || true' EXIT
+          docker run -d --name motor-pricing-runtime-v26 \
+            -p 8000:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/deployment_artifacts:/models:ro" \
+            motor-pricing-shadow:runtime-v26
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          import httpx
+          import numpy as np
+
+          reference = json.loads(Path('deployment_artifacts/parity_reference.json').read_text())
+          fields = [
+              'reference_frequency',
+              'challenger_frequency',
+              'reference_pure_premium',
+              'challenger_pure_premium',
+          ]
+          with httpx.Client(base_url='http://127.0.0.1:8000', timeout=5.0) as client:
+              for _ in range(30):
+                  try:
+                      response = client.get('/health')
+                      if response.status_code == 200:
+                          break
+                  except Exception:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError('Runtime container did not become healthy')
+
+              health = response.json()
+              assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+              assert health['environment_compatibility'] == 'HYBRID_MODEL_IO_COMPATIBLE'
+
+              info_response = client.get('/model-info')
+              info_response.raise_for_status()
+              info = info_response.json()
+              compatibility = info['environment_compatibility']
+              assert compatibility['status'] == 'HYBRID_MODEL_IO_COMPATIBLE'
+              assert compatibility['compatible'] is True
+              assert compatibility['pickle_mismatches'] == {}
+              assert compatibility['xgboost_native_compatible'] is True
+              for key in compatibility['critical_pickle_keys']:
+                  assert compatibility['expected'][key] == compatibility['runtime'][key], key
+              assert compatibility['expected']['xgboost'] == '3.4.1'
+              assert compatibility['runtime']['xgboost'] == '3.4.0'
+
+              max_abs_error = 0.0
+              for record_index, (record, expected) in enumerate(
+                  zip(reference['records'], reference['scores'])
+              ):
+                  scored = client.post('/score', json=record)
+                  scored.raise_for_status()
+                  body = scored.json()
+                  for field in fields:
+                      observed = float(body[field])
+                      expected_value = float(expected[field])
+                      error = abs(observed - expected_value)
+                      max_abs_error = max(max_abs_error, error)
+                      if not np.isclose(observed, expected_value, rtol=1e-10, atol=1e-10):
+                          raise AssertionError(
+                              f'HTTP same-fit parity mismatch record={record_index} field={field} '
+                              f'observed={observed} expected={expected_value} abs_error={error}'
+                          )
+
+              summary = {
+                  'status': 'V26_HYBRID_RUNTIME_HTTP_PARITY_PASS',
+                  'governance_status': health['governance_status'],
+                  'environment_compatibility': compatibility['status'],
+                  'training_environment': compatibility['expected'],
+                  'runtime_environment': compatibility['runtime'],
+                  'pickle_mismatches': compatibility['pickle_mismatches'],
+                  'xgboost_native_compatible': compatibility['xgboost_native_compatible'],
+                  'records_tested': len(reference['records']),
+                  'fields_per_record': len(fields),
+                  'comparisons': len(reference['records']) * len(fields),
+                  'http_max_absolute_error_vs_same_fit_reference': max_abs_error,
+              }
+              Path('results_v26/environment_compatibility_summary.json').write_text(
+                  json.dumps(summary, indent=2), encoding='utf-8'
+              )
+              print(json.dumps(summary, indent=2))
+          PY
+
+          docker logs motor-pricing-runtime-v26 > results_v26/container.log 2>&1
+          if grep -Eiq 'serialized model.*older version|different version of XGBoost|older version of XGBoost' results_v26/container.log; then
+            cat results_v26/container.log
+            echo 'Cross-version XGBoost pickle serialization warning detected' >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          Path('results_v26/serialization_warning_check.json').write_text(json.dumps({
+              'status': 'NO_XGBOOST_PICKLE_VERSION_WARNING',
+              'warning_detected': False,
+              'checked_log': 'results_v26/container.log',
+              'reason': 'XGBoost challengers use native UBJSON rather than joblib/pickle.',
+          }, indent=2), encoding='utf-8')
+          PY
+
+      - name: Build v0.26 result summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          migration = json.loads(Path('results_v26/serialization_migration_summary.json').read_text())
+          drift = json.loads(Path('results_v26/retrain_drift_audit.json').read_text())
+          env = json.loads(Path('results_v26/environment_compatibility_summary.json').read_text())
+          warning = json.loads(Path('results_v26/serialization_warning_check.json').read_text())
+          result = {
+              'status': 'V26_HYBRID_MODEL_IO_PASS',
+              'serialization_migration': migration,
+              'historical_retrain_drift_audit': drift,
+              'runtime_environment': env,
+              'serialization_warning_check': warning,
+              'governance_boundary': 'HOLD / HOLD_SHADOW_ONLY remains unchanged',
+              'next_model_io_step': (
+                  'The XGBoost estimators are now out of pickle. A later migration can reduce '
+                  'the remaining sklearn preprocessing/GLM joblib surface if there is a concrete '
+                  'deployment need; it is not required to claim v0.26 XGBoost portability.'
+              ),
+          }
+          Path('results_v26/environment_compatibility_result.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.26 evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v26
+          cp results_v26/*.json action_results/v26/
+          cp deployment_artifacts/serialization_parity_summary.json action_results/v26/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v26/ACTION_V26_STATUS.json').write_text(
+              json.dumps({
+                  'workflow': 'Motor pricing hybrid model IO v0.26',
+                  'run_id': os.environ.get('GITHUB_RUN_ID'),
+                  'sha': os.environ.get('GITHUB_SHA'),
+                  'status': 'success',
+              }, indent=2),
+              encoding='utf-8',
+          )
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v26
+          if git diff --cached --quiet; then
+            echo 'No v0.26 evidence changes'
+          else
+            git commit -m "Persist v0.26 hybrid model-IO run ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.26 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-hybrid-model-io-v26
+          path: |
+            results_v26/
+            deployment_artifacts/serialization_parity_summary.json
+          if-no-files-found: warn

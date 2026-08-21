@@ -1,0 +1,6 @@
+{
+  "status": "NO_XGBOOST_PICKLE_VERSION_WARNING",
+  "warning_detected": false,
+  "checked_log": "results_v26/container.log",
+  "reason": "XGBoost challengers use native UBJSON rather than joblib/pickle."
+}
