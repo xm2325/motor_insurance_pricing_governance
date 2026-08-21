@@ -1,4 +1,4 @@
-# Model Card — Motor Pricing Decision Workbench
+# Model Card - Motor Pricing Decision Workbench
 
 ## Intended use
 
@@ -17,7 +17,7 @@ Portfolio demonstration of insurance data-science reasoning: claim frequency, se
 Two public motor-insurance sources have different roles.
 
 1. `freMTPL2` is the detailed cross-sectional governance benchmark used for model architecture, calibration, monitoring, disagreement analysis and stress tests.
-2. Mendeley dataset `sw4jmdb2sm`, version 1, supplies the main temporal evidence: 354,140 Spanish motor policy-year observations and 47 variables covering 2022, 2023 and 2024.
+2. Mendeley dataset `sw4jmdb2sm`, version 1, supplies the main temporal evidence: **354,140 Spanish motor policy-year observations and 47 variables covering 2022, 2023 and 2024**.
 
 The Mendeley source is downloaded in GitHub Actions rather than committed. The verified main CSV is 94,710,312 bytes with SHA-256 `6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4`.
 
@@ -27,9 +27,9 @@ The Mendeley source is downloaded in GitHub Actions rather than committed. The v
 - Expected loss / pure premium: `total_incurred / total_exposure`.
 - Exposure is used as a modelling weight / denominator rather than a predictive feature.
 
-## 2022–2024 OOT feature policy
+## Feature policy
 
-The OOT model uses only selected driver, vehicle and policy characteristics:
+The temporal models use selected driver, vehicle and policy characteristics:
 
 - numeric: driver age, vehicle age, age at driving licence, vehicle value, seats, power-to-weight ratio;
 - categorical: policy type, business type, payment frequency, bonus score, fuel type, vehicle brand, municipality type, circulation area.
@@ -43,9 +43,9 @@ The following are intentionally excluded from predictive features:
 - current incurred-loss fields;
 - exposure itself as a feature.
 
-## Temporal design
+## Locked temporal design
 
-The locked OOT design is:
+The deployment-style OOT design is:
 
 - **2022:** training;
 - **2023:** aggregate scaling / calibration only;
@@ -53,14 +53,14 @@ The locked OOT design is:
 
 No 2024 outcome is used to fit the model or calibration scale.
 
-## OOT model families
+## Model families
 
 - Poisson GLM frequency reference;
 - XGBoost Poisson frequency challenger;
 - Tweedie GLM pure-premium reference;
 - XGBoost Tweedie pure-premium challenger.
 
-## Verified 2024 OOT results
+## Verified locked 2024 OOT results
 
 ### Frequency
 
@@ -70,7 +70,7 @@ No 2024 outcome is used to fit the model or calibration scale.
 - XGBoost locked calibration ratio: **0.960**
 - top-10% exposure claim capture: **26.62% GLM vs 27.04% XGBoost**
 
-The XGBoost ranking gain is small and does not improve OOT deviance. The 250-resample GLM-minus-XGBoost Poisson-deviance difference has a 95% interval of **[-0.00155, 0.00083]**.
+The XGBoost ranking gain is small and does not improve locked OOT deviance. The 250-resample GLM-minus-XGBoost Poisson-deviance difference has a 95% interval of **[-0.00155, 0.00083]**.
 
 ### Pure premium
 
@@ -81,6 +81,30 @@ The XGBoost ranking gain is small and does not improve OOT deviance. The 250-res
 - top-10% exposure loss capture: **20.44% GLM vs 21.13% XGBoost**
 
 The 250-resample GLM-minus-XGBoost Tweedie-deviance difference has a 95% interval of **[-0.988, 0.856]**.
+
+## v0.14 rolling-origin stability
+
+The rolling-origin audit is a **model-family stability check**, not a replacement for the locked OOT gate.
+
+### 2022 train -> 2023 test
+
+- frequency deviance: **1.13619 GLM vs 1.13646 XGBoost**;
+- frequency bootstrap interval: **[-0.00189, 0.00095]**;
+- pure-premium deviance: **92.6970 GLM vs 93.2707 XGBoost**;
+- pure-premium bootstrap interval: **[-2.149, 0.880]**.
+
+No stable XGBoost advantage is present.
+
+### 2022+2023 train -> 2024 test
+
+- frequency deviance: **1.11199 GLM vs 1.10843 XGBoost**;
+- frequency top-10% claim capture: **26.98% vs 27.42%**;
+- frequency bootstrap interval: **[0.00236, 0.00513]**, supporting a small XGBoost frequency gain;
+- pure-premium deviance: **92.8213 GLM vs 93.1606 XGBoost**;
+- pure-premium calibration: **0.948 GLM vs 0.842 XGBoost**;
+- pure-premium bootstrap interval: **[-0.793, 0.160]**.
+
+The frequency advantage appears after adding 2023 to the training window, but the expected-loss challenger still does not show stable superiority. This is evidence against promoting a model family from one frequency metric alone.
 
 ## Transport checks
 
@@ -94,18 +118,15 @@ Pure-premium calibration differs by transport cohort:
 - seen IDs: GLM **0.994**, XGBoost **0.950**;
 - unseen IDs: GLM **0.825**, XGBoost **0.881**.
 
-This means the aggregate result is not sufficient for a segment-level model-family decision.
+An illustrative `[0.85, 1.15]` diagnostic is used only to expose portfolio transport differences; it is not a FIRST CENTRAL or regulatory threshold.
 
 ## Current decision
 
-**HOLD.**
+**KEEP HOLD / NO MODEL-FAMILY PROMOTION.**
 
-The automatic rule requires both:
+The locked gate requires both acceptable aggregate calibration and positive bootstrap evidence for challenger deviance improvement. The rolling-origin audit adds a second requirement: any model-family advantage should be directionally repeatable across temporal windows and should translate into expected-loss performance rather than only frequency ranking.
 
-1. 2024 locked aggregate calibration ratio in `[0.90, 1.10]`; and
-2. a strictly positive 95% bootstrap interval for GLM-minus-XGBoost deviance.
-
-Both XGBoost challengers satisfy the broad aggregate-calibration condition but fail the evidence condition. The model family is therefore not promoted merely because top-risk capture is slightly higher.
+The current evidence does not satisfy that standard.
 
 ## Key risks and limits
 
@@ -116,6 +137,15 @@ Both XGBoost challengers satisfy the broad aggregate-calibration condition but f
 - bonus score is treated as an available rating characteristic, but its exact production as-of construction is source-specific;
 - model-selection thresholds in this repository are demonstration rules, not insurer policy;
 - synthetic proposition simulations are not observed business outcomes.
+
+## Engineering controls
+
+`tests/test_oot_contract.py` and the lightweight GitHub Actions CI protect the modelling contract by checking:
+
+- forbidden current premium/outcome/post-period fields are not used as predictors;
+- the locked 2022/2023/2024 temporal roles remain in place;
+- the model-change gate still requires calibration plus bootstrap evidence;
+- rolling-origin windows use only prior years and reuse the locked feature contract.
 
 ## Required work before any production-like claim
 
