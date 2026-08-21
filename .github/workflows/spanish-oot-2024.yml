@@ -1,0 +1,73 @@
+name: Spanish motor 2022-2024 discovery and OOT
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'discover_spanish_motor_2022_2024.py'
+      - 'download_spanish_motor_2022_2024.py'
+      - 'run_spanish_oot_2024.py'
+      - '.github/workflows/spanish-oot-2024.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Discover Mendeley files
+        id: discover
+        run: python discover_spanish_motor_2022_2024.py
+
+      - name: Persist discovery status
+        if: always()
+        env:
+          DISCOVERY_OUTCOME: ${{ steps.discover.outcome }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status = {
+              "workflow": "Spanish motor 2022-2024 discovery and OOT",
+              "stage": "discovery",
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "sha": os.environ.get("GITHUB_SHA"),
+              "discovery_outcome": os.environ.get("DISCOVERY_OUTCOME"),
+          }
+          Path("ACTION_RUN_STATUS_2024.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
+          PY
+          mkdir -p action_results/spanish_oot_2024
+          rm -rf action_results/spanish_oot_2024/*
+          cp ACTION_RUN_STATUS_2024.json action_results/spanish_oot_2024/
+          if [ -d results_oot_2024 ]; then cp -R results_oot_2024/. action_results/spanish_oot_2024/; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/spanish_oot_2024
+          if git diff --cached --quiet; then
+            echo "No discovery result changes"
+          else
+            git commit -m "Persist Spanish motor 2022-2024 discovery run ${GITHUB_RUN_ID}"
+            git push origin HEAD:main
+          fi
+
+      - name: Upload discovery result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spanish-motor-2022-2024-discovery
+          path: |
+            results_oot_2024/
+            ACTION_RUN_STATUS_2024.json
+          if-no-files-found: warn
