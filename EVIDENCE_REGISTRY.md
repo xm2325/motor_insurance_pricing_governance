@@ -40,6 +40,10 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.23 review recovery | temporal review closes only after **2 green windows** and returns to `HEALTHY` | `action_results/v23/review_lifecycle_summary.json` |
 | v0.23 synthetic high-severity review | repeated stress -> **HIGH** `INVESTIGATE_SERVING_DATA_AND_MODEL` | `action_results/v23/review_lifecycle_summary.json` |
 | v0.23 lifecycle determinism/privacy | deterministic replay; aggregate-only evidence; SHA-256 evidence lineage; **no automatic model or pricing change** | `action_results/v23/review_lifecycle_summary.json` |
+| v0.25 runtime image reduction | **960,271,925 -> 488,778,419 bytes (49.10%; 471,493,506 bytes removed)** | `action_results/v25/image_size_summary.json` |
+| v0.25 CPU-only dependency gate | `xgboost-cpu 3.4.0`; no `httpx`, `matplotlib`, `nvidia-nccl-cu13`, `pytest` or `tabulate` in runtime image | `action_results/v25/image_size_summary.json` |
+| v0.25 full-vs-runtime HTTP parity | **25 records x 6 numeric fields; max absolute error 0.0** | `action_results/v25/http_parity_summary.json` |
+| v0.25 runtime-vs-offline parity | **25 records x 4 core prediction fields; max absolute error 0.0** | `action_results/v25/http_parity_summary.json` |
 
 ## Interpretation rules
 
@@ -55,9 +59,11 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.23 uses **review hysteresis** to avoid opening/closing reviews on single windows. The 2-window rules are project demonstration rules, not insurer governance policy.
 - v0.23 review actions are recommendations only. The controller never changes customer pricing, model approval, rollback state or serving configuration automatically.
 - The v0.23 synthetic high-severity review validates controller behaviour and is not an observed production incident.
+- v0.25 is a **runtime/dependency optimisation**, not model approval. The model-family status remains `HOLD` and serving remains `HOLD_SHADOW_ONLY`.
+- v0.25 exact parity is evidence for the locked 25-record test set and current bundle; it does **not** prove arbitrary cross-version portability. The successful benchmark still emitted an XGBoost warning when loading the joblib/pickle-serialised model across the training/runtime XGBoost version difference.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py` recomputes / verifies the main modelling, deployment, monitoring and review-lifecycle headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py` recomputes / verifies the main modelling, deployment, monitoring, review-lifecycle and runtime headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
