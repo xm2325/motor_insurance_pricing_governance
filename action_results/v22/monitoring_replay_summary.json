@@ -1,6 +1,48 @@
 {
   "status": "success",
-  "interpretation": "Synthetic replay validation only. Alerts demonstrate monitoring behaviour; they are not observed production incidents or insurer thresholds.",
+  "interpretation": "Synthetic replay validation only. Cold start is recorded separately from the steady-state baseline. Alerts demonstrate monitoring behaviour; they are not observed production incidents or insurer thresholds.",
+  "cold_start": {
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "privacy_boundary": "aggregate_non_pii_only",
+    "request_count": 1,
+    "error_count": 0,
+    "error_rate": 0.0,
+    "records_scored": 25,
+    "unseen_warning_records": 0,
+    "unseen_category_rate": 0.0,
+    "latency_ms": {
+      "median": 967.1710740000208,
+      "p95": 967.1710740000208,
+      "max": 967.1710740000208
+    },
+    "batch_size": {
+      "median": 25.0,
+      "p95": 25.0,
+      "max": 25.0
+    },
+    "disagreement": {
+      "frequency_abs_log_ratio_p50": 0.07567455039508895,
+      "frequency_abs_log_ratio_p95": 0.22204840735417364,
+      "pure_premium_abs_log_ratio_p50": 0.34126546795854207,
+      "pure_premium_abs_log_ratio_p95": 0.7395185940407553
+    },
+    "thresholds": {
+      "error_rate": 0.02,
+      "unseen_category_rate": 0.01,
+      "p95_latency_ms": 200.0,
+      "frequency_abs_log_ratio_p95": 0.75,
+      "pure_premium_abs_log_ratio_p95": 1.0
+    },
+    "alerts": {
+      "error_rate": false,
+      "unseen_category_rate": false,
+      "p95_latency_ms": true,
+      "frequency_disagreement": false,
+      "pure_premium_disagreement": false
+    },
+    "alert_status": "RED"
+  },
   "baseline": {
     "model_version": "v0.21-shadow-2022-train-2023-calibration",
     "governance_status": "HOLD_SHADOW_ONLY",
@@ -12,9 +54,9 @@
     "unseen_warning_records": 0,
     "unseen_category_rate": 0.0,
     "latency_ms": {
-      "median": 27.650948000001563,
-      "p95": 555.5118064999978,
-      "max": 986.0519839999995
+      "median": 27.527972500010378,
+      "p95": 27.761650800000837,
+      "max": 27.77506800001106
     },
     "batch_size": {
       "median": 25.0,
@@ -37,11 +79,11 @@
     "alerts": {
       "error_rate": false,
       "unseen_category_rate": false,
-      "p95_latency_ms": true,
+      "p95_latency_ms": false,
       "frequency_disagreement": false,
       "pure_premium_disagreement": false
     },
-    "alert_status": "RED"
+    "alert_status": "GREEN"
   },
   "stress": {
     "model_version": "v0.21-shadow-2022-train-2023-calibration",
@@ -54,9 +96,9 @@
     "unseen_warning_records": 250,
     "unseen_category_rate": 1.0,
     "latency_ms": {
-      "median": 0.5698575000039341,
-      "p95": 27.654513200003805,
-      "max": 28.21468900000923
+      "median": 0.5005864999958476,
+      "p95": 27.836784899996303,
+      "max": 28.030333000003793
     },
     "batch_size": {
       "median": 25.0,
@@ -97,8 +139,10 @@
     "pure_premium_relative_alert": true
   },
   "checks": {
+    "cold_start_recorded_separately": true,
     "baseline_privacy_boundary": true,
     "stress_privacy_boundary": true,
+    "baseline_alert_status": "GREEN",
     "baseline_records_scored": 250,
     "stress_records_scored": 250,
     "stress_error_rate_alert": true,

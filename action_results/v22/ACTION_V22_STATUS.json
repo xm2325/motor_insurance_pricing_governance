@@ -1,7 +1,7 @@
 {
   "workflow": "Motor pricing shadow monitoring v0.22",
-  "run_id": "32483746689",
-  "sha": "ba80492bb3489744de5904591c6c668d3724c12d",
+  "run_id": "32484047180",
+  "sha": "72369be0ea0eda2aa612dde6b7b608a1792092f9",
   "install_outcome": "success",
   "contract_outcome": "success",
   "discover_outcome": "success",
