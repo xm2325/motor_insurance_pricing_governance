@@ -1,0 +1,121 @@
+name: Motor pricing governance v0.20
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.20-governance
+    paths:
+      - 'run_v20_governance.py'
+      - 'tests/test_v20_contract.py'
+      - 'requirements.txt'
+      - '.github/workflows/v20-governance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  governance-v20:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        id: install
+        run: pip install -r requirements.txt
+
+      - name: Run v0.20 contract tests
+        id: contracts
+        run: python -m unittest -v tests/test_v20_contract.py tests/test_oot_contract.py tests/test_evidence_registry.py
+
+      - name: Discover Mendeley source
+        id: discover
+        run: python discover_spanish_motor_2022_2024.py
+
+      - name: Download and verify source files
+        id: download
+        run: python download_spanish_motor_2022_2024.py
+
+      - name: Audit schema and year coverage
+        id: audit
+        run: python audit_spanish_motor_2022_2024.py
+
+      - name: Rebuild locked 2024 OOT evidence
+        id: oot
+        run: python run_spanish_oot_2024.py
+
+      - name: Rebuild rolling-origin evidence
+        id: rolling
+        run: python run_rolling_origin_v14.py
+
+      - name: Run v0.16-v0.20 governance audits
+        id: governance
+        run: python run_v20_governance.py
+
+      - name: Show final decision
+        if: always()
+        run: |
+          test -f results_v20/v20_approval_decision.json && cat results_v20/v20_approval_decision.json || true
+          test -f results_v20/V20_FINAL_APPROVAL_PACK.md && sed -n '1,220p' results_v20/V20_FINAL_APPROVAL_PACK.md || true
+
+      - name: Persist v0.20 results and run status
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          CONTRACT_OUTCOME: ${{ steps.contracts.outcome }}
+          DISCOVER_OUTCOME: ${{ steps.discover.outcome }}
+          DOWNLOAD_OUTCOME: ${{ steps.download.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+          OOT_OUTCOME: ${{ steps.oot.outcome }}
+          ROLLING_OUTCOME: ${{ steps.rolling.outcome }}
+          GOVERNANCE_OUTCOME: ${{ steps.governance.outcome }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          out = Path('action_results/v20')
+          out.mkdir(parents=True, exist_ok=True)
+          status = {
+              'workflow': 'Motor pricing governance v0.20',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'install_outcome': os.environ.get('INSTALL_OUTCOME'),
+              'contract_outcome': os.environ.get('CONTRACT_OUTCOME'),
+              'discover_outcome': os.environ.get('DISCOVER_OUTCOME'),
+              'download_outcome': os.environ.get('DOWNLOAD_OUTCOME'),
+              'audit_outcome': os.environ.get('AUDIT_OUTCOME'),
+              'oot_outcome': os.environ.get('OOT_OUTCOME'),
+              'rolling_outcome': os.environ.get('ROLLING_OUTCOME'),
+              'governance_outcome': os.environ.get('GOVERNANCE_OUTCOME'),
+          }
+          (out / 'ACTION_V20_STATUS.json').write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          if [ -d results_v20 ]; then cp -R results_v20/. action_results/v20/; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v20
+          if git diff --cached --quiet; then
+            echo 'No v0.20 result changes'
+          else
+            git commit -m "Persist v0.20 governance run ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.20 artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-governance-v20
+          path: |
+            results_v20/
+            action_results/v20/ACTION_V20_STATUS.json
+          if-no-files-found: warn
