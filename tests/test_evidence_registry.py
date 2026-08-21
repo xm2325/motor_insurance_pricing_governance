@@ -154,6 +154,45 @@ class TestEvidenceRegistry(unittest.TestCase):
         self.assertEqual(container["records_scored"], 5)
         self.assertEqual(container["alert_status"], "GREEN")
 
+    def test_v23_review_lifecycle_evidence(self) -> None:
+        review = load_json("action_results/v23/review_lifecycle_summary.json")
+        self.assertEqual(review["status"], "success")
+        self.assertEqual(review["policy"]["open_after_consecutive_breach_windows"], 2)
+        self.assertEqual(review["policy"]["close_after_consecutive_green_windows"], 2)
+        self.assertFalse(review["policy"]["automatic_model_or_pricing_change"])
+        self.assertTrue(review["aggregate_only_evidence"])
+        self.assertTrue(review["deterministic_replay"])
+        self.assertEqual(
+            review["states"],
+            [
+                "HEALTHY",
+                "WATCH",
+                "REVIEW_REQUIRED",
+                "RECOVERING",
+                "HEALTHY",
+                "WATCH",
+                "REVIEW_REQUIRED",
+            ],
+        )
+        temporal = review["temporal_review"]
+        self.assertEqual(temporal["severity"], "MEDIUM")
+        self.assertEqual(temporal["active_alerts"], ["feature_drift"])
+        self.assertEqual(
+            temporal["action"],
+            "REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION",
+        )
+        self.assertAlmostEqual(temporal["max_feature_psi"], 1.4115752423025838)
+        self.assertEqual(temporal["max_feature_psi_feature"], "business_type")
+        self.assertTrue(review["recovery"]["closed_after_two_green_windows"])
+        self.assertEqual(review["recovery"]["state_after_recovery"], "HEALTHY")
+        stress = review["synthetic_stress_review"]
+        self.assertEqual(stress["severity"], "HIGH")
+        self.assertEqual(stress["action"], "INVESTIGATE_SERVING_DATA_AND_MODEL")
+        self.assertIn("error_rate", stress["active_alerts"])
+        self.assertIn("unseen_category_rate", stress["active_alerts"])
+        self.assertIn("pure_premium_disagreement", stress["active_alerts"])
+        self.assertEqual(len(review["source_monitoring_sha256"]), 64)
+
 
 if __name__ == "__main__":
     unittest.main()
