@@ -20,16 +20,24 @@ This file maps the project's headline claims to persisted result files. The goal
 | Rolling-origin pure-premium result | GLM 92.8213 vs XGBoost 93.1606; no stable XGBoost gain | `action_results/spanish_oot_2024/rolling_origin_v14_summary.json` |
 | Existing-policy pure-premium calibration | GLM 0.994; XGBoost 0.950 | `action_results/spanish_oot_2024/oot_2024_transport_segment_calibration.csv` |
 | New-policy pure-premium calibration | GLM 0.825; XGBoost 0.881 | `action_results/spanish_oot_2024/oot_2024_transport_segment_calibration.csv` |
-| Final model-family decision | HOLD / no promotion | `action_results/spanish_oot_2024/oot_2024_summary.json`, `RESULTS_V14.md` |
+| Final model-family decision | HOLD / no promotion | `action_results/spanish_oot_2024/oot_2024_summary.json`, `RESULTS_V14.md`, `RESULTS_V20.md` |
+| v0.21 governance mode | `HOLD_SHADOW_ONLY`; no quote/price endpoint | `action_results/v21/manifest.json`, `tests/test_deployment_contract.py` |
+| v0.21 offline-online parity | 25 records; max absolute prediction error **0.0** | `action_results/v21/deployment_smoke_summary.json` |
+| v0.21 batch contract | deterministic **1,000-policy** batch tested | `action_results/v21/deployment_smoke_summary.json` |
+| v0.21 safety/data-contract checks | forbidden current-outcome field rejected; unseen category warning emitted | `action_results/v21/deployment_smoke_summary.json` |
+| v0.21 container/network check | Docker build + HTTP score parity **success** | `action_results/v21/ACTION_V21_STATUS.json`, `action_results/v21/container_smoke_summary.json` |
+| v0.21 artifact integrity | four serialised models have registered SHA-256 digests | `action_results/v21/manifest.json` |
 
 ## Interpretation rules
 
 - The 5.43% frequency result is a **cross-sectional benchmark result**, not an out-of-time pricing improvement.
 - The 0.42 pp 2024 claim-capture gain is a **ranking result** and does not establish lower pricing loss.
 - The 0.32% rolling-origin frequency-deviance reduction is a **small model-family stability result**, not a pure-premium improvement.
+- v0.21 demonstrates **deployability in shadow mode**, not approval to use XGBoost for customer pricing.
+- The v0.21 TestClient latency is a GitHub-runner diagnostic, not a production SLA.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py` recomputes the main headline metrics from the persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py` recomputes / verifies the main modelling and deployment headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
