@@ -1,0 +1,27 @@
+{
+  "model_version": "v0.21-shadow-2022-train-2023-calibration",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "source_dataset": "data_spanish_2022_2024/Dataset_of_motor_insurance_portfolio.csv",
+  "train_year": 2022,
+  "calibration_year": 2023,
+  "evaluation_year": 2024,
+  "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25",
+  "features": ["driver_age", "vehicle_age", "age_driving_licence", "vehicle_value", "seats", "power_to_weight_ratio", "policy_type", "business_type", "payment_frequency", "bonus_score", "fuel_type", "vehicle_brand", "municipality_type", "circulation_area"],
+  "categorical_levels": {
+    "policy_type": ["CC", "COMP_E", "COMP_N", "TP", "TPG"],
+    "business_type": ["NB", "P"],
+    "payment_frequency": ["A", "Q", "S"],
+    "bonus_score": ["B", "G", "N"],
+    "fuel_type": ["D", "G"],
+    "vehicle_brand": ["ABARTH", "AIXAM", "ALFA ROMEO", "ASTON MARTIN", "AUDI", "AVIA", "BMW", "CHEVROLET", "CHRYSLER", "CITROEN", "DACIA", "DAEWOO", "DAF", "DAIHATSU", "DODGE", "FERRARI", "FIAT", "FORD", "GALLOPER", "GMC", "GRECAV", "HONDA", "HUMMER", "HURTAN", "HYUNDAI", "INFINITI", "ISUZU", "IVECO", "JAGUAR", "JEEP", "KIA", "LADA", "LANCIA", "LAND ROVER", "LEXUS", "MAHINDRA", "MASERATI", "MAZDA", "MERCEDES", "MICROCAR", "MINI", "MITSUBISHI", "NISSAN", "OPEL", "PEUGEOT", "PIAGGIO", "PORSCHE", "RENAULT", "ROVER", "SAAB", "SANTANA", "SEAT", "SIMCA", "SKODA", "SMART", "SSANGYONG", "SUBARU", "SUZUKI", "TATA", "TOYOTA", "VOLKSWAGEN", "VOLVO"],
+    "municipality_type": ["C", "I", "IS"],
+    "circulation_area": ["R", "U"]
+  },
+  "models": {
+    "poisson_glm_frequency": {"target": "frequency", "role": "reference", "artifact": "poisson_glm_frequency.joblib", "locked_scale": 1.0123999184297037, "sha256": "8934b110a58d7acc870335e63b10bf1ab67674241b43a3875e5c4be2bf7f3b08"},
+    "xgb_poisson_frequency": {"target": "frequency", "role": "challenger", "artifact": "xgb_poisson_frequency.joblib", "locked_scale": 1.0277575870212368, "sha256": "ccaa994f17d863c1adfff61e15fa3198b97673e5b6ce855cd87c58b6175d097b"},
+    "tweedie_glm_pure_premium": {"target": "pure_premium", "role": "reference", "artifact": "tweedie_glm_pure_premium.joblib", "locked_scale": 0.9141981759904917, "sha256": "e2b111b163d760fa311997009b1135c7390cf6dc13bc5781ece8a922b23b3b03"},
+    "xgb_tweedie_pure_premium": {"target": "pure_premium", "role": "challenger", "artifact": "xgb_tweedie_pure_premium.joblib", "locked_scale": 1.2075552522048616, "sha256": "70e2bacb3b216eebec6f5b288c6d77cdb59325b1a7b6e4deeb0e427386d06174"}
+  },
+  "interpretation_boundary": "Shadow comparison only. The v0.20 global model-family decision is HOLD. Scores are risk-model outputs, not customer premiums, underwriting decisions, or evidence of transfer to FIRST CENTRAL / the UK motor market."
+}

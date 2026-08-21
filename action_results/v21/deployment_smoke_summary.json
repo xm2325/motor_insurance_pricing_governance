@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "parity_records": 25,
+  "offline_online_max_abs_error": 0.0,
+  "forbidden_outcome_field_rejected": true,
+  "unseen_category_warning_emitted": true,
+  "batch_deterministic": true,
+  "batch_size_tested": 1000,
+  "testclient_batch_latency_ms": {
+    "median": 43.03820000001224,
+    "p95": 74.05599999999595
+  }
+}

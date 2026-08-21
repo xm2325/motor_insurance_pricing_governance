@@ -76,6 +76,38 @@ class TestEvidenceRegistry(unittest.TestCase):
         self.assertLess(loss_ci["ci95_low"], 0)
         self.assertGreater(loss_ci["ci95_high"], 0)
 
+    def test_v21_shadow_deployment_evidence(self) -> None:
+        status = load_json("action_results/v21/ACTION_V21_STATUS.json")
+        smoke = load_json("action_results/v21/deployment_smoke_summary.json")
+        container = load_json("action_results/v21/container_smoke_summary.json")
+        manifest = load_json("action_results/v21/manifest.json")
+
+        for key in [
+            "contract_outcome",
+            "download_outcome",
+            "audit_outcome",
+            "bundle_outcome",
+            "parity_outcome",
+            "docker_build_outcome",
+            "container_smoke_outcome",
+        ]:
+            self.assertEqual(status[key], "success", key)
+
+        self.assertEqual(manifest["governance_status"], "HOLD_SHADOW_ONLY")
+        self.assertEqual(
+            (manifest["train_year"], manifest["calibration_year"], manifest["evaluation_year"]),
+            (2022, 2023, 2024),
+        )
+        self.assertEqual(smoke["parity_records"], 25)
+        self.assertEqual(smoke["offline_online_max_abs_error"], 0.0)
+        self.assertTrue(smoke["forbidden_outcome_field_rejected"])
+        self.assertTrue(smoke["unseen_category_warning_emitted"])
+        self.assertTrue(smoke["batch_deterministic"])
+        self.assertEqual(smoke["batch_size_tested"], 1000)
+        self.assertTrue(container["network_score_parity"])
+        for metadata in manifest["models"].values():
+            self.assertEqual(len(metadata["sha256"]), 64)
+
 
 if __name__ == "__main__":
     unittest.main()

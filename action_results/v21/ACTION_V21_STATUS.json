@@ -1,0 +1,13 @@
+{
+  "workflow": "Motor pricing shadow deployment v0.21",
+  "run_id": "32481705152",
+  "sha": "7935854f2f398a6931f41b8216d286964dc50e46",
+  "contract_outcome": "success",
+  "download_outcome": "success",
+  "audit_outcome": "success",
+  "bundle_outcome": "success",
+  "parity_outcome": "success",
+  "docker_build_outcome": "success",
+  "container_smoke_outcome": "success",
+  "artifact_id": 9446338733
+}

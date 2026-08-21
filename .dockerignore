@@ -1,0 +1,11 @@
+.git
+.github
+data*
+results*
+action_results
+deployment_artifacts
+*.zip
+*.pdf
+*.png
+__pycache__
+.pytest_cache

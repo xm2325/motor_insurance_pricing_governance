@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "health": {
+    "status": "ok",
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25"
+  },
+  "network_score_parity": true,
+  "container_image": "motor-pricing-shadow:v21"
+}
