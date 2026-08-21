@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 
-import numpy as np
 from fastapi.testclient import TestClient
 
 os.environ.setdefault("MODEL_BUNDLE_DIR", "deployment_artifacts")
@@ -54,6 +53,11 @@ def main() -> None:
     records = load_records()
     telemetry = get_telemetry()
 
+    # Warm the fitted pipelines before defining a steady-state latency baseline.
+    warmup = client.post("/batch-score", json={"policies": records})
+    warmup.raise_for_status()
+    cold_start_snapshot = client.get("/monitoring").json()
+
     telemetry.reset()
     for _ in range(10):
         response = client.post("/batch-score", json={"policies": records})
@@ -76,8 +80,10 @@ def main() -> None:
 
     shifts = disagreement_shift(baseline, stress)
     checks = {
+        "cold_start_recorded_separately": cold_start_snapshot["request_count"] == 1,
         "baseline_privacy_boundary": baseline["privacy_boundary"] == "aggregate_non_pii_only",
         "stress_privacy_boundary": stress["privacy_boundary"] == "aggregate_non_pii_only",
+        "baseline_alert_status": baseline["alert_status"],
         "baseline_records_scored": baseline["records_scored"],
         "stress_records_scored": stress["records_scored"],
         "stress_error_rate_alert": bool(stress["alerts"]["error_rate"]),
@@ -86,19 +92,25 @@ def main() -> None:
         "frequency_relative_alert": bool(shifts["frequency_relative_alert"]),
         "pure_premium_relative_alert": bool(shifts["pure_premium_relative_alert"]),
     }
+    if baseline["alert_status"] != "GREEN":
+        raise RuntimeError(f"Steady-state baseline should be GREEN, got {baseline['alerts']}")
     if not checks["baseline_privacy_boundary"] or not checks["stress_privacy_boundary"]:
         raise RuntimeError("Monitoring snapshot violated aggregate-only privacy boundary")
     if not checks["stress_error_rate_alert"]:
         raise RuntimeError("Stress replay failed to trigger error-rate alert")
     if not checks["stress_unseen_category_alert"]:
         raise RuntimeError("Stress replay failed to trigger unseen-category alert")
+    if not checks["frequency_relative_alert"] or not checks["pure_premium_relative_alert"]:
+        raise RuntimeError("Stress replay failed to trigger relative disagreement-shift alerts")
 
     payload = {
         "status": "success",
         "interpretation": (
-            "Synthetic replay validation only. Alerts demonstrate monitoring behaviour; "
-            "they are not observed production incidents or insurer thresholds."
+            "Synthetic replay validation only. Cold start is recorded separately from the "
+            "steady-state baseline. Alerts demonstrate monitoring behaviour; they are not "
+            "observed production incidents or insurer thresholds."
         ),
+        "cold_start": cold_start_snapshot,
         "baseline": baseline,
         "stress": stress,
         "disagreement_shift": shifts,
