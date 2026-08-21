@@ -1,2 +1,2 @@
 model,train_years,calibration_year,test_year,n_train,n_calibration,n_test,calibration_scale_from_prior_year,calibration_year_raw_ratio_pred_over_actual,test_raw_tweedie_deviance_p1_5,test_raw_loss_calibration_ratio_pred_over_actual,test_locked_tweedie_deviance_p1_5,test_locked_loss_calibration_ratio_pred_over_actual,test_top10_loss_capture
-Tweedie_GLM,"2015,2016",2017,2018,30232,28758,31729,0.5527423469878381,1.8091611859476417,68.3662606787852,4.711932589858399,55.4401450631905,2.604484678566813,0.2160061781868594
+Tweedie_GLM,"2015,2016",2017,2018,30232,28758,31729,0.5527423447644981,1.8091611932247762,68.36626073070894,4.711932601776416,55.440145029163375,2.604484674678178,0.2160061781868594
