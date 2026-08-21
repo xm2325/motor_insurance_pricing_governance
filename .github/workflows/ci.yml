@@ -28,6 +28,7 @@ on:
       - 'tests/test_ci_stratification_v24.py'
       - 'tests/test_download_cache_v24.py'
       - 'tests/test_runtime_contract_v25.py'
+      - 'tests/test_environment_static_v26.py'
       - 'tests/test_model_io_contract_v26.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
@@ -60,6 +61,7 @@ on:
       - 'tests/test_ci_stratification_v24.py'
       - 'tests/test_download_cache_v24.py'
       - 'tests/test_runtime_contract_v25.py'
+      - 'tests/test_environment_static_v26.py'
       - 'tests/test_model_io_contract_v26.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
@@ -94,6 +96,7 @@ jobs:
             tests/test_ci_stratification_v24.py \
             tests/test_download_cache_v24.py \
             tests/test_runtime_contract_v25.py \
+            tests/test_environment_static_v26.py \
             tests/test_model_io_contract_v26.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
