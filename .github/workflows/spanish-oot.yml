@@ -11,27 +11,32 @@ on:
       - '.github/workflows/spanish-oot.yml'
 
 permissions:
-  contents: read
+  contents: write
 
-# Manual trigger marker: 2026-08-21T11:13+01:00
 jobs:
   oot:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
 
       - name: Install dependencies
+        id: install
         run: pip install -r requirements.txt
 
       - name: Download and audit Spanish motor data
+        id: download
         run: python download_spanish_motor.py
 
       - name: Run genuine calendar out-of-time validation
+        id: oot
         run: python run_spanish_oot.py
 
       - name: Show audit and summary
@@ -40,10 +45,47 @@ jobs:
           test -f results_oot/spanish_data_audit.json && cat results_oot/spanish_data_audit.json || true
           test -f results_oot/oot_summary.json && cat results_oot/oot_summary.json || true
 
+      - name: Persist run status to repository
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          DOWNLOAD_OUTCOME: ${{ steps.download.outcome }}
+          OOT_OUTCOME: ${{ steps.oot.outcome }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status = {
+              "workflow": "Spanish motor out-of-time validation",
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "sha": os.environ.get("GITHUB_SHA"),
+              "install_outcome": os.environ.get("INSTALL_OUTCOME"),
+              "download_outcome": os.environ.get("DOWNLOAD_OUTCOME"),
+              "oot_outcome": os.environ.get("OOT_OUTCOME"),
+          }
+          Path("ACTION_RUN_STATUS.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
+          PY
+          mkdir -p action_results/spanish_oot
+          rm -rf action_results/spanish_oot/*
+          cp ACTION_RUN_STATUS.json action_results/spanish_oot/
+          if [ -d results_oot ]; then cp -R results_oot/. action_results/spanish_oot/; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/spanish_oot
+          if git diff --cached --quiet; then
+            echo "No persisted OOT result changes"
+          else
+            git commit -m "Persist Spanish motor OOT run ${GITHUB_RUN_ID}"
+            git push origin HEAD:main
+          fi
+
       - name: Upload OOT results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: spanish-motor-oot-results
-          path: results_oot/
+          path: |
+            results_oot/
+            ACTION_RUN_STATUS.json
           if-no-files-found: warn
