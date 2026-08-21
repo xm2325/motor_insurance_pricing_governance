@@ -1,0 +1,18 @@
+{
+  "status": "IMAGE_SIZE_AND_PACKAGE_GATE_PASS",
+  "full_image_bytes": 960271925,
+  "runtime_image_bytes": 488778419,
+  "absolute_bytes_removed": 471493506,
+  "relative_size_reduction": 0.49099999044541476,
+  "minimum_required_reduction": 0.2,
+  "runtime_distribution": "xgboost-cpu",
+  "runtime_xgboost_version": "3.4.0",
+  "forbidden_packages_checked": [
+    "httpx",
+    "matplotlib",
+    "nvidia-nccl-cu13",
+    "pytest",
+    "tabulate"
+  ],
+  "forbidden_packages_present": []
+}
