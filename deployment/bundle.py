@@ -11,6 +11,10 @@ import numpy as np
 import pandas as pd
 
 from deployment.contracts import CATEGORICAL_FEATURES, FEATURES, feature_contract_hash
+from deployment.environment import (
+    EnvironmentCompatibility,
+    require_model_environment_compatibility,
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -26,6 +30,7 @@ class ShadowModelBundle:
     root: Path
     manifest: dict[str, Any]
     models: dict[str, Any]
+    environment_compatibility: EnvironmentCompatibility
 
     @classmethod
     def load(cls, root: str | Path) -> "ShadowModelBundle":
@@ -37,6 +42,18 @@ class ShadowModelBundle:
         if manifest.get("feature_contract_hash") != feature_contract_hash():
             raise RuntimeError("Deployment feature contract hash does not match service code")
 
+        # The persisted objects are sklearn Pipelines saved through joblib/pickle. Check
+        # the model stack before any artifact is deserialised so a version mismatch fails
+        # closed rather than merely emitting a warning after the object has been loaded.
+        expected_environment = manifest.get("training_environment")
+        if not isinstance(expected_environment, dict):
+            raise RuntimeError(
+                "Deployment manifest is missing training_environment; refuse joblib deserialization"
+            )
+        environment_compatibility = require_model_environment_compatibility(
+            expected_environment
+        )
+
         models: dict[str, Any] = {}
         for model_name, metadata in manifest["models"].items():
             artifact_path = root / metadata["artifact"]
@@ -46,7 +63,12 @@ class ShadowModelBundle:
                     f"Artifact hash mismatch for {model_name}: {actual_hash} != {metadata['sha256']}"
                 )
             models[model_name] = joblib.load(artifact_path)
-        return cls(root=root, manifest=manifest, models=models)
+        return cls(
+            root=root,
+            manifest=manifest,
+            models=models,
+            environment_compatibility=environment_compatibility,
+        )
 
     def _warnings_for_record(self, record: dict[str, Any]) -> list[str]:
         warnings: list[str] = []
