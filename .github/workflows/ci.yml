@@ -6,23 +6,43 @@ on:
     paths:
       - 'run_spanish_oot_2024.py'
       - 'run_rolling_origin_v14.py'
+      - 'download_spanish_motor_2022_2024.py'
       - 'results/fremtpl2_full_frequency_benchmark.csv'
       - 'action_results/spanish_oot_2024/**'
+      - 'action_results/v21/**'
+      - 'action_results/v22/**'
+      - 'action_results/v23/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'tests/test_oot_contract.py'
       - 'tests/test_evidence_registry.py'
+      - 'tests/test_ci_stratification_v24.py'
+      - 'tests/test_download_cache_v24.py'
+      - '.github/workflows/v21-deployment.yml'
+      - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
       - 'run_spanish_oot_2024.py'
       - 'run_rolling_origin_v14.py'
+      - 'download_spanish_motor_2022_2024.py'
       - 'results/fremtpl2_full_frequency_benchmark.csv'
       - 'action_results/spanish_oot_2024/**'
+      - 'action_results/v21/**'
+      - 'action_results/v22/**'
+      - 'action_results/v23/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'tests/test_oot_contract.py'
       - 'tests/test_evidence_registry.py'
+      - 'tests/test_ci_stratification_v24.py'
+      - 'tests/test_download_cache_v24.py'
+      - '.github/workflows/v21-deployment.yml'
+      - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
+
+concurrency:
+  group: light-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -37,12 +57,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check leakage, temporal design and registered evidence
+      - name: Check leakage, evidence, cache and workflow stratification
         id: contract
         run: |
           python -m unittest -v \
             tests/test_oot_contract.py \
-            tests/test_evidence_registry.py
+            tests/test_evidence_registry.py \
+            tests/test_ci_stratification_v24.py \
+            tests/test_download_cache_v24.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
