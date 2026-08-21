@@ -18,6 +18,7 @@ from deployment.contracts import (
     feature_contract_hash,
 )
 from deployment.drift import build_monitoring_baseline
+from deployment.environment import capture_model_environment
 from run_spanish_oot_2024 import DATA_PATH, load_data, locked_scale, make_pipeline
 
 OUTDIR = Path("deployment_artifacts")
@@ -175,7 +176,9 @@ def main() -> None:
             }
         )
 
+    training_environment = capture_model_environment()
     manifest = {
+        "bundle_contract_version": "0.26",
         "model_version": "v0.21-shadow-2022-train-2023-calibration",
         "governance_status": SHADOW_GOVERNANCE_STATUS,
         "source_dataset": str(DATA_PATH),
@@ -186,6 +189,13 @@ def main() -> None:
         "features": FEATURES,
         "categorical_levels": categorical_levels,
         "monitoring_baseline": monitoring_baseline,
+        "training_environment": training_environment,
+        "serialization": {
+            "format": "joblib_pickle_sklearn_pipeline",
+            "compatibility_policy": "exact_match_for_joblib_pickle_model_stack",
+            "environment_check_before_deserialization": True,
+            "native_xgboost_model_io_migration": "deferred_to_follow_up",
+        },
         "models": manifest_models,
         "interpretation_boundary": (
             "Shadow comparison only. The v0.20 global model-family decision is HOLD. "
@@ -201,11 +211,13 @@ def main() -> None:
     )
     print(json.dumps({
         "bundle": str(OUTDIR),
+        "bundle_contract_version": manifest["bundle_contract_version"],
         "model_version": manifest["model_version"],
         "governance_status": manifest["governance_status"],
         "models": list(manifest_models),
         "parity_records": len(parity_records),
         "monitoring_baseline_source": monitoring_baseline["source"],
+        "training_environment": training_environment,
     }, indent=2))
 
 
