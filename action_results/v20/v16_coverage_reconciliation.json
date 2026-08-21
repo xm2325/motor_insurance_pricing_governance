@@ -1,0 +1,10 @@
+{
+  "version": "v0.16",
+  "note": "Coverage premium fields are used only to construct an audit coverage-exposure proxy; they are not predictive features.",
+  "total_claims": 39276.0,
+  "sum_component_claims": 39276.0,
+  "claim_reconciliation_gap": 0.0,
+  "total_incurred": 38106351.28,
+  "sum_component_incurred": 38106351.28000001,
+  "incurred_reconciliation_gap": 7.450580596923828e-09
+}

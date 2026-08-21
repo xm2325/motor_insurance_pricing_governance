@@ -1,0 +1,13 @@
+{
+  "workflow": "Motor pricing governance v0.20",
+  "run_id": "32476369771",
+  "sha": "0365fc37fa50b64b2983d4e540915a53ed134a7d",
+  "install_outcome": "success",
+  "contract_outcome": "success",
+  "discover_outcome": "success",
+  "download_outcome": "success",
+  "audit_outcome": "success",
+  "oot_outcome": "success",
+  "rolling_outcome": "success",
+  "governance_outcome": "success"
+}
