@@ -2,6 +2,16 @@
   "status": "success",
   "interpretation": "The 2022 sample is a monitoring-control replay, the 2024 sample is real temporal feature/score transport, and the final stress is synthetic. Cold start is recorded separately. Alert thresholds are project demonstration rules, not insurer SLAs or regulatory thresholds.",
   "sample_size_per_replay": 5000,
+  "business_type_distribution_full_year": {
+    "2022": {
+      "NB": 0.979053460570782,
+      "P": 0.020946539429217967
+    },
+    "2024": {
+      "NB": 0.5734658059910165,
+      "P": 0.42653419400898357
+    }
+  },
   "cold_start": {
     "service_version": "0.22",
     "model_version": "v0.21-shadow-2022-train-2023-calibration",
@@ -14,9 +24,9 @@
     "unseen_warning_records": 0,
     "unseen_category_rate": 0.0,
     "latency_ms": {
-      "median": 48.62698399999488,
-      "p95": 48.62698399999488,
-      "max": 48.62698399999488
+      "median": 47.440647000001945,
+      "p95": 47.440647000001945,
+      "max": 47.440647000001945
     },
     "batch_size": {
       "median": 100.0,
@@ -47,7 +57,9 @@
         "circulation_area": 0.00034394953855600315
       },
       "max_psi": 1.0977754046506218,
-      "max_psi_feature": "vehicle_brand"
+      "max_psi_feature": "vehicle_brand",
+      "alert_eligible": false,
+      "minimum_records": 500
     },
     "thresholds": {
       "error_rate": 0.02,
@@ -55,7 +67,8 @@
       "p95_latency_ms": 200.0,
       "frequency_abs_log_ratio_p95": 0.75,
       "pure_premium_abs_log_ratio_p95": 1.0,
-      "max_feature_psi": 0.25
+      "max_feature_psi": 0.25,
+      "min_feature_drift_records": 500.0
     },
     "alerts": {
       "error_rate": false,
@@ -63,9 +76,9 @@
       "p95_latency_ms": false,
       "frequency_disagreement": false,
       "pure_premium_disagreement": false,
-      "feature_drift": true
+      "feature_drift": false
     },
-    "alert_status": "RED"
+    "alert_status": "GREEN"
   },
   "baseline_2022": {
     "service_version": "0.22",
@@ -79,9 +92,9 @@
     "unseen_warning_records": 0,
     "unseen_category_rate": 0.0,
     "latency_ms": {
-      "median": 77.88125300000104,
-      "p95": 81.9801966,
-      "max": 82.69588699999986
+      "median": 78.9365329999896,
+      "p95": 80.09975639999709,
+      "max": 80.2669539999954
     },
     "batch_size": {
       "median": 1000.0,
@@ -112,7 +125,9 @@
         "circulation_area": 0.000223173437115946
       },
       "max_psi": 0.009732760622960532,
-      "max_psi_feature": "vehicle_brand"
+      "max_psi_feature": "vehicle_brand",
+      "alert_eligible": true,
+      "minimum_records": 500
     },
     "thresholds": {
       "error_rate": 0.02,
@@ -120,7 +135,8 @@
       "p95_latency_ms": 200.0,
       "frequency_abs_log_ratio_p95": 0.75,
       "pure_premium_abs_log_ratio_p95": 1.0,
-      "max_feature_psi": 0.25
+      "max_feature_psi": 0.25,
+      "min_feature_drift_records": 500.0
     },
     "alerts": {
       "error_rate": false,
@@ -144,9 +160,9 @@
     "unseen_warning_records": 0,
     "unseen_category_rate": 0.0,
     "latency_ms": {
-      "median": 76.90768300000173,
-      "p95": 77.7750329999975,
-      "max": 77.95169499999588
+      "median": 80.63458600000217,
+      "p95": 81.63677759999644,
+      "max": 81.88095299999532
     },
     "batch_size": {
       "median": 1000.0,
@@ -177,7 +193,9 @@
         "circulation_area": 0.00034394953855600315
       },
       "max_psi": 1.4115752423025838,
-      "max_psi_feature": "business_type"
+      "max_psi_feature": "business_type",
+      "alert_eligible": true,
+      "minimum_records": 500
     },
     "thresholds": {
       "error_rate": 0.02,
@@ -185,7 +203,8 @@
       "p95_latency_ms": 200.0,
       "frequency_abs_log_ratio_p95": 0.75,
       "pure_premium_abs_log_ratio_p95": 1.0,
-      "max_feature_psi": 0.25
+      "max_feature_psi": 0.25,
+      "min_feature_drift_records": 500.0
     },
     "alerts": {
       "error_rate": false,
@@ -209,9 +228,9 @@
     "unseen_warning_records": 5000,
     "unseen_category_rate": 1.0,
     "latency_ms": {
-      "median": 0.4923850000011498,
-      "p95": 77.59534900000347,
-      "max": 79.06206299999496
+      "median": 0.5194209999928034,
+      "p95": 79.11716039999988,
+      "max": 80.74108699999272
     },
     "batch_size": {
       "median": 1000.0,
@@ -242,7 +261,9 @@
         "circulation_area": 0.000223173437115946
       },
       "max_psi": 24.583521462013813,
-      "max_psi_feature": "vehicle_brand"
+      "max_psi_feature": "vehicle_brand",
+      "alert_eligible": true,
+      "minimum_records": 500
     },
     "thresholds": {
       "error_rate": 0.02,
@@ -250,7 +271,8 @@
       "p95_latency_ms": 200.0,
       "frequency_abs_log_ratio_p95": 0.75,
       "pure_premium_abs_log_ratio_p95": 1.0,
-      "max_feature_psi": 0.25
+      "max_feature_psi": 0.25,
+      "min_feature_drift_records": 500.0
     },
     "alerts": {
       "error_rate": true,
