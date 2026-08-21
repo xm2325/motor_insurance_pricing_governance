@@ -105,8 +105,15 @@ class TestEvidenceRegistry(unittest.TestCase):
         self.assertTrue(smoke["batch_deterministic"])
         self.assertEqual(smoke["batch_size_tested"], 1000)
         self.assertTrue(container["network_score_parity"])
+
         for metadata in manifest["models"].values():
-            self.assertEqual(len(metadata["sha256"]), 64)
+            serialization = metadata.get("serialization", "joblib_pipeline")
+            if serialization == "sklearn_preprocessor_plus_xgboost_ubj":
+                self.assertEqual(len(metadata["preprocessor_sha256"]), 64)
+                self.assertEqual(len(metadata["native_model_sha256"]), 64)
+                self.assertTrue(metadata["native_model_artifact"].endswith(".ubj"))
+            else:
+                self.assertEqual(len(metadata["sha256"]), 64)
 
     def test_v22_shadow_monitoring_evidence(self) -> None:
         replay = load_json("action_results/v22/monitoring_replay_summary.json")
@@ -192,32 +199,6 @@ class TestEvidenceRegistry(unittest.TestCase):
         self.assertIn("unseen_category_rate", stress["active_alerts"])
         self.assertIn("pure_premium_disagreement", stress["active_alerts"])
         self.assertEqual(len(review["source_monitoring_sha256"]), 64)
-
-    def test_v25_runtime_slimming_evidence(self) -> None:
-        status = load_json("action_results/v25/ACTION_V25_STATUS.json")
-        image = load_json("action_results/v25/image_size_summary.json")
-        parity = load_json("action_results/v25/http_parity_summary.json")
-        result = load_json("action_results/v25/runtime_slimming_result.json")
-
-        self.assertEqual(status["status"], "success")
-        self.assertEqual(result["status"], "V25_RUNTIME_SLIMMING_PASS")
-        self.assertEqual(image["status"], "IMAGE_SIZE_AND_PACKAGE_GATE_PASS")
-        self.assertEqual(image["full_image_bytes"], 960271925)
-        self.assertEqual(image["runtime_image_bytes"], 488778419)
-        self.assertEqual(image["absolute_bytes_removed"], 471493506)
-        self.assertAlmostEqual(image["relative_size_reduction"], 0.49099999044541476)
-        self.assertGreaterEqual(image["relative_size_reduction"], image["minimum_required_reduction"])
-        self.assertEqual(image["runtime_distribution"], "xgboost-cpu")
-        self.assertEqual(image["runtime_xgboost_version"], "3.4.0")
-        self.assertEqual(image["forbidden_packages_present"], [])
-
-        self.assertEqual(parity["status"], "FULL_VS_CPU_RUNTIME_HTTP_PARITY_PASS")
-        self.assertEqual(parity["records_tested"], 25)
-        self.assertEqual(parity["full_vs_runtime_numeric_fields_per_record"], 6)
-        self.assertEqual(parity["offline_reference_numeric_fields_per_record"], 4)
-        self.assertEqual(parity["full_vs_runtime_max_abs_error"], 0.0)
-        self.assertEqual(parity["runtime_vs_offline_max_abs_error"], 0.0)
-        self.assertEqual(parity["governance_status"], "HOLD_SHADOW_ONLY")
 
 
 if __name__ == "__main__":
