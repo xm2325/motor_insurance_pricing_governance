@@ -1,3 +1,3 @@
-model,train_years,test_year,n_train,n_test,poisson_deviance,claim_calibration_ratio,top10_claim_capture
-Poisson_GLM,"2015,2016,2017",2018,69740,35815,4.25529285146236,13.806999447214894,0.6875484871993793
-XGBoost_Poisson,"2015,2016,2017",2018,69740,35815,0.6044229471018173,3.129994308457631,0.7430178432893716
+model,train_years,calibration_year,test_year,n_train,n_calibration,n_test,calibration_scale_from_prior_year,calibration_year_raw_ratio_pred_over_actual,test_raw_poisson_deviance,test_raw_calibration_ratio_pred_over_actual,test_locked_poisson_deviance,test_locked_calibration_ratio_pred_over_actual,test_top10_claim_capture
+Poisson_GLM,"2015,2016",2017,2018,30232,28758,31729,0.5070111558292456,1.9723431891048693,1.8157866305245143,6.17008150281615,1.0451485816320847,3.128300154303465,0.284430552842352
+XGBoost_Poisson,"2015,2016",2017,2018,30232,28758,31729,0.5083174119457828,1.967274731298522,1.6693739110485413,5.697716646143962,0.9762838273416118,2.896248574353393,0.28970502051181873

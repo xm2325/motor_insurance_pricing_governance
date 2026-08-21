@@ -1,47 +1,138 @@
 {
-  "status": "COMPLETED_REAL_CALENDAR_OOT",
+  "status": "COMPLETED_STRICT_CALENDAR_OOT_V2",
+  "construction_audit": {
+    "source_rows": 105555,
+    "valid_rows_after_exposure_filter": 90719,
+    "removed_nonpositive_or_missing_exposure": 14836,
+    "rows_with_missing_renewal_year": 0,
+    "raw_nonpositive_exposure_rows": 14836,
+    "feature_policy": "strict_pre_outcome_excludes_N_claims_history_and_R_Claims_history"
+  },
+  "feature_policy": {
+    "included_numeric": [
+      "Seniority",
+      "Policies_in_force",
+      "Max_policies",
+      "Max_products",
+      "Power",
+      "Cylinder_capacity",
+      "Value_vehicle",
+      "N_doors",
+      "Length",
+      "Weight"
+    ],
+    "included_categorical": [
+      "Distribution_channel",
+      "Payment",
+      "Type_risk",
+      "Area",
+      "Second_driver",
+      "Type_fuel"
+    ],
+    "excluded_ambiguous_claim_history": [
+      "N_claims_history",
+      "R_Claims_history"
+    ]
+  },
+  "year_summary": {
+    "2015": {
+      "rows": 3805,
+      "unique_ids": 3805,
+      "exposure": 3703.188227241615,
+      "claims": 3236.0,
+      "claim_frequency": 0.8738416200924227,
+      "loss": 1192811.8399999999,
+      "pure_premium": 322.1040268019232
+    },
+    "2016": {
+      "rows": 26427,
+      "unique_ids": 26427,
+      "exposure": 25747.056125941133,
+      "claims": 20843.0,
+      "claim_frequency": 0.8095294428243347,
+      "loss": 7746656.78,
+      "pure_premium": 300.8754376464403
+    },
+    "2017": {
+      "rows": 28758,
+      "unique_ids": 28758,
+      "exposure": 28079.49897330595,
+      "claims": 12389.0,
+      "claim_frequency": 0.4412115761672858,
+      "loss": 4946518.0600000005,
+      "pure_premium": 176.16119378420734
+    },
+    "2018": {
+      "rows": 31729,
+      "unique_ids": 31729,
+      "exposure": 31386.822724161528,
+      "claims": 5119.0,
+      "claim_frequency": 0.16309392145192836,
+      "loss": 2302073.46,
+      "pure_premium": 73.34522134436588
+    }
+  },
   "train_years": [
     2015,
-    2016,
-    2017
+    2016
   ],
+  "calibration_year": 2017,
   "test_year": 2018,
-  "rows_by_year": {
-    "2015": 4559,
-    "2016": 31428,
-    "2017": 33753,
-    "2018": 35815
+  "id_transport": {
+    "test_unique_ids": 31729,
+    "test_ids_seen_before": 20392,
+    "test_ids_unseen_before": 11337,
+    "share_test_ids_seen_before": 0.642692804689716
   },
   "frequency_results": [
     {
       "model": "Poisson_GLM",
-      "train_years": "2015,2016,2017",
+      "train_years": "2015,2016",
+      "calibration_year": 2017,
       "test_year": 2018,
-      "n_train": 69740,
-      "n_test": 35815,
-      "poisson_deviance": 4.25529285146236,
-      "claim_calibration_ratio": 13.806999447214894,
-      "top10_claim_capture": 0.6875484871993793
+      "n_train": 30232,
+      "n_calibration": 28758,
+      "n_test": 31729,
+      "calibration_scale_from_prior_year": 0.5070111558292456,
+      "calibration_year_raw_ratio_pred_over_actual": 1.9723431891048693,
+      "test_raw_poisson_deviance": 1.8157866305245143,
+      "test_raw_calibration_ratio_pred_over_actual": 6.17008150281615,
+      "test_locked_poisson_deviance": 1.0451485816320847,
+      "test_locked_calibration_ratio_pred_over_actual": 3.128300154303465,
+      "test_top10_claim_capture": 0.284430552842352
     },
     {
       "model": "XGBoost_Poisson",
-      "train_years": "2015,2016,2017",
+      "train_years": "2015,2016",
+      "calibration_year": 2017,
       "test_year": 2018,
-      "n_train": 69740,
-      "n_test": 35815,
-      "poisson_deviance": 0.6044229471018173,
-      "claim_calibration_ratio": 3.129994308457631,
-      "top10_claim_capture": 0.7430178432893716
+      "n_train": 30232,
+      "n_calibration": 28758,
+      "n_test": 31729,
+      "calibration_scale_from_prior_year": 0.5083174119457828,
+      "calibration_year_raw_ratio_pred_over_actual": 1.967274731298522,
+      "test_raw_poisson_deviance": 1.6693739110485413,
+      "test_raw_calibration_ratio_pred_over_actual": 5.697716646143962,
+      "test_locked_poisson_deviance": 0.9762838273416118,
+      "test_locked_calibration_ratio_pred_over_actual": 2.896248574353393,
+      "test_top10_claim_capture": 0.28970502051181873
     }
   ],
   "pure_premium_result": {
     "model": "Tweedie_GLM",
-    "train_years": "2015,2016,2017",
+    "train_years": "2015,2016",
+    "calibration_year": 2017,
     "test_year": 2018,
-    "n_train": 69740,
-    "n_test": 35815,
-    "tweedie_deviance_p1_5": 107.14189916794835,
-    "loss_calibration_ratio": 37117.59511792548,
-    "top10_loss_capture": 0.7352780424198074
-  }
+    "n_train": 30232,
+    "n_calibration": 28758,
+    "n_test": 31729,
+    "calibration_scale_from_prior_year": 0.5527423469878381,
+    "calibration_year_raw_ratio_pred_over_actual": 1.8091611859476417,
+    "test_raw_tweedie_deviance_p1_5": 68.3662606787852,
+    "test_raw_loss_calibration_ratio_pred_over_actual": 4.711932589858399,
+    "test_locked_tweedie_deviance_p1_5": 55.4401450631905,
+    "test_locked_loss_calibration_ratio_pred_over_actual": 2.604484678566813,
+    "test_top10_loss_capture": 0.2160061781868594
+  },
+  "interpretation_boundary": "Calendar ordering is genuine, but Date_last_renewal defines policy-renewal cohorts rather than a guaranteed claim-occurrence timestamp. Treat as renewal-cohort OOT, not claim-date OOT."
 }
