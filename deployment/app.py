@@ -3,16 +3,18 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from deployment.bundle import ShadowModelBundle
 from deployment.contracts import BatchScoreRequest, PricingFeatures
+from deployment.monitoring import ShadowTelemetry
 
 app = FastAPI(
     title="Motor Pricing Shadow Scoring Service",
-    version="0.21",
+    version="0.22",
     description=(
         "Reference/challenger risk scoring for governance and shadow comparison only. "
         "The current model-family decision is HOLD; this service does not set customer premiums."
@@ -24,6 +26,28 @@ app = FastAPI(
 def get_bundle() -> ShadowModelBundle:
     root = Path(os.environ.get("MODEL_BUNDLE_DIR", "deployment_artifacts"))
     return ShadowModelBundle.load(root)
+
+
+@lru_cache(maxsize=1)
+def get_telemetry() -> ShadowTelemetry:
+    return ShadowTelemetry()
+
+
+@app.middleware("http")
+async def scoring_telemetry(request: Request, call_next):
+    if request.url.path not in {"/score", "/batch-score"}:
+        return await call_next(request)
+    start = perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception:
+        get_telemetry().record_request((perf_counter() - start) * 1000.0, error=True)
+        raise
+    get_telemetry().record_request(
+        (perf_counter() - start) * 1000.0,
+        error=response.status_code >= 400,
+    )
+    return response
 
 
 @app.get("/health")
@@ -51,15 +75,28 @@ def model_info() -> dict[str, Any]:
     }
 
 
+@app.get("/monitoring")
+def monitoring() -> dict[str, Any]:
+    bundle = get_bundle()
+    return {
+        "model_version": bundle.manifest["model_version"],
+        "governance_status": bundle.manifest["governance_status"],
+        **get_telemetry().snapshot(),
+    }
+
+
 @app.post("/score")
 def score(policy: PricingFeatures) -> dict[str, Any]:
-    return get_bundle().score_records([policy.as_model_record()])[0]
+    scores = get_bundle().score_records([policy.as_model_record()])
+    get_telemetry().record_scores(scores)
+    return scores[0]
 
 
 @app.post("/batch-score")
 def batch_score(request: BatchScoreRequest) -> dict[str, Any]:
     records = [policy.as_model_record() for policy in request.policies]
     scores = get_bundle().score_records(records)
+    get_telemetry().record_scores(scores)
     return {
         "count": len(scores),
         "model_version": get_bundle().manifest["model_version"],
