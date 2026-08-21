@@ -1,0 +1,17 @@
+{
+  "status": "V29_GITHUB_ARTIFACT_ATTESTATION_PASS",
+  "subject": "dist/motor-pricing-shadow-bundle-v29.tar.gz",
+  "subject_sha256": "14866b170f3737193f7e46c9997a532d3d2a0fdd9e1223f9dbd240617548bfbf",
+  "subject_bytes": 386598,
+  "sealed_bundle_lock_digest_sha256": "40aa8634be00a7c0f3171fa3473754fead8d52bd05b53eb12c4e54b60f5f3420",
+  "attestation_id": "42232000",
+  "attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42232000",
+  "attestation_bundle_path": "/home/runner/work/_temp/yMGwLB/attestation.json",
+  "gh_attestation_verify_success": true,
+  "verification_records": 1,
+  "repository": "xm2325/motor_insurance_pricing_governance",
+  "workflow": "Motor pricing release artifact attestation v0.29",
+  "commit_sha": "3119dd27dcdf7bbbaa484ec83ce924f6fd940e4f",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "provenance_boundary": "GitHub artifact attestation provides cryptographically verifiable build provenance for this release archive. It does not prove that the model is safe, accurate, approved for customer pricing, or transferable to FIRST CENTRAL / the UK motor market."
+}

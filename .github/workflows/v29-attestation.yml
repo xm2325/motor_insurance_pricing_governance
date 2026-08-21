@@ -1,0 +1,184 @@
+name: Motor pricing release artifact attestation v0.29
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.29-artifact-attestation
+    paths:
+      - '.github/workflows/v29-attestation.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'deployment/**'
+      - 'requirements.txt'
+      - 'requirements-runtime.txt'
+      - 'Dockerfile'
+
+concurrency:
+  group: v29-attestation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  attest-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify source and build sealed shadow bundle
+        env:
+          RELEASE_LABEL: attested-shadow-release-v29
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+          python build_deployment_bundle_v21.py
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Build deterministic release archive
+        id: package
+        run: |
+          mkdir -p dist results_v29
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -cf - deployment_artifacts | gzip -n > dist/motor-pricing-shadow-bundle-v29.tar.gz
+          sha256sum dist/motor-pricing-shadow-bundle-v29.tar.gz | tee results_v29/release_archive.sha256
+          ARCHIVE_SHA=$(sha256sum dist/motor-pricing-shadow-bundle-v29.tar.gz | awk '{print $1}')
+          ARCHIVE_BYTES=$(stat -c '%s' dist/motor-pricing-shadow-bundle-v29.tar.gz)
+          echo "archive_sha256=${ARCHIVE_SHA}" >> "$GITHUB_OUTPUT"
+          echo "archive_bytes=${ARCHIVE_BYTES}" >> "$GITHUB_OUTPUT"
+          python - <<'PY'
+          import tarfile
+          from pathlib import Path
+          path = Path('dist/motor-pricing-shadow-bundle-v29.tar.gz')
+          with tarfile.open(path, 'r:gz') as archive:
+              names = archive.getnames()
+          required = {
+              'deployment_artifacts/bundle.lock.json',
+              'deployment_artifacts/manifest.json',
+              'deployment_artifacts/parity_reference.json',
+          }
+          missing = required.difference(names)
+          if missing:
+              raise AssertionError(f'Missing required sealed-bundle members: {sorted(missing)}')
+          forbidden_tokens = ('Dataset_of_motor_insurance_portfolio.csv', 'data_spanish_2022_2024')
+          bad = [name for name in names if any(token in name for token in forbidden_tokens)]
+          if bad:
+              raise AssertionError(f'Raw source data leaked into release archive: {bad[:5]}')
+          print({'archive_members': len(names), 'required_members_present': True, 'raw_data_members': 0})
+          PY
+
+      - name: Generate GitHub build provenance attestation
+        id: attest
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/motor-pricing-shadow-bundle-v29.tar.gz
+          show-summary: true
+
+      - name: Verify GitHub attestation with GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify dist/motor-pricing-shadow-bundle-v29.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --format json > results_v29/attestation_verification.json
+          test -s results_v29/attestation_verification.json
+          jq -e 'length > 0' results_v29/attestation_verification.json >/dev/null
+
+      - name: Build v0.29 provenance result
+        env:
+          ATTESTATION_ID: ${{ steps.attest.outputs.attestation-id }}
+          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
+          ATTESTATION_BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+          ARCHIVE_SHA: ${{ steps.package.outputs.archive_sha256 }}
+          ARCHIVE_BYTES: ${{ steps.package.outputs.archive_bytes }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          lock = json.loads(Path('deployment_artifacts/bundle.lock.json').read_text())
+          verification = json.loads(Path('results_v29/attestation_verification.json').read_text())
+          result = {
+              'status': 'V29_GITHUB_ARTIFACT_ATTESTATION_PASS',
+              'subject': 'dist/motor-pricing-shadow-bundle-v29.tar.gz',
+              'subject_sha256': os.environ['ARCHIVE_SHA'],
+              'subject_bytes': int(os.environ['ARCHIVE_BYTES']),
+              'sealed_bundle_lock_digest_sha256': lock['lock_digest_sha256'],
+              'attestation_id': os.environ.get('ATTESTATION_ID'),
+              'attestation_url': os.environ.get('ATTESTATION_URL'),
+              'attestation_bundle_path': os.environ.get('ATTESTATION_BUNDLE_PATH'),
+              'gh_attestation_verify_success': bool(verification),
+              'verification_records': len(verification),
+              'repository': os.environ.get('GITHUB_REPOSITORY'),
+              'workflow': os.environ.get('GITHUB_WORKFLOW'),
+              'commit_sha': os.environ.get('GITHUB_SHA'),
+              'governance_status': 'HOLD_SHADOW_ONLY',
+              'provenance_boundary': (
+                  'GitHub artifact attestation provides cryptographically verifiable build provenance '
+                  'for this release archive. It does not prove that the model is safe, accurate, '
+                  'approved for customer pricing, or transferable to FIRST CENTRAL / the UK motor market.'
+              ),
+          }
+          Path('results_v29/artifact_attestation_result.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.29 evidence
+        run: |
+          mkdir -p action_results/v29
+          cp results_v29/artifact_attestation_result.json action_results/v29/
+          cp results_v29/attestation_verification.json action_results/v29/
+          cp results_v29/release_archive.sha256 action_results/v29/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v29/ACTION_V29_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing release artifact attestation v0.29',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v29
+          if git diff --cached --quiet; then
+            echo 'No v0.29 evidence changes'
+          else
+            git commit -m "Persist v0.29 GitHub artifact attestation ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload attested release archive and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-attested-release-v29
+          path: |
+            dist/motor-pricing-shadow-bundle-v29.tar.gz
+            results_v29/
+          if-no-files-found: warn

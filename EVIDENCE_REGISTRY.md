@@ -60,6 +60,11 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.28 release event lineage | **7-event SHA-256 chain verified** | `action_results/v28/release_control_result.json`, `action_results/v28/release_registry.json` |
 | v0.28 container bundle switch | candidate B **100 comparisons / max error 0.0** -> rollback A **100 comparisons / max error 0.0**, same runtime image | `action_results/v28/container_rollback_summary.json` |
 | v0.28 rollback side-effect boundary | **no model retraining and no pricing change** during release switch | `action_results/v28/release_control_result.json` |
+| v0.29 attested release archive | **386,598 bytes**, SHA-256 `14866b17...548bfbf` | `action_results/v29/artifact_attestation_result.json` |
+| v0.29 GitHub/Sigstore provenance | GitHub attestation ID **42232000** generated for the sealed release archive | `action_results/v29/artifact_attestation_result.json` |
+| v0.29 independent attestation verification | `gh attestation verify` **PASS**, one verification record | `action_results/v29/attestation_verification.json`, `action_results/v29/artifact_attestation_result.json` |
+| v0.29 provenance identity | verification material binds repository, v0.29 workflow/ref and build commit `3119dd27...940e4f` | `action_results/v29/attestation_verification.json` |
+| v0.29 governance boundary | attestation leaves model serving at `HOLD_SHADOW_ONLY`; it is build provenance, not pricing approval | `action_results/v29/artifact_attestation_result.json`, `RESULTS_V29.md` |
 
 ## Interpretation rules
 
@@ -88,9 +93,12 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.28 opening a review does not switch serving automatically. An unauthorised rollback is rejected; only the explicit project flag `operator_authorised=True` permits the switch to last-known-good.
 - `operator_authorised=True` is a demonstration governance contract, **not an authentication/IAM system** or evidence of production separation of duties.
 - v0.28 rollback does not retrain models, approve the challenger or change customer pricing; it only selects a previously sealed shadow bundle.
+- v0.29 uses GitHub Artifact Attestations to provide **cryptographically verifiable build provenance for one release archive**. This is stronger than the v0.27 self-contained content lock because verification is rooted in GitHub Actions OIDC/Sigstore rather than a repository-local digest alone.
+- v0.29 attestation does **not** prove the model is safe, accurate, regulator-approved or suitable for customer pricing; it links the exact archive digest to the repository/workflow/commit that built it.
+- v0.29 does not expose the raw Mendeley portfolio in the attested archive and does not change `HOLD_SHADOW_ONLY` governance.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py` and `tests/test_release_control_evidence_v28.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity and shadow-release-control headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py` and `tests/test_artifact_attestation_evidence_v29.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control and GitHub-attestation headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
