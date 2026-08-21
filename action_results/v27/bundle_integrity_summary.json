@@ -1,0 +1,24 @@
+{
+  "status": "V27_CONTENT_ADDRESSED_LOCK_CREATED",
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "bundle_contract_version": "0.27",
+  "lock_digest_sha256": "9d9d2b18b11dbb85306da99c691bccddd9aaa938a781e24ee44cba914175a5cd",
+  "artifact_count": 9,
+  "total_locked_bytes": 1604579,
+  "source_provenance": {
+    "provider": "Mendeley Data",
+    "dataset_id": "sw4jmdb2sm",
+    "dataset_version": 1,
+    "portfolio_file": "Dataset_of_motor_insurance_portfolio.csv",
+    "portfolio_file_bytes": 94710312,
+    "portfolio_file_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4"
+  },
+  "build_provenance": {
+    "repository": "xm2325/motor_insurance_pricing_governance",
+    "code_sha": "21e72d7c514f554a2f608bec49419e75370e6cac",
+    "github_run_id": "32521360922",
+    "github_workflow": "Motor pricing content-addressed bundle v0.27",
+    "builder": "build_deployment_bundle_v21.py + build_bundle_lock_v27.py"
+  },
+  "integrity_boundary": "Content-addressed integrity contract. Detects missing or modified locked files when this lockfile digest is trusted; it is not a cryptographic signature and does not claim resistance to an attacker who can replace both artifacts and lockfile."
+}

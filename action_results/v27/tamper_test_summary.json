@@ -1,0 +1,21 @@
+{
+  "status": "V27_TAMPER_TESTS_PASS",
+  "cases": {
+    "model_artifact_byte_tamper": {
+      "status": "FAIL_CLOSED_AS_EXPECTED",
+      "exception_type": "RuntimeError",
+      "message": "Locked artifact size mismatch for xgb_poisson_frequency.ubj: 742445 != 742444"
+    },
+    "missing_locked_artifact": {
+      "status": "FAIL_CLOSED_AS_EXPECTED",
+      "exception_type": "RuntimeError",
+      "message": "Locked bundle artifact is missing: poisson_glm_frequency.joblib"
+    },
+    "lock_self_tamper": {
+      "status": "FAIL_CLOSED_AS_EXPECTED",
+      "exception_type": "RuntimeError",
+      "message": "Bundle lock self-digest mismatch: a97d465df8d28cd2b5cbe8e925f757a5b625a865cb76ebcdf394b275757a0598 != 9d9d2b18b11dbb85306da99c691bccddd9aaa938a781e24ee44cba914175a5cd"
+    }
+  },
+  "case_count": 3
+}
