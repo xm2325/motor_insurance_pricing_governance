@@ -9,6 +9,7 @@ on:
       - 'download_spanish_motor_2022_2024.py'
       - 'audit_spanish_motor_2022_2024.py'
       - 'run_spanish_oot_2024.py'
+      - 'run_rolling_origin_v14.py'
       - 'requirements.txt'
       - '.github/workflows/spanish-oot-2024.yml'
 
@@ -49,11 +50,16 @@ jobs:
         id: model_oot
         run: python run_spanish_oot_2024.py
 
-      - name: Show OOT decision
+      - name: Run v0.14 rolling-origin temporal stability audit
+        id: rolling_origin
+        run: python run_rolling_origin_v14.py
+
+      - name: Show OOT and rolling-origin decisions
         if: always()
         run: |
           test -f results_oot_2024/oot_2024_summary.json && cat results_oot_2024/oot_2024_summary.json || true
           test -f results_oot_2024/oot_2024_model_decision.json && cat results_oot_2024/oot_2024_model_decision.json || true
+          test -f results_oot_2024/rolling_origin_v14_summary.json && cat results_oot_2024/rolling_origin_v14_summary.json || true
 
       - name: Persist 2022-2024 OOT status and results
         if: always()
@@ -63,13 +69,14 @@ jobs:
           DOWNLOAD_AUDIT_OUTCOME: ${{ steps.download_audit.outcome }}
           SCHEMA_AUDIT_OUTCOME: ${{ steps.schema_audit.outcome }}
           MODEL_OOT_OUTCOME: ${{ steps.model_oot.outcome }}
+          ROLLING_ORIGIN_OUTCOME: ${{ steps.rolling_origin.outcome }}
         run: |
           python - <<'PY'
           import json, os
           from pathlib import Path
           status = {
               "workflow": "Spanish motor 2022-2024 discovery and OOT",
-              "stage": "full_2024_oot",
+              "stage": "full_2024_oot_plus_v14_rolling_origin",
               "run_id": os.environ.get("GITHUB_RUN_ID"),
               "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
               "sha": os.environ.get("GITHUB_SHA"),
@@ -78,6 +85,7 @@ jobs:
               "download_audit_outcome": os.environ.get("DOWNLOAD_AUDIT_OUTCOME"),
               "schema_audit_outcome": os.environ.get("SCHEMA_AUDIT_OUTCOME"),
               "model_oot_outcome": os.environ.get("MODEL_OOT_OUTCOME"),
+              "rolling_origin_outcome": os.environ.get("ROLLING_ORIGIN_OUTCOME"),
           }
           Path("ACTION_RUN_STATUS_2024.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
           PY
