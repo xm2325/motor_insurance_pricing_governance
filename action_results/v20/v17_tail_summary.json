@@ -1,0 +1,10 @@
+{
+  "version": "v0.17",
+  "positive_loss_policy_rows": 21264,
+  "positive_loss_p99": 15522.763319999978,
+  "positive_loss_p99_5": 22542.84657250001,
+  "positive_loss_p99_9": 59641.99256450073,
+  "positive_loss_max": 571128.318,
+  "top_1pct_positive_loss_policies_share_of_total_incurred": 0.20518322792304874,
+  "top_0_5pct_positive_loss_policies_share_of_total_incurred": 0.15394797067802607
+}

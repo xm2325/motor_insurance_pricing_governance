@@ -1,0 +1,14 @@
+{
+  "version": "v0.20",
+  "decision": "HOLD",
+  "gates": {
+    "locked_2024_frequency_bootstrap_supports_xgb": false,
+    "locked_2024_pure_premium_bootstrap_supports_xgb": false,
+    "rolling_origin_frequency_support_consistent_across_windows": false,
+    "rolling_origin_pure_premium_support_consistent_across_windows": false,
+    "same_model_is_closer_to_one_for_returning_and_new_business": false,
+    "xgb_has_lower_locked_2024_pure_premium_deviance": false,
+    "xgb_pure_premium_is_more_complex_on_size_or_fit_time": true
+  },
+  "interpretation": "The final decision prioritises stable expected-loss evidence, temporal repeatability, transport and value-for-complexity. No synthetic proposition result is used as deployment evidence."
+}
