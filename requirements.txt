@@ -6,3 +6,7 @@ matplotlib>=3.9
 pytest>=8.0
 scipy>=1.13
 tabulate>=0.9
+joblib>=1.4
+fastapi>=0.116
+uvicorn>=0.35
+httpx>=0.28
