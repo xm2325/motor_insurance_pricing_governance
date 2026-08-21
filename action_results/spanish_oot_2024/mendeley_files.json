@@ -1,0 +1,23 @@
+{
+  "status": "MENDELEY_FILE_DISCOVERY_OK",
+  "dataset_id": "sw4jmdb2sm",
+  "version": 1,
+  "api_url": "https://data.mendeley.com/public-api/datasets/sw4jmdb2sm/files?folder_id=root&version=1",
+  "file_count": 2,
+  "files": [
+    {
+      "id": "3dc64675-b6bd-4e8e-bfba-b64e585c6599",
+      "name": null,
+      "size": 94710312,
+      "download_url": "https://data.mendeley.com/public-files/datasets/sw4jmdb2sm/files/3dc64675-b6bd-4e8e-bfba-b64e585c6599/file_downloaded",
+      "content_type": null
+    },
+    {
+      "id": "b34f32d4-cbe8-4a4e-bd09-9b59796e7fa3",
+      "name": null,
+      "size": 15413,
+      "download_url": "https://data.mendeley.com/public-files/datasets/sw4jmdb2sm/files/b34f32d4-cbe8-4a4e-bd09-9b59796e7fa3/file_downloaded",
+      "content_type": null
+    }
+  ]
+}
