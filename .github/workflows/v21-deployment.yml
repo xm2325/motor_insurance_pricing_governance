@@ -57,7 +57,7 @@ jobs:
           python-version: '3.12'
           cache: pip
 
-      - name: Restore verified public-data cache
+      - name: Restore verified public-data cache (v1)
         id: source_cache
         uses: actions/cache@v4
         with:
