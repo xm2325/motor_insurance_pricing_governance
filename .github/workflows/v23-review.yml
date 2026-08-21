@@ -1,0 +1,123 @@
+name: Motor pricing review lifecycle v0.23
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.23-review-lifecycle
+    paths:
+      - 'deployment/review.py'
+      - 'run_review_lifecycle_v23.py'
+      - 'tests/test_review_v23.py'
+      - 'tests/test_evidence_registry.py'
+      - 'action_results/v22/monitoring_replay_summary.json'
+      - '.github/workflows/v23-review.yml'
+  pull_request:
+    paths:
+      - 'deployment/review.py'
+      - 'run_review_lifecycle_v23.py'
+      - 'tests/test_review_v23.py'
+      - 'tests/test_evidence_registry.py'
+      - 'action_results/v22/monitoring_replay_summary.json'
+      - '.github/workflows/v23-review.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  review-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run review and evidence contracts
+        id: contracts
+        run: |
+          python -m unittest -v \
+            tests/test_review_v23.py \
+            tests/test_evidence_registry.py
+
+      - name: Replay monitoring-to-review lifecycle
+        id: replay
+        run: |
+          python run_review_lifecycle_v23.py \
+            --source action_results/v22/monitoring_replay_summary.json
+
+      - name: Validate lifecycle artifact
+        id: validate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('results_v23/review_lifecycle_summary.json').read_text())
+          assert p['status'] == 'success'
+          assert p['states'] == [
+              'HEALTHY', 'WATCH', 'REVIEW_REQUIRED', 'RECOVERING',
+              'HEALTHY', 'WATCH', 'REVIEW_REQUIRED'
+          ]
+          assert p['temporal_review']['active_alerts'] == ['feature_drift']
+          assert p['temporal_review']['action'] == 'REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION'
+          assert p['recovery']['closed_after_two_green_windows'] is True
+          assert p['synthetic_stress_review']['severity'] == 'HIGH'
+          assert p['synthetic_stress_review']['action'] == 'INVESTIGATE_SERVING_DATA_AND_MODEL'
+          assert p['aggregate_only_evidence'] is True
+          assert p['deterministic_replay'] is True
+          assert p['policy']['automatic_model_or_pricing_change'] is False
+          print(json.dumps({
+              'status': p['status'],
+              'states': p['states'],
+              'temporal_action': p['temporal_review']['action'],
+              'stress_action': p['synthetic_stress_review']['action'],
+          }, indent=2))
+          PY
+
+      - name: Persist v0.23 review evidence
+        if: always() && github.event_name == 'push'
+        env:
+          CONTRACT_OUTCOME: ${{ steps.contracts.outcome }}
+          REPLAY_OUTCOME: ${{ steps.replay.outcome }}
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          mkdir -p action_results/v23
+          test -f results_v23/review_lifecycle_summary.json && \
+            cp results_v23/review_lifecycle_summary.json action_results/v23/review_lifecycle_summary.json || true
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status = {
+              'workflow': 'Motor pricing review lifecycle v0.23',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'contract_outcome': os.environ.get('CONTRACT_OUTCOME'),
+              'replay_outcome': os.environ.get('REPLAY_OUTCOME'),
+              'validate_outcome': os.environ.get('VALIDATE_OUTCOME'),
+          }
+          Path('action_results/v23/ACTION_V23_STATUS.json').write_text(
+              json.dumps(status, indent=2), encoding='utf-8'
+          )
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v23
+          if git diff --cached --quiet; then
+            echo 'No v0.23 evidence changes'
+          else
+            git commit -m "Persist v0.23 review lifecycle run ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.23 review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-review-lifecycle-v23
+          path: results_v23/
+          if-no-files-found: warn
