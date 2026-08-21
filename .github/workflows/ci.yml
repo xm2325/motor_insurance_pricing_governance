@@ -13,17 +13,26 @@ on:
       - 'action_results/v22/**'
       - 'action_results/v23/**'
       - 'action_results/v25/**'
+      - 'action_results/v26/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'Dockerfile'
+      - 'requirements.txt'
       - 'requirements-runtime.txt'
+      - 'deployment/bundle.py'
+      - 'deployment/environment.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'verify_environment_parity_v26.py'
+      - 'tests/fixtures/v26_locked_parity_reference.json'
       - 'tests/test_oot_contract.py'
       - 'tests/test_evidence_registry.py'
       - 'tests/test_ci_stratification_v24.py'
       - 'tests/test_download_cache_v24.py'
       - 'tests/test_runtime_contract_v25.py'
+      - 'tests/test_model_io_contract_v26.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
+      - '.github/workflows/v26-environment.yml'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
@@ -36,17 +45,26 @@ on:
       - 'action_results/v22/**'
       - 'action_results/v23/**'
       - 'action_results/v25/**'
+      - 'action_results/v26/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'Dockerfile'
+      - 'requirements.txt'
       - 'requirements-runtime.txt'
+      - 'deployment/bundle.py'
+      - 'deployment/environment.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'verify_environment_parity_v26.py'
+      - 'tests/fixtures/v26_locked_parity_reference.json'
       - 'tests/test_oot_contract.py'
       - 'tests/test_evidence_registry.py'
       - 'tests/test_ci_stratification_v24.py'
       - 'tests/test_download_cache_v24.py'
       - 'tests/test_runtime_contract_v25.py'
+      - 'tests/test_model_io_contract_v26.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
+      - '.github/workflows/v26-environment.yml'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -67,7 +85,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check leakage, evidence, cache, workflow and runtime contracts
+      - name: Check leakage, evidence, cache, workflow, runtime and model-IO contracts
         id: contract
         run: |
           python -m unittest -v \
@@ -75,7 +93,8 @@ jobs:
             tests/test_evidence_registry.py \
             tests/test_ci_stratification_v24.py \
             tests/test_download_cache_v24.py \
-            tests/test_runtime_contract_v25.py
+            tests/test_runtime_contract_v25.py \
+            tests/test_model_io_contract_v26.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
