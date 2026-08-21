@@ -31,6 +31,12 @@ def locked_artifact_hashes(release: dict) -> dict[str, str]:
 
 
 def register(registry: ShadowReleaseRegistry, release_id: str, release: dict) -> None:
+    release_label = release["lock"].get("build_provenance", {}).get("release_label")
+    if release_label != release_id:
+        raise AssertionError(
+            f"Sealed bundle release_label must match registry release_id: "
+            f"{release_label!r} != {release_id!r}"
+        )
     registry.register_verified_release(
         release_id=release_id,
         bundle_ref=str(release["bundle"]),
@@ -141,6 +147,7 @@ def main() -> None:
             "lock_digest_sha256": digest_b,
             "release_label": release_b["lock"]["build_provenance"].get("release_label"),
         },
+        "release_label_identity_check": True,
         "distinct_release_lock_digests": True,
         "identical_locked_artifact_hashes": True,
         "locked_artifact_count": len(artifacts_a),
