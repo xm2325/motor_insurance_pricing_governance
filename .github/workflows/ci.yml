@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - 'run_spanish_oot_2024.py'
+      - 'run_rolling_origin_v14.py'
       - 'tests/test_oot_contract.py'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
       - 'run_spanish_oot_2024.py'
+      - 'run_rolling_origin_v14.py'
       - 'tests/test_oot_contract.py'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
@@ -27,7 +29,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check leakage and calendar OOT contract
+      - name: Check leakage, calendar OOT and rolling-origin contracts
         id: contract
         run: python -m unittest -v tests/test_oot_contract.py
       - name: Persist CI status
