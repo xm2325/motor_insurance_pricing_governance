@@ -1,0 +1,6 @@
+{
+  "frequency_challenger": "HOLD",
+  "pure_premium_challenger": "HOLD",
+  "overall": "HOLD",
+  "rule": "2024 locked calibration ratio in [0.90,1.10] AND 95% bootstrap CI for GLM-minus-XGB deviance strictly above zero"
+}

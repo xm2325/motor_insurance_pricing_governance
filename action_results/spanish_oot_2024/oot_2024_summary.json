@@ -1,0 +1,173 @@
+{
+  "status": "COMPLETED_2022_TRAIN_2023_CALIBRATION_2024_OOT",
+  "data_source": {
+    "dataset_id": "sw4jmdb2sm",
+    "version": 1,
+    "rows_used": 354091,
+    "features": [
+      "driver_age",
+      "vehicle_age",
+      "age_driving_licence",
+      "vehicle_value",
+      "seats",
+      "power_to_weight_ratio",
+      "policy_type",
+      "business_type",
+      "payment_frequency",
+      "bonus_score",
+      "fuel_type",
+      "vehicle_brand",
+      "municipality_type",
+      "circulation_area"
+    ],
+    "excluded_from_features": [
+      "insured_id",
+      "year",
+      "policy_status",
+      "total_premium",
+      "all coverage premiums",
+      "all current claim counts",
+      "all current incurred losses",
+      "total_exposure"
+    ]
+  },
+  "year_summary": {
+    "2022": {
+      "rows": 67171,
+      "unique_ids": 67171,
+      "exposure": 41912.495890410966,
+      "claims": 12664.0,
+      "claim_frequency": 0.302153325182845,
+      "incurred": 12269924.942,
+      "pure_premium": 292.75099660211833,
+      "premium": 18697928.342009425,
+      "observed_loss_ratio": 0.6562184172260753
+    },
+    "2023": {
+      "rows": 118835,
+      "unique_ids": 118835,
+      "exposure": 82399.03835616438,
+      "claims": 25158.0,
+      "claim_frequency": 0.30531909718722944,
+      "incurred": 23488354.354000002,
+      "pure_premium": 285.0561708314258,
+      "premium": 35344308.084516324,
+      "observed_loss_ratio": 0.6645583299532692
+    },
+    "2024": {
+      "rows": 168085,
+      "unique_ids": 168085,
+      "exposure": 126014.36438356164,
+      "claims": 39276.0,
+      "claim_frequency": 0.31167875338760576,
+      "incurred": 38106351.28,
+      "pure_premium": 302.3968851996282,
+      "premium": 51037433.00066149,
+      "observed_loss_ratio": 0.7466353427200405
+    }
+  },
+  "split": {
+    "train": 2022,
+    "calibration": 2023,
+    "test": 2024
+  },
+  "id_transport": {
+    "test_unique_ids": 168085,
+    "test_ids_seen_in_2022_or_2023": 105307,
+    "test_ids_unseen_before_2024": 62778,
+    "share_test_ids_seen_before": 0.6265103965255674
+  },
+  "frequency_results": [
+    {
+      "model": "Poisson_GLM",
+      "train_year": 2022,
+      "calibration_year": 2023,
+      "test_year": 2024,
+      "n_train": 67171,
+      "n_calibration": 118835,
+      "n_test": 168085,
+      "locked_scale_from_2023": 1.012399917638075,
+      "calibration_2023_raw_ratio": 0.987751957085295,
+      "test_raw_poisson_deviance": 1.1188652241222257,
+      "test_raw_calibration_ratio_pred_over_actual": 0.9512920824796468,
+      "test_raw_top10_claim_capture": 0.26621855586108567,
+      "test_locked_poisson_deviance": 1.1185362628672493,
+      "test_locked_calibration_ratio_pred_over_actual": 0.963088025952147,
+      "test_locked_top10_claim_capture": 0.26621855586108567
+    },
+    {
+      "model": "XGBoost_Poisson",
+      "train_year": 2022,
+      "calibration_year": 2023,
+      "test_year": 2024,
+      "n_train": 67171,
+      "n_calibration": 118835,
+      "n_test": 168085,
+      "locked_scale_from_2023": 1.0277575870212368,
+      "calibration_2023_raw_ratio": 0.9729920874613176,
+      "test_raw_poisson_deviance": 1.1197387954839269,
+      "test_raw_calibration_ratio_pred_over_actual": 0.9341550901655308,
+      "test_raw_top10_claim_capture": 0.2704195946634077,
+      "test_locked_poisson_deviance": 1.1188352761606644,
+      "test_locked_calibration_ratio_pred_over_actual": 0.9600850351705676,
+      "test_locked_top10_claim_capture": 0.2704195946634077
+    }
+  ],
+  "pure_premium_results": [
+    {
+      "model": "Tweedie_GLM",
+      "train_year": 2022,
+      "calibration_year": 2023,
+      "test_year": 2024,
+      "n_train": 67171,
+      "n_calibration": 118835,
+      "n_test": 168085,
+      "locked_scale_from_2023": 0.9141249647626554,
+      "calibration_2023_raw_ratio": 1.093942336712838,
+      "test_raw_tweedie_deviance_p1_5": 93.83440628851558,
+      "test_raw_calibration_ratio_pred_over_actual": 1.042602920747024,
+      "test_raw_top10_loss_capture": 0.20440602477960465,
+      "test_locked_tweedie_deviance_p1_5": 93.93180592411453,
+      "test_locked_calibration_ratio_pred_over_actual": 0.9530693581893147,
+      "test_locked_top10_loss_capture": 0.20440602477960465
+    },
+    {
+      "model": "XGBoost_Tweedie",
+      "train_year": 2022,
+      "calibration_year": 2023,
+      "test_year": 2024,
+      "n_train": 67171,
+      "n_calibration": 118835,
+      "n_test": 168085,
+      "locked_scale_from_2023": 1.2075552522048616,
+      "calibration_2023_raw_ratio": 0.8281194572042241,
+      "test_raw_tweedie_deviance_p1_5": 95.33999210901733,
+      "test_raw_calibration_ratio_pred_over_actual": 0.7731264987400369,
+      "test_raw_top10_loss_capture": 0.21127151711125464,
+      "test_locked_tweedie_deviance_p1_5": 93.95131588528709,
+      "test_locked_calibration_ratio_pred_over_actual": 0.9335929964684005,
+      "test_locked_top10_loss_capture": 0.21127151711125464
+    }
+  ],
+  "bootstrap": {
+    "glm_minus_xgb_frequency_deviance": {
+      "mean": -0.00034880145522441717,
+      "ci95_low": -0.0015525792926944391,
+      "ci95_high": 0.0008301603492682277,
+      "p_gt_0": 0.308
+    },
+    "glm_minus_xgb_tweedie_deviance": {
+      "mean": -0.016994949891574435,
+      "ci95_low": -0.9884166388467033,
+      "ci95_high": 0.8556433951950472,
+      "p_gt_0": 0.48
+    }
+  },
+  "model_change_decision": {
+    "frequency_challenger": "HOLD",
+    "pure_premium_challenger": "HOLD",
+    "overall": "HOLD",
+    "rule": "2024 locked calibration ratio in [0.90,1.10] AND 95% bootstrap CI for GLM-minus-XGB deviance strictly above zero"
+  },
+  "interpretation_boundary": "Real calendar policy-year OOT within one Spanish insurer. It is not evidence of transport to FIRST CENTRAL or the UK motor market."
+}
