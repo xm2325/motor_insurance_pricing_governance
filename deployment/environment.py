@@ -12,19 +12,25 @@ import sklearn
 import xgboost
 
 
-CRITICAL_MODEL_ENV_KEYS = (
+CRITICAL_PICKLE_ENV_KEYS = (
     "python_major_minor",
     "numpy",
     "pandas",
     "scipy",
     "scikit_learn",
-    "xgboost",
     "joblib",
 )
 
 
+def _major_minor(version: str) -> str:
+    parts = str(version).split(".")
+    if len(parts) < 2:
+        return str(version)
+    return ".".join(parts[:2])
+
+
 def capture_model_environment() -> dict[str, str]:
-    """Capture versions that affect the persisted sklearn/joblib model pipeline."""
+    """Capture versions that affect the persisted sklearn/joblib + native-XGBoost bundle."""
     return {
         "python_major_minor": f"{platform.python_version_tuple()[0]}.{platform.python_version_tuple()[1]}",
         "python_full": platform.python_version(),
@@ -42,20 +48,34 @@ class EnvironmentCompatibility:
     status: str
     expected: dict[str, str]
     runtime: dict[str, str]
-    mismatches: dict[str, dict[str, str]]
+    pickle_mismatches: dict[str, dict[str, str]]
+    xgboost_native_compatible: bool
 
     @property
     def compatible(self) -> bool:
-        return self.status == "EXACT_MODEL_STACK_MATCH"
+        return self.status == "HYBRID_MODEL_IO_COMPATIBLE"
+
+    @property
+    def mismatches(self) -> dict[str, dict[str, str]]:
+        result = dict(self.pickle_mismatches)
+        if not self.xgboost_native_compatible:
+            result["xgboost"] = {
+                "expected": self.expected.get("xgboost", "<missing>"),
+                "runtime": self.runtime.get("xgboost", "<missing>"),
+            }
+        return result
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "status": self.status,
             "compatible": self.compatible,
-            "policy": "exact_match_for_joblib_pickle_model_stack",
-            "critical_keys": list(CRITICAL_MODEL_ENV_KEYS),
+            "pickle_policy": "exact_match_for_joblib_pickle_stack",
+            "xgboost_policy": "same_major_minor_for_native_model_io",
+            "critical_pickle_keys": list(CRITICAL_PICKLE_ENV_KEYS),
             "expected": self.expected,
             "runtime": self.runtime,
+            "pickle_mismatches": self.pickle_mismatches,
+            "xgboost_native_compatible": self.xgboost_native_compatible,
             "mismatches": self.mismatches,
         }
 
@@ -64,29 +84,44 @@ def compare_model_environments(
     expected: dict[str, str], runtime: dict[str, str] | None = None
 ) -> EnvironmentCompatibility:
     runtime = capture_model_environment() if runtime is None else dict(runtime)
-    missing = [key for key in CRITICAL_MODEL_ENV_KEYS if key not in expected]
+    required = (*CRITICAL_PICKLE_ENV_KEYS, "xgboost")
+    missing = [key for key in required if key not in expected]
     if missing:
-        mismatches = {
+        pickle_mismatches = {
             key: {"expected": "<missing>", "runtime": runtime.get(key, "<missing>")}
             for key in missing
+            if key in CRITICAL_PICKLE_ENV_KEYS
         }
+        xgb_ok = "xgboost" not in missing
         return EnvironmentCompatibility(
             status="REJECT_MISSING_TRAINING_ENVIRONMENT",
             expected=dict(expected),
             runtime=runtime,
-            mismatches=mismatches,
+            pickle_mismatches=pickle_mismatches,
+            xgboost_native_compatible=xgb_ok,
         )
 
-    mismatches = {
+    pickle_mismatches = {
         key: {"expected": str(expected[key]), "runtime": str(runtime.get(key, "<missing>"))}
-        for key in CRITICAL_MODEL_ENV_KEYS
+        for key in CRITICAL_PICKLE_ENV_KEYS
         if str(expected[key]) != str(runtime.get(key, "<missing>"))
     }
+    xgb_runtime = runtime.get("xgboost", "<missing>")
+    xgb_ok = _major_minor(expected["xgboost"]) == _major_minor(xgb_runtime)
+
+    if pickle_mismatches:
+        status = "REJECT_PICKLE_STACK_MISMATCH"
+    elif not xgb_ok:
+        status = "REJECT_XGBOOST_NATIVE_VERSION_MISMATCH"
+    else:
+        status = "HYBRID_MODEL_IO_COMPATIBLE"
+
     return EnvironmentCompatibility(
-        status="EXACT_MODEL_STACK_MATCH" if not mismatches else "REJECT_MODEL_STACK_MISMATCH",
+        status=status,
         expected=dict(expected),
         runtime=runtime,
-        mismatches=mismatches,
+        pickle_mismatches=pickle_mismatches,
+        xgboost_native_compatible=xgb_ok,
     )
 
 
