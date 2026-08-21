@@ -35,6 +35,11 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.22 synthetic monitoring stress | error, unseen-category and feature-drift alerts fire; frequency/pure-premium disagreement p95 **2.54x/2.87x** baseline | `action_results/v22/monitoring_replay_summary.json` |
 | v0.22 small-sample drift guard | feature-drift alert requires at least **500** scored records | `action_results/v22/monitoring_replay_summary.json`, `tests/test_monitoring_v22.py` |
 | v0.22 container monitoring check | Docker HTTP `/monitoring` verified; 5 valid requests -> **GREEN** | `action_results/v22/container_monitoring_summary.json` |
+| v0.23 review hysteresis | **2** consecutive breach windows open review; **2** consecutive green windows close it | `action_results/v23/review_lifecycle_summary.json`, `tests/test_review_v23.py` |
+| v0.23 real temporal-review action | persistent 2024 `feature_drift` -> **MEDIUM** `REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION` | `action_results/v23/review_lifecycle_summary.json` |
+| v0.23 review recovery | temporal review closes only after **2 green windows** and returns to `HEALTHY` | `action_results/v23/review_lifecycle_summary.json` |
+| v0.23 synthetic high-severity review | repeated stress -> **HIGH** `INVESTIGATE_SERVING_DATA_AND_MODEL` | `action_results/v23/review_lifecycle_summary.json` |
+| v0.23 lifecycle determinism/privacy | deterministic replay; aggregate-only evidence; SHA-256 evidence lineage; **no automatic model or pricing change** | `action_results/v23/review_lifecycle_summary.json` |
 
 ## Interpretation rules
 
@@ -47,9 +52,12 @@ This file maps the project's headline claims to persisted result files. The goal
 - A v0.22 feature-drift alert does **not** prove predictive deterioration. In the 2024 replay, portfolio mix drifted materially while reference/challenger disagreement remained comparatively stable.
 - The v0.21/v0.22 latency measurements are GitHub-runner/TestClient diagnostics, not production SLAs.
 - The v0.22 stress replay is synthetic and verifies alert behaviour; it is not an observed production incident.
+- v0.23 uses **review hysteresis** to avoid opening/closing reviews on single windows. The 2-window rules are project demonstration rules, not insurer governance policy.
+- v0.23 review actions are recommendations only. The controller never changes customer pricing, model approval, rollback state or serving configuration automatically.
+- The v0.23 synthetic high-severity review validates controller behaviour and is not an observed production incident.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py` recomputes / verifies the main modelling, deployment and monitoring headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py` recomputes / verifies the main modelling, deployment, monitoring and review-lifecycle headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.

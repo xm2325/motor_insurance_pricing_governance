@@ -1,0 +1,305 @@
+{
+  "status": "success",
+  "policy": {
+    "open_after_consecutive_breach_windows": 2,
+    "close_after_consecutive_green_windows": 2,
+    "automatic_model_or_pricing_change": false
+  },
+  "interpretation": "Lifecycle replay only. The 2024 windows reuse real aggregate temporal-monitoring evidence from v0.22; the final stress windows are synthetic. The controller makes review recommendations and does not change pricing, model approval, or serving state.",
+  "states": [
+    "HEALTHY",
+    "WATCH",
+    "REVIEW_REQUIRED",
+    "RECOVERING",
+    "HEALTHY",
+    "WATCH",
+    "REVIEW_REQUIRED"
+  ],
+  "temporal_review": {
+    "review_id": "review-0003-d5b93798",
+    "severity": "MEDIUM",
+    "action": "REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION",
+    "active_alerts": [
+      "feature_drift"
+    ],
+    "max_feature_psi": 1.4115752423025838,
+    "max_feature_psi_feature": "business_type",
+    "frequency_abs_log_ratio_p95": 0.27152646164885785,
+    "pure_premium_abs_log_ratio_p95": 0.8256728031197651
+  },
+  "recovery": {
+    "closed_after_two_green_windows": true,
+    "state_after_recovery": "HEALTHY"
+  },
+  "synthetic_stress_review": {
+    "review_id": "review-0007-df2f448e",
+    "severity": "HIGH",
+    "action": "INVESTIGATE_SERVING_DATA_AND_MODEL",
+    "active_alerts": [
+      "error_rate",
+      "feature_drift",
+      "pure_premium_disagreement",
+      "unseen_category_rate"
+    ]
+  },
+  "aggregate_only_evidence": true,
+  "lifecycle": {
+    "state": "REVIEW_REQUIRED",
+    "review_id": "review-0007-df2f448e",
+    "breach_streak": 2,
+    "recovery_streak": 0,
+    "open_after_breaches": 2,
+    "close_after_green": 2,
+    "events": [
+      {
+        "sequence": 1,
+        "label": "2022_control",
+        "state": "HEALTHY",
+        "severity": "NONE",
+        "recommended_action": "CONTINUE_SHADOW",
+        "active_alerts": [],
+        "breach_streak": 0,
+        "recovery_streak": 0,
+        "review_id_before": null,
+        "review_id_after": null,
+        "evidence_sha256": "eba48a4e81baf0f21394dbab564d7350d80404ad024f0758c338d6243147f853",
+        "evidence": {
+          "label": "2022_control",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 5,
+          "records_scored": 5000,
+          "error_rate": 0.0,
+          "unseen_category_rate": 0.0,
+          "p95_latency_ms": 80.09975639999709,
+          "frequency_abs_log_ratio_p95": 0.29007507040537484,
+          "pure_premium_abs_log_ratio_p95": 0.7918991109117568,
+          "max_feature_psi": 0.009732760622960532,
+          "max_feature_psi_feature": "vehicle_brand",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": []
+        }
+      },
+      {
+        "sequence": 2,
+        "label": "2024_temporal_1",
+        "state": "WATCH",
+        "severity": "MEDIUM",
+        "recommended_action": "OBSERVE_NEXT_WINDOW",
+        "active_alerts": [
+          "feature_drift"
+        ],
+        "breach_streak": 1,
+        "recovery_streak": 0,
+        "review_id_before": null,
+        "review_id_after": null,
+        "evidence_sha256": "346f5e310892d29c7697b1f13dc8cea749519b8ddbfbf02de37d3c49ac50da46",
+        "evidence": {
+          "label": "2024_temporal_1",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 5,
+          "records_scored": 5000,
+          "error_rate": 0.0,
+          "unseen_category_rate": 0.0,
+          "p95_latency_ms": 81.63677759999644,
+          "frequency_abs_log_ratio_p95": 0.27152646164885785,
+          "pure_premium_abs_log_ratio_p95": 0.8256728031197651,
+          "max_feature_psi": 1.4115752423025838,
+          "max_feature_psi_feature": "business_type",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": [
+            "feature_drift"
+          ]
+        }
+      },
+      {
+        "sequence": 3,
+        "label": "2024_temporal_2",
+        "state": "REVIEW_REQUIRED",
+        "severity": "MEDIUM",
+        "recommended_action": "REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION",
+        "active_alerts": [
+          "feature_drift"
+        ],
+        "breach_streak": 2,
+        "recovery_streak": 0,
+        "review_id_before": null,
+        "review_id_after": "review-0003-d5b93798",
+        "evidence_sha256": "d5b93798b523ef0382c94b0ade4991e503bf4d2d08db7f8dd427f792ad92609c",
+        "evidence": {
+          "label": "2024_temporal_2",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 5,
+          "records_scored": 5000,
+          "error_rate": 0.0,
+          "unseen_category_rate": 0.0,
+          "p95_latency_ms": 81.63677759999644,
+          "frequency_abs_log_ratio_p95": 0.27152646164885785,
+          "pure_premium_abs_log_ratio_p95": 0.8256728031197651,
+          "max_feature_psi": 1.4115752423025838,
+          "max_feature_psi_feature": "business_type",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": [
+            "feature_drift"
+          ]
+        }
+      },
+      {
+        "sequence": 4,
+        "label": "2022_recovery_1",
+        "state": "RECOVERING",
+        "severity": "NONE",
+        "recommended_action": "VERIFY_RECOVERY",
+        "active_alerts": [],
+        "breach_streak": 0,
+        "recovery_streak": 1,
+        "review_id_before": "review-0003-d5b93798",
+        "review_id_after": "review-0003-d5b93798",
+        "evidence_sha256": "cb71d3e8b6cd23314303a41984f0c28e2833437549fb43770a997cbdaee9ae60",
+        "evidence": {
+          "label": "2022_recovery_1",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 5,
+          "records_scored": 5000,
+          "error_rate": 0.0,
+          "unseen_category_rate": 0.0,
+          "p95_latency_ms": 80.09975639999709,
+          "frequency_abs_log_ratio_p95": 0.29007507040537484,
+          "pure_premium_abs_log_ratio_p95": 0.7918991109117568,
+          "max_feature_psi": 0.009732760622960532,
+          "max_feature_psi_feature": "vehicle_brand",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": []
+        }
+      },
+      {
+        "sequence": 5,
+        "label": "2022_recovery_2",
+        "state": "HEALTHY",
+        "severity": "NONE",
+        "recommended_action": "CONTINUE_SHADOW",
+        "active_alerts": [],
+        "breach_streak": 0,
+        "recovery_streak": 0,
+        "review_id_before": "review-0003-d5b93798",
+        "review_id_after": null,
+        "evidence_sha256": "525aa75d3d9a885c8de8e8154079a16424f129319b7c44612dea3a1641b1f5bd",
+        "evidence": {
+          "label": "2022_recovery_2",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 5,
+          "records_scored": 5000,
+          "error_rate": 0.0,
+          "unseen_category_rate": 0.0,
+          "p95_latency_ms": 80.09975639999709,
+          "frequency_abs_log_ratio_p95": 0.29007507040537484,
+          "pure_premium_abs_log_ratio_p95": 0.7918991109117568,
+          "max_feature_psi": 0.009732760622960532,
+          "max_feature_psi_feature": "vehicle_brand",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": []
+        }
+      },
+      {
+        "sequence": 6,
+        "label": "synthetic_stress_1",
+        "state": "WATCH",
+        "severity": "HIGH",
+        "recommended_action": "OBSERVE_NEXT_WINDOW",
+        "active_alerts": [
+          "error_rate",
+          "feature_drift",
+          "pure_premium_disagreement",
+          "unseen_category_rate"
+        ],
+        "breach_streak": 1,
+        "recovery_streak": 0,
+        "review_id_before": null,
+        "review_id_after": null,
+        "evidence_sha256": "028ccd857d2f7381612f98eb8cd85c6f1d033e3f7317b518deb0d300f8c60d71",
+        "evidence": {
+          "label": "synthetic_stress_1",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 25,
+          "records_scored": 5000,
+          "error_rate": 0.8,
+          "unseen_category_rate": 1.0,
+          "p95_latency_ms": 79.11716039999988,
+          "frequency_abs_log_ratio_p95": 0.7376316433998011,
+          "pure_premium_abs_log_ratio_p95": 2.26889828153985,
+          "max_feature_psi": 24.583521462013813,
+          "max_feature_psi_feature": "vehicle_brand",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": [
+            "error_rate",
+            "feature_drift",
+            "pure_premium_disagreement",
+            "unseen_category_rate"
+          ]
+        }
+      },
+      {
+        "sequence": 7,
+        "label": "synthetic_stress_2",
+        "state": "REVIEW_REQUIRED",
+        "severity": "HIGH",
+        "recommended_action": "INVESTIGATE_SERVING_DATA_AND_MODEL",
+        "active_alerts": [
+          "error_rate",
+          "feature_drift",
+          "pure_premium_disagreement",
+          "unseen_category_rate"
+        ],
+        "breach_streak": 2,
+        "recovery_streak": 0,
+        "review_id_before": null,
+        "review_id_after": "review-0007-df2f448e",
+        "evidence_sha256": "df2f448ebadfc4ce504b8f19c7b7175c59e95772a9f1878315ddc84401b7a47e",
+        "evidence": {
+          "label": "synthetic_stress_2",
+          "service_version": "0.22",
+          "model_version": "v0.21-shadow-2022-train-2023-calibration",
+          "governance_status": "HOLD_SHADOW_ONLY",
+          "privacy_boundary": "aggregate_non_pii_only",
+          "request_count": 25,
+          "records_scored": 5000,
+          "error_rate": 0.8,
+          "unseen_category_rate": 1.0,
+          "p95_latency_ms": 79.11716039999988,
+          "frequency_abs_log_ratio_p95": 0.7376316433998011,
+          "pure_premium_abs_log_ratio_p95": 2.26889828153985,
+          "max_feature_psi": 24.583521462013813,
+          "max_feature_psi_feature": "vehicle_brand",
+          "feature_drift_alert_eligible": true,
+          "active_alerts": [
+            "error_rate",
+            "feature_drift",
+            "pure_premium_disagreement",
+            "unseen_category_rate"
+          ]
+        }
+      }
+    ],
+    "automation_boundary": "Recommendations only: no automatic pricing, model promotion, rollback, or serving change is performed by this controller."
+  },
+  "source_monitoring_evidence": "action_results/v22/monitoring_replay_summary.json",
+  "source_monitoring_sha256": "d1a1170ada23ef6d2412bdf5a2c21df479996c9e58a7043a6391ffd3ed923aae",
+  "deterministic_replay": true
+}
