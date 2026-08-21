@@ -9,7 +9,7 @@ from unittest.mock import patch
 from deployment.bundle import ShadowModelBundle
 from deployment.contracts import feature_contract_hash
 from deployment.environment import (
-    CRITICAL_MODEL_ENV_KEYS,
+    CRITICAL_PICKLE_ENV_KEYS,
     capture_model_environment,
     compare_model_environments,
 )
@@ -19,37 +19,58 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class TestEnvironmentCompatibilityV26(unittest.TestCase):
-    def test_exact_model_stack_matches(self) -> None:
+    def test_current_hybrid_model_io_environment_matches(self) -> None:
         current = capture_model_environment()
         report = compare_model_environments(current, current)
-        self.assertEqual(report.status, "EXACT_MODEL_STACK_MATCH")
+        self.assertEqual(report.status, "HYBRID_MODEL_IO_COMPATIBLE")
         self.assertTrue(report.compatible)
         self.assertEqual(report.mismatches, {})
 
-    def test_critical_version_mismatch_rejects(self) -> None:
+    def test_pickle_stack_version_mismatch_rejects(self) -> None:
         expected = capture_model_environment()
         runtime = dict(expected)
         runtime["scikit_learn"] = "0.0.0-test-mismatch"
         report = compare_model_environments(expected, runtime)
-        self.assertEqual(report.status, "REJECT_MODEL_STACK_MISMATCH")
+        self.assertEqual(report.status, "REJECT_PICKLE_STACK_MISMATCH")
         self.assertFalse(report.compatible)
         self.assertIn("scikit_learn", report.mismatches)
 
+    def test_xgboost_patch_difference_is_allowed_for_native_model_io(self) -> None:
+        expected = capture_model_environment()
+        runtime = dict(expected)
+        expected["xgboost"] = "3.4.1"
+        runtime["xgboost"] = "3.4.0"
+        report = compare_model_environments(expected, runtime)
+        self.assertEqual(report.status, "HYBRID_MODEL_IO_COMPATIBLE")
+        self.assertTrue(report.compatible)
+        self.assertTrue(report.xgboost_native_compatible)
+
+    def test_xgboost_minor_difference_rejects(self) -> None:
+        expected = capture_model_environment()
+        runtime = dict(expected)
+        expected["xgboost"] = "3.4.1"
+        runtime["xgboost"] = "3.5.0"
+        report = compare_model_environments(expected, runtime)
+        self.assertEqual(report.status, "REJECT_XGBOOST_NATIVE_VERSION_MISMATCH")
+        self.assertFalse(report.compatible)
+        self.assertIn("xgboost", report.mismatches)
+
     def test_missing_training_environment_rejects(self) -> None:
         runtime = capture_model_environment()
-        expected = {key: runtime[key] for key in CRITICAL_MODEL_ENV_KEYS if key != "xgboost"}
+        expected = {key: runtime[key] for key in CRITICAL_PICKLE_ENV_KEYS}
         report = compare_model_environments(expected, runtime)
         self.assertEqual(report.status, "REJECT_MISSING_TRAINING_ENVIRONMENT")
         self.assertIn("xgboost", report.mismatches)
 
-    def test_bundle_rejects_mismatch_before_joblib_load(self) -> None:
+    def test_bundle_rejects_pickle_mismatch_before_joblib_load(self) -> None:
         expected = capture_model_environment()
-        expected["xgboost"] = "0.0.0-test-mismatch"
+        expected["scikit_learn"] = "0.0.0-test-mismatch"
         manifest = {
             "feature_contract_hash": feature_contract_hash(),
             "training_environment": expected,
             "models": {
                 "dummy": {
+                    "serialization": "joblib_pipeline",
                     "artifact": "does-not-need-to-exist.joblib",
                     "sha256": "0" * 64,
                 }
@@ -63,7 +84,7 @@ class TestEnvironmentCompatibilityV26(unittest.TestCase):
                     ShadowModelBundle.load(root)
                 mocked_load.assert_not_called()
 
-    def test_bundle_accepts_exact_environment_before_empty_model_set(self) -> None:
+    def test_bundle_accepts_compatible_environment_before_empty_model_set(self) -> None:
         manifest = {
             "feature_contract_hash": feature_contract_hash(),
             "training_environment": capture_model_environment(),
@@ -75,10 +96,10 @@ class TestEnvironmentCompatibilityV26(unittest.TestCase):
             bundle = ShadowModelBundle.load(root)
             self.assertEqual(
                 bundle.environment_compatibility.status,
-                "EXACT_MODEL_STACK_MATCH",
+                "HYBRID_MODEL_IO_COMPATIBLE",
             )
 
-    def test_training_and_runtime_requirements_pin_same_model_stack(self) -> None:
+    def test_training_and_runtime_pin_pickle_stack_but_allow_xgb_patch_split(self) -> None:
         training = (ROOT / "requirements.txt").read_text(encoding="utf-8")
         runtime = (ROOT / "requirements-runtime.txt").read_text(encoding="utf-8")
         expected_common = [
@@ -91,8 +112,14 @@ class TestEnvironmentCompatibilityV26(unittest.TestCase):
         for requirement in expected_common:
             self.assertIn(requirement, training)
             self.assertIn(requirement, runtime)
-        self.assertIn("xgboost==3.4.0", training)
+        self.assertIn("xgboost==3.4.1", training)
         self.assertIn("xgboost-cpu==3.4.0", runtime)
+
+    def test_builder_uses_native_xgboost_model_io(self) -> None:
+        source = (ROOT / "build_deployment_bundle_v21.py").read_text(encoding="utf-8")
+        self.assertIn("sklearn_preprocessor_plus_xgboost_ubj", source)
+        self.assertIn("save_model", source)
+        self.assertIn("serialization_parity_summary.json", source)
 
     def test_frozen_parity_fixture_has_public_features_only(self) -> None:
         fixture = json.loads(
