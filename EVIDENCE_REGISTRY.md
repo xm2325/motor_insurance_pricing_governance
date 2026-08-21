@@ -27,6 +27,14 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.21 safety/data-contract checks | forbidden current-outcome field rejected; unseen category warning emitted | `action_results/v21/deployment_smoke_summary.json` |
 | v0.21 container/network check | Docker build + HTTP score parity **success** | `action_results/v21/ACTION_V21_STATUS.json`, `action_results/v21/container_smoke_summary.json` |
 | v0.21 artifact integrity | four serialised models have registered SHA-256 digests | `action_results/v21/manifest.json` |
+| v0.22 monitoring privacy boundary | aggregate non-PII telemetry only; no policy rows/payloads retained in monitoring snapshot | `action_results/v22/monitoring_replay_summary.json`, `tests/test_monitoring_v22.py` |
+| v0.22 2022 monitoring control | 5,000 records; **GREEN**; max feature PSI **0.00973** | `action_results/v22/monitoring_replay_summary.json` |
+| v0.22 real 2024 temporal drift | 5,000 records; max feature PSI **1.4116**, driven by `business_type` | `action_results/v22/monitoring_replay_summary.json` |
+| Full-year business-type mix | 2022 NB/P **97.91%/2.09%** -> 2024 **57.35%/42.65%** | `action_results/v22/monitoring_replay_summary.json` |
+| v0.22 temporal model-disagreement stability | frequency p95 **0.94x** baseline; pure-premium p95 **1.04x** baseline; no relative disagreement alert | `action_results/v22/monitoring_replay_summary.json` |
+| v0.22 synthetic monitoring stress | error, unseen-category and feature-drift alerts fire; frequency/pure-premium disagreement p95 **2.54x/2.87x** baseline | `action_results/v22/monitoring_replay_summary.json` |
+| v0.22 small-sample drift guard | feature-drift alert requires at least **500** scored records | `action_results/v22/monitoring_replay_summary.json`, `tests/test_monitoring_v22.py` |
+| v0.22 container monitoring check | Docker HTTP `/monitoring` verified; 5 valid requests -> **GREEN** | `action_results/v22/container_monitoring_summary.json` |
 
 ## Interpretation rules
 
@@ -34,10 +42,14 @@ This file maps the project's headline claims to persisted result files. The goal
 - The 0.42 pp 2024 claim-capture gain is a **ranking result** and does not establish lower pricing loss.
 - The 0.32% rolling-origin frequency-deviance reduction is a **small model-family stability result**, not a pure-premium improvement.
 - v0.21 demonstrates **deployability in shadow mode**, not approval to use XGBoost for customer pricing.
-- The v0.21 TestClient latency is a GitHub-runner diagnostic, not a production SLA.
+- v0.22 monitoring thresholds (including PSI 0.25 and minimum 500 records) are **project demonstration rules**, not insurer, regulatory or FIRST CENTRAL thresholds.
+- The v0.22 2024 feature-PSI result is from a seeded **5,000-policy sample** against the 2022 aggregate training baseline; the quoted NB/P percentages are full-year aggregate distributions.
+- A v0.22 feature-drift alert does **not** prove predictive deterioration. In the 2024 replay, portfolio mix drifted materially while reference/challenger disagreement remained comparatively stable.
+- The v0.21/v0.22 latency measurements are GitHub-runner/TestClient diagnostics, not production SLAs.
+- The v0.22 stress replay is synthetic and verifies alert behaviour; it is not an observed production incident.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py` recomputes / verifies the main modelling and deployment headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py` recomputes / verifies the main modelling, deployment and monitoring headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
