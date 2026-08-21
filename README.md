@@ -2,7 +2,7 @@
 
 A reproducible insurance data-science case study asking one practical question:
 
-> **Does a more flexible ML challenger improve the pricing target reliably enough, across time and customer cohorts, to justify replacing a GLM — and can the models be deployed and monitored safely in shadow mode without confusing deployability with approval?**
+> **Does a more flexible ML challenger improve the pricing target reliably enough, across time and customer cohorts, to justify replacing a GLM — and can the models be deployed, monitored and reviewed safely in shadow mode without confusing deployability with approval?**
 
 ## 30-second result
 
@@ -18,18 +18,20 @@ A reproducible insurance data-science case study asking one practical question:
 | v0.20 model-change pack | Tail, transport uncertainty and value-for-complexity checks all retain **HOLD** |
 | v0.21 shadow deployment | FastAPI + Docker; **25-record parity error 0.0**, deterministic 1,000-policy batch, container HTTP parity **pass** |
 | v0.22 shadow monitoring | Real 2024 replay: feature PSI **1.4116** (`business_type`) while model-disagreement p95 stayed near baseline; Docker `/monitoring` **pass** |
+| v0.23 review lifecycle | **2 breach windows open review / 2 green windows close it**; real 2024 drift opens a portfolio-mix review, with no automatic model/pricing change |
 | Model-family decision | **HOLD / NO PROMOTION**; serving status is **HOLD_SHADOW_ONLY** |
 
-The project deliberately separates four ideas that are often conflated:
+The project deliberately separates five ideas that are often conflated:
 
 1. **predictive/ranking uplift**;
 2. **evidence for a model-family change**;
 3. **technical deployability**;
-4. **operational monitoring after deployment to shadow mode**.
+4. **operational monitoring after deployment to shadow mode**;
+5. **review lifecycle and recovery after persistent monitoring breaches**.
 
-A challenger can be deployable and observable in shadow mode while still failing the statistical / pricing evidence required for promotion.
+A challenger can be deployable and observable in shadow mode while still failing the statistical / pricing evidence required for promotion. A monitoring breach can require investigation without triggering an automatic model or pricing change.
 
-**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment evidence](DEPLOYMENT_V21.md) | [v0.22 monitoring evidence](RESULTS_V22.md)
+**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment evidence](DEPLOYMENT_V21.md) | [v0.22 monitoring evidence](RESULTS_V22.md) | [v0.23 review lifecycle](RESULTS_V23.md)
 
 ---
 
@@ -150,9 +152,27 @@ The Docker workflow also verifies `/monitoring` over HTTP. Five valid smoke-test
 
 See [RESULTS_V22.md](RESULTS_V22.md) for exact monitoring scope, caveats and replay evidence.
 
+## Evidence track 7 — v0.23 monitoring-to-review lifecycle
+
+v0.23 consumes only persisted aggregate v0.22 evidence and adds hysteresis around monitoring alerts. Two consecutive breach windows are required to open a review, and two consecutive green windows are required to close it.
+
+The verified replay is:
+
+```text
+HEALTHY → WATCH → REVIEW_REQUIRED → RECOVERING → HEALTHY → WATCH → REVIEW_REQUIRED
+```
+
+For the real 2024 temporal replay, the persistent alert is **feature drift only**. The review is classified **MEDIUM** and recommends `REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION`. After two green windows the review closes and returns to `HEALTHY`.
+
+The final synthetic stress creates a separate **HIGH** review with `INVESTIGATE_SERVING_DATA_AND_MODEL`. It is a controller-validation scenario, not a production incident.
+
+Every window is reduced to aggregate evidence with a SHA-256 digest. The controller is deterministic and recommendation-only: it does **not** automatically change pricing, model approval, rollback state or serving configuration.
+
+See [RESULTS_V23.md](RESULTS_V23.md).
+
 ## Auditable claims and CI
 
-`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Automated tests verify modelling results, temporal/leakage contracts, v0.21 deployment evidence and v0.22 monitoring evidence.
+`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Automated tests verify modelling results, temporal/leakage contracts, v0.21 deployment, v0.22 monitoring and v0.23 review-lifecycle evidence.
 
 ## Repository map
 
@@ -164,16 +184,19 @@ MODEL_CARD.md                     intended use, limits and decision rules
 RESULTS_V20.md                    final offline model-change approval results
 DEPLOYMENT_V21.md                 shadow serving contract and verified deployment gates
 RESULTS_V22.md                    shadow monitoring, temporal drift and stress evidence
-deployment/                       FastAPI contracts, bundle loader, drift and telemetry code
+RESULTS_V23.md                    persistent-alert review and recovery lifecycle
+deployment/                       FastAPI contracts, bundle loader, drift, telemetry and review code
 build_deployment_bundle_v21.py    reproducible locked model bundle + monitoring baseline
 replay_monitoring_v22.py          2022 control / real 2024 / synthetic stress replay
+run_review_lifecycle_v23.py       deterministic monitoring-to-review replay
 Dockerfile                        containerised shadow service
 action_results/v21/               persisted non-binary deployment evidence
 action_results/v22/               persisted non-binary monitoring evidence
-.github/workflows/                data, governance, deployment and monitoring workflows
-tests/                            leakage, evidence, governance, deployment and monitoring contracts
+action_results/v23/               persisted aggregate review-lifecycle evidence
+.github/workflows/                data, governance, deployment, monitoring and review workflows
+tests/                            leakage, evidence, governance, deployment, monitoring and review contracts
 ```
 
 ## Scope
 
-This is a portfolio model-governance, shadow-deployment and monitoring project, not a production pricing engine. It does not set real customer premiums and does not establish transfer to FIRST CENTRAL or the UK motor market. Pure-premium estimates do not include company-specific expenses, reinsurance, commercial adjustments or regulatory approval. Monitoring thresholds are demonstration rules rather than insurer/regulatory limits, and synthetic stress replays are labelled separately from observed temporal data.
+This is a portfolio model-governance, shadow-deployment, monitoring and review-lifecycle project, not a production pricing engine. It does not set real customer premiums and does not establish transfer to FIRST CENTRAL or the UK motor market. Pure-premium estimates do not include company-specific expenses, reinsurance, commercial adjustments or regulatory approval. Monitoring and review thresholds are demonstration rules rather than insurer/regulatory limits, and synthetic stress replays are labelled separately from observed temporal data.
