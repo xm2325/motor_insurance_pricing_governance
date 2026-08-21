@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class TestEnvironmentStaticV26(unittest.TestCase):
-    def test_training_and_runtime_pin_same_model_stack(self) -> None:
+    def test_training_and_runtime_pin_same_pickle_stack(self) -> None:
         training = (ROOT / "requirements.txt").read_text(encoding="utf-8")
         runtime = (ROOT / "requirements-runtime.txt").read_text(encoding="utf-8")
         for requirement in (
@@ -21,22 +21,25 @@ class TestEnvironmentStaticV26(unittest.TestCase):
         ):
             self.assertIn(requirement, training)
             self.assertIn(requirement, runtime)
-        self.assertIn("xgboost==3.4.0", training)
+        self.assertIn("xgboost==3.4.1", training)
         self.assertIn("xgboost-cpu==3.4.0", runtime)
 
     def test_bundle_checks_environment_before_joblib_load_in_source(self) -> None:
         source = (ROOT / "deployment/bundle.py").read_text(encoding="utf-8")
         gate = source.index("require_model_environment_compatibility")
-        load = source.index("joblib.load(artifact_path)")
-        self.assertLess(gate, load)
+        first_joblib_load = source.index("joblib.load")
+        self.assertLess(gate, first_joblib_load)
         self.assertIn("missing training_environment", source)
 
-    def test_manifest_builder_records_environment_and_serialization_policy(self) -> None:
+    def test_manifest_builder_records_hybrid_serialization_policy(self) -> None:
         source = (ROOT / "build_deployment_bundle_v21.py").read_text(encoding="utf-8")
         self.assertIn('"training_environment": training_environment', source)
         self.assertIn('"bundle_contract_version": "0.26"', source)
         self.assertIn('"environment_check_before_deserialization": True', source)
-        self.assertIn('"format": "joblib_pickle_sklearn_pipeline"', source)
+        self.assertIn('"format": "hybrid_sklearn_joblib_plus_xgboost_native_ubj"', source)
+        self.assertIn('"xgboost_removed_from_pickle": True', source)
+        self.assertIn("save_model", source)
+        self.assertIn("serialization_parity_summary.json", source)
 
     def test_frozen_reference_provenance_is_locked(self) -> None:
         fixture = json.loads(
