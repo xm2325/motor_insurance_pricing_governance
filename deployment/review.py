@@ -1,3 +1,10 @@
+"""Aggregate review-lifecycle logic.
+
+This module is intentionally owned by the lightweight v0.23 review workflow. Changes here
+must not require rebuilding the v0.21/v0.22 model-serving stack unless a serving dependency
+changes separately.
+"""
+
 from __future__ import annotations
 
 import hashlib
