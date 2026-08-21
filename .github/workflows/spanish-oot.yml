@@ -13,6 +13,7 @@ on:
 permissions:
   contents: read
 
+# Manual trigger marker: 2026-08-21T11:13+01:00
 jobs:
   oot:
     runs-on: ubuntu-latest
