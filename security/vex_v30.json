@@ -1,0 +1,29 @@
+{
+  "format": "project-vex-v1",
+  "scope": "motor-pricing-shadow runtime image v0.30",
+  "expires_on": "2026-09-30",
+  "statements": [
+    {
+      "vulnerability": "CVE-2026-8376",
+      "package": "perl-base",
+      "status": "not_affected",
+      "justification": "runtime_architecture_not_affected",
+      "impact_statement": "The Debian/Perl issue is documented for 32-bit builds. The validated runtime image is linux/amd64 and the FastAPI service does not invoke Perl. Re-review is mandatory at VEX expiry or when Debian publishes a stable fix."
+    },
+    {
+      "vulnerability": "CVE-2026-13221",
+      "package": "perl-base",
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The issue requires compiling an extreme Perl regular expression. The shadow scoring service executes Python/FastAPI only and has no subprocess or Perl execution path. Re-review is mandatory at VEX expiry or when Debian publishes a stable fix."
+    },
+    {
+      "vulnerability": "CVE-2026-42496",
+      "package": "perl-base",
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The issue concerns Perl Archive::Tar extraction of attacker-controlled links. The shadow scoring service does not invoke Perl or Archive::Tar and does not extract user-supplied archives. Re-review is mandatory at VEX expiry or when Debian publishes a stable fix."
+    }
+  ],
+  "boundary": "This is a time-limited exploitability review for scanner findings with no stable Debian fix. It is not a blanket CVE ignore list. Any new CRITICAL finding, any fixed CRITICAL finding, VEX expiry, package mismatch or missing rationale fails the build."
+}
