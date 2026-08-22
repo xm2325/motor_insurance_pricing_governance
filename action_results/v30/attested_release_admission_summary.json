@@ -6,18 +6,18 @@
     "governance_status": "HOLD_SHADOW_ONLY",
     "archive": {
       "name": "motor-pricing-shadow-bundle-v30.tar.gz",
-      "bytes": 386589,
-      "sha256": "c80e0c9a7c67f5241bcc1b426d48f3f91ccf294d2a5460112431df0285402a04",
+      "bytes": 386591,
+      "sha256": "b49af629a18de1246ea5e9e9eb7ae5413530c867fd173f1eac3727ef13afaebd",
       "member_count": 12,
       "raw_source_data_members": 0
     },
     "attestation_identity": {
-      "subject_sha256": "c80e0c9a7c67f5241bcc1b426d48f3f91ccf294d2a5460112431df0285402a04",
+      "subject_sha256": "b49af629a18de1246ea5e9e9eb7ae5413530c867fd173f1eac3727ef13afaebd",
       "repository": "xm2325/motor_insurance_pricing_governance",
       "workflow_name": "Motor pricing attested release admission v0.30",
       "workflow_path": ".github/workflows/v30-admission.yml",
       "workflow_ref": "refs/heads/chatgpt/v0.30-attested-release-admission",
-      "source_commit_sha": "7a5b49bd209797b97a8740d7117a118e10418527",
+      "source_commit_sha": "a3bd6c11345074fbadbf5673d829ede21ab8cfae",
       "source_repository_visibility": "public",
       "runner_environment": "github-hosted",
       "verified_timestamp_count": 1,
@@ -26,9 +26,9 @@
     },
     "inner_bundle": {
       "integrity_status": "CONTENT_ADDRESSED_BUNDLE_VERIFIED",
-      "lock_digest_sha256": "cb01eaa464fea2f4078548f54938ff2357b7982d77537c287cc1d218553e9f82",
+      "lock_digest_sha256": "9f331802c1c902afeb1278f9acf3290667db440db5736c119b2a72448a3cb255",
       "artifact_count": 9,
-      "total_locked_bytes": 1604579,
+      "total_locked_bytes": 1604577,
       "model_version": "v0.21-shadow-2022-train-2023-calibration",
       "bundle_contract_version": "0.27",
       "dataset_id": "sw4jmdb2sm",
@@ -43,7 +43,7 @@
     "wrong_workflow_identity_rejected": true,
     "negative_case_count": 3
   },
-  "attestation_id": "42362872",
-  "attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42362872",
+  "attestation_id": "42363070",
+  "attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42363070",
   "governance_boundary": "HOLD / HOLD_SHADOW_ONLY remains unchanged"
 }
