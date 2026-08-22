@@ -15,6 +15,8 @@ EXPECTED_REPOSITORY = "xm2325/motor_insurance_pricing_governance"
 EXPECTED_WORKFLOW_NAME = "Motor pricing attested release admission v0.30"
 EXPECTED_WORKFLOW_PATH = ".github/workflows/v30-admission.yml"
 EXPECTED_GOVERNANCE = "HOLD_SHADOW_ONLY"
+EXPECTED_PREDICATE_TYPE = "https://slsa.dev/provenance/v1"
+EXPECTED_BUILD_TYPE = "https://actions.github.io/buildtypes/workflow/v1"
 FORBIDDEN_ARCHIVE_TOKENS = (
     "Dataset_of_motor_insurance_portfolio.csv",
     "data_spanish_2022_2024",
@@ -45,8 +47,9 @@ def _attestation_identity(
         subjects = statement.get("subject", [])
         certificate = result.get("signature", {}).get("certificate", {})
         predicate = statement.get("predicate", {})
+        build_definition = predicate.get("buildDefinition", {})
         workflow = (
-            predicate.get("buildDefinition", {})
+            build_definition
             .get("externalParameters", {})
             .get("workflow", {})
         )
@@ -67,6 +70,13 @@ def _attestation_identity(
         repository_url = f"https://github.com/{expected_repository}"
         if workflow.get("repository") != repository_url:
             continue
+        if statement.get("predicateType") != EXPECTED_PREDICATE_TYPE:
+            continue
+        if build_definition.get("buildType") != EXPECTED_BUILD_TYPE:
+            continue
+        verified_timestamps = result.get("verifiedTimestamps", [])
+        if not isinstance(verified_timestamps, list) or len(verified_timestamps) < 1:
+            continue
         source_commit = certificate.get("sourceRepositoryDigest")
         if not isinstance(source_commit, str) or len(source_commit) != 40:
             continue
@@ -82,15 +92,15 @@ def _attestation_identity(
                     "sourceRepositoryVisibilityAtSigning"
                 ),
                 "runner_environment": certificate.get("runnerEnvironment"),
-                "verified_timestamp_count": len(result.get("verifiedTimestamps", [])),
+                "verified_timestamp_count": len(verified_timestamps),
                 "predicate_type": statement.get("predicateType"),
-                "build_type": predicate.get("buildDefinition", {}).get("buildType"),
+                "build_type": build_definition.get("buildType"),
             }
         )
     if not matches:
         raise RuntimeError(
             "No verified attestation record binds the exact archive digest to the expected "
-            "repository and v0.30 workflow identity"
+            "repository, workflow and SLSA provenance policy"
         )
     if len(matches) != 1:
         raise RuntimeError(f"Expected one admission attestation match, found {len(matches)}")
