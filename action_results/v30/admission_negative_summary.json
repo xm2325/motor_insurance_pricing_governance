@@ -1,0 +1,7 @@
+{
+  "status": "V30_NEGATIVE_ADMISSION_TESTS_PASS",
+  "tampered_archive_attestation_rejected": true,
+  "wrong_repository_attestation_rejected": true,
+  "wrong_workflow_identity_rejected": true,
+  "negative_case_count": 3
+}
