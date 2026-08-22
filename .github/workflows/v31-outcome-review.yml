@@ -1,0 +1,138 @@
+name: Motor pricing outcome-maturity review v0.31
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.31-outcome-maturity-review
+    paths:
+      - 'deployment/outcome_monitoring.py'
+      - 'run_outcome_review_v31.py'
+      - 'tests/test_outcome_monitoring_v31.py'
+      - '.github/workflows/v31-outcome-review.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+  pull_request:
+    paths:
+      - 'deployment/outcome_monitoring.py'
+      - 'run_outcome_review_v31.py'
+      - 'tests/test_outcome_monitoring_v31.py'
+      - '.github/workflows/v31-outcome-review.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+
+concurrency:
+  group: v31-outcome-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  outcome-maturity-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run delayed-outcome monitoring contracts
+        run: python -m unittest -v tests/test_outcome_monitoring_v31.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build current shadow bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Seal and verify content-addressed bundle
+        env:
+          RELEASE_LABEL: v31-outcome-review
+        run: |
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Run 2024 delayed-outcome review replay
+        run: python run_outcome_review_v31.py
+
+      - name: Verify v0.31 governance boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('results_v31/outcome_review_summary.json').read_text())
+          assert result['status'] == 'V31_OUTCOME_MATURITY_REVIEW_PASS'
+          assert result['maturity_policy']['early_status'] == 'WAIT_FOR_OUTCOME_MATURITY'
+          assert result['maturity_policy']['mature_status'] == 'OUTCOME_PERFORMANCE_EVALUATED'
+          assert result['early_partial_outcomes']['metrics_evaluated'] is False
+          assert result['fully_mature_outcomes']['metrics_evaluated'] is True
+          assert result['review_resolution']['automatic_serving_change'] is False
+          assert result['review_resolution']['automatic_pricing_change'] is False
+          assert result['review_resolution']['model_family_decision'] == 'HOLD'
+          assert result['review_resolution']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert result['historical_oot_reconciliation']['status'] == 'HISTORICAL_OOT_RECONCILIATION_PASS'
+          print(json.dumps({
+              'status': result['status'],
+              'early_maturity_fraction': result['early_partial_outcomes']['mature_exposure_fraction'],
+              'mature_maturity_fraction': result['fully_mature_outcomes']['mature_exposure_fraction'],
+              'historical_reconciliation_max_relative_difference': result['historical_oot_reconciliation']['max_relative_difference'],
+          }, indent=2))
+          PY
+
+      - name: Persist v0.31 aggregate evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v31
+          cp results_v31/outcome_review_summary.json action_results/v31/
+          cp results_v31/business_type_calibration.csv action_results/v31/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v31/ACTION_V31_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing outcome-maturity review v0.31',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v31
+          if git diff --cached --quiet; then
+            echo 'No v0.31 evidence changes'
+          else
+            git commit -m "Persist v0.31 delayed-outcome review ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.31 review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-outcome-maturity-v31
+          path: results_v31/
+          if-no-files-found: warn
