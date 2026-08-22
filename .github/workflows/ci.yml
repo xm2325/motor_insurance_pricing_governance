@@ -50,6 +50,7 @@ on:
       - 'tests/test_release_admission_evidence_v30.py'
       - 'tests/test_outcome_monitoring_v31.py'
       - 'tests/test_outcome_monitoring_static_v31.py'
+      - 'tests/test_outcome_review_evidence_v31.py'
       - 'tests/test_evidence_push_static_v31.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
@@ -108,6 +109,7 @@ on:
       - 'tests/test_release_admission_evidence_v30.py'
       - 'tests/test_outcome_monitoring_v31.py'
       - 'tests/test_outcome_monitoring_static_v31.py'
+      - 'tests/test_outcome_review_evidence_v31.py'
       - 'tests/test_evidence_push_static_v31.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
@@ -154,6 +156,7 @@ jobs:
             tests/test_artifact_attestation_evidence_v29.py \
             tests/test_release_admission_evidence_v30.py \
             tests/test_outcome_monitoring_static_v31.py \
+            tests/test_outcome_review_evidence_v31.py \
             tests/test_evidence_push_static_v31.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
