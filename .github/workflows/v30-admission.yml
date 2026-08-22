@@ -13,6 +13,7 @@ on:
       - 'build_deployment_bundle_v21.py'
       - 'build_bundle_lock_v27.py'
       - 'deployment/**'
+      - 'scripts/push_evidence_with_rebase.sh'
       - 'requirements.txt'
   pull_request:
     paths:
@@ -22,6 +23,7 @@ on:
       - 'build_deployment_bundle_v21.py'
       - 'build_bundle_lock_v27.py'
       - 'deployment/**'
+      - 'scripts/push_evidence_with_rebase.sh'
       - 'requirements.txt'
 
 concurrency:
@@ -214,7 +216,7 @@ jobs:
             echo 'No v0.30 evidence changes'
           else
             git commit -m "Persist v0.30 attested release admission ${GITHUB_RUN_ID}"
-            git push origin HEAD:${GITHUB_REF_NAME}
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
           fi
 
       - name: Upload v0.30 attested admission evidence
