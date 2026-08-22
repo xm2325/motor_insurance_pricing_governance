@@ -20,20 +20,29 @@ A reproducible insurance data-science case study asking one practical question:
 | v0.22 shadow monitoring | Real 2024 replay: feature PSI **1.4116** (`business_type`) while model-disagreement p95 stayed near baseline; Docker `/monitoring` **pass** |
 | v0.23 review lifecycle | **2 breach windows open review / 2 green windows close it**; real 2024 drift opens a portfolio-mix review, with no automatic model/pricing change |
 | v0.25 runtime slimming | CPU-only serving image **960.27 MB → 488.78 MB (-49.10%)**; full-vs-runtime and runtime-vs-offline locked parity max error **0.0** |
+| v0.26 model IO portability | XGBoost challengers use native UBJSON plus sklearn preprocessor; **100 same-fit comparisons, max error 0.0**, including training XGBoost 3.4.1 → runtime 3.4.0 |
+| v0.27 bundle integrity | **9 locked artifacts / 1,604,579 bytes**; content-addressed verification and corruption/missing-artifact tests pass before model deserialisation |
+| v0.28 release/rollback control | A/B shadow releases registered; unauthorised rollback rejected; operator-authorised rollback returns to last-known-good with **100/100 parity comparisons at error 0.0** |
+| v0.29–v0.30 build provenance/admission | GitHub/Sigstore attestation verifies the sealed archive; admission is restricted to **`ADMIT_TO_SHADOW_REGISTRY_ONLY`** and rejects tampered/wrong-identity cases |
+| v0.31 delayed-outcome review | **60.0001% mature exposure** is below the **95%** gate so metrics are withheld; at full maturity, all **8 OOT regression checks match exactly** and segment review still retains HOLD |
 | Model-family decision | **HOLD / NO PROMOTION**; serving status is **HOLD_SHADOW_ONLY** |
 
-The project deliberately separates six ideas that are often conflated:
+The project separates model evidence from operational controls. A challenger can rank risk differently, be technically deployable, pass bundle integrity and provenance checks, and still fail the evidence required for customer-pricing promotion. Likewise, monitoring drift can open a review without proving predictive deterioration, and later claims outcomes can be held back until enough exposure has mature labels.
 
-1. **predictive/ranking uplift**;
-2. **evidence for a model-family change**;
-3. **technical deployability**;
-4. **operational monitoring after deployment to shadow mode**;
-5. **review lifecycle and recovery after persistent monitoring breaches**;
-6. **runtime efficiency and portability controls**.
+The current evidence chain covers:
 
-A challenger can be deployable and observable in shadow mode while still failing the statistical / pricing evidence required for promotion. A monitoring breach can require investigation without triggering an automatic model or pricing change. A smaller serving image is an engineering improvement, not evidence that the challenger should set customer prices.
+1. predictive/ranking uplift;
+2. model-family change evidence;
+3. locked temporal and rolling-origin validation;
+4. transport and segment calibration;
+5. shadow deployment and monitoring;
+6. review lifecycle and recovery;
+7. runtime/model-IO compatibility;
+8. content-addressed release integrity and rollback;
+9. build provenance and shadow-only admission;
+10. delayed-outcome maturity and realised claims/loss review.
 
-**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment evidence](DEPLOYMENT_V21.md) | [v0.22 monitoring evidence](RESULTS_V22.md) | [v0.23 review lifecycle](RESULTS_V23.md) | [v0.25 runtime evidence](RESULTS_V25.md)
+**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment](DEPLOYMENT_V21.md) | [v0.22 monitoring](RESULTS_V22.md) | [v0.23 review lifecycle](RESULTS_V23.md) | [v0.25 runtime](RESULTS_V25.md) | [v0.26 model IO](RESULTS_V26.md) | [v0.27 integrity](RESULTS_V27.md) | [v0.28 release control](RESULTS_V28.md) | [v0.29 attestation](RESULTS_V29.md) | [v0.30 admission](RESULTS_V30.md) | [v0.31 outcome review](RESULTS_V31.md)
 
 ---
 
@@ -185,40 +194,124 @@ Verified results:
 - **25 records × 6 numeric fields** match full-vs-runtime with max absolute error **0.0**;
 - the same 25 records × 4 core prediction fields match the persisted offline reference with max absolute error **0.0**.
 
-This does not remove the model-governance HOLD. It also does not claim arbitrary cross-version portability: the current joblib/pickle bundle emitted an XGBoost version-serialization warning even though the locked parity test was exact. That limitation is retained and becomes the next portability gate rather than being suppressed.
+This does not remove the model-governance HOLD. It also does not claim arbitrary cross-version portability: the joblib/pickle bundle emitted an XGBoost version-serialization warning even though the locked parity test was exact. v0.26 addresses that model-IO boundary rather than hiding the warning.
 
 See [RESULTS_V25.md](RESULTS_V25.md).
 
+## Evidence track 9 — v0.26 native XGBoost model IO
+
+v0.26 removes the XGBoost estimator from pickle/joblib persistence. The sklearn preprocessing pipeline remains joblib-serialised, while each XGBoost challenger is stored using native UBJSON model IO.
+
+The same-fit migration is checked over **25 records × 4 prediction fields = 100 comparisons**, with max absolute error **0.0**. The CPU runtime then loads a model trained under XGBoost **3.4.1** using `xgboost-cpu 3.4.0`, again with **100 HTTP comparisons at max error 0.0** and no cross-version pickle warning.
+
+A separate historical retrain diagnostic has maximum relative difference **0.0874%**. That is not used as a serialization acceptance threshold: same-fit parity and fresh-retrain reproducibility are different tests.
+
+See [RESULTS_V26.md](RESULTS_V26.md).
+
+## Evidence track 10 — v0.27 content-addressed bundle integrity
+
+v0.27 seals the shadow bundle before deserialisation. The registered build contains **9 locked artifacts / 1,604,579 bytes**, a canonical lock digest, model/artifact hashes and public-source provenance.
+
+Negative checks reject:
+
+- a byte change in a model artifact;
+- a missing GLM artifact;
+- a modified lock self-digest.
+
+The verified container status is `CONTENT_ADDRESSED_BUNDLE_VERIFIED` plus `HYBRID_MODEL_IO_COMPATIBLE`, followed by **100 serving comparisons at max error 0.0**.
+
+This is a repository-local content integrity contract, not a signature. v0.29 adds external build provenance.
+
+See [RESULTS_V27.md](RESULTS_V27.md).
+
+## Evidence track 11 — v0.28 shadow release registry and rollback
+
+v0.28 turns sealed bundles into explicit shadow releases. Candidate A and B have distinct release/lock identities while sharing identical hashes for the nine locked model artifacts in the controlled replay.
+
+The controller verifies that:
+
+- opening a synthetic review does **not** automatically switch serving;
+- an unauthorised rollback is rejected;
+- an explicitly operator-authorised rollback selects last-known-good A;
+- the release registry carries a verified **7-event SHA-256 chain**;
+- candidate B and rollback A each reproduce **100 predictions at max error 0.0** in the same runtime image;
+- switching releases performs no retraining and no customer-pricing change.
+
+`operator_authorised=True` is a project control flag, not an IAM or production authentication system.
+
+See [RESULTS_V28.md](RESULTS_V28.md).
+
+## Evidence track 12 — v0.29/v0.30 provenance and shadow admission
+
+v0.29 packages a sealed release archive and generates GitHub Artifact Attestation / Sigstore provenance. `gh attestation verify` independently verifies the archive against the repository/workflow identity.
+
+v0.30 then converts provenance from descriptive metadata into an admission policy. A release must have the expected repository, workflow, SLSA provenance predicate and GitHub Actions build type, and its inner v0.27 bundle must pass integrity verification. The current persisted result is:
+
+> **`V30_ATTESTED_RELEASE_ADMISSION_PASS` → `ADMIT_TO_SHADOW_REGISTRY_ONLY`**
+
+The admitted archive contains **0 raw source-data members**. Negative cases for archive tampering, wrong repository and wrong workflow identity all fail closed.
+
+Admission remains shadow-only. It does not approve the challenger or customer pricing.
+
+See [RESULTS_V29.md](RESULTS_V29.md) and [RESULTS_V30.md](RESULTS_V30.md).
+
+## Evidence track 13 — v0.31 delayed-outcome maturity review
+
+v0.31 connects the v0.23 portfolio-mix review to realised 2024 claims/loss outcomes. It rebuilds and integrity-verifies the current shadow bundle, scores the **168,085-row** 2024 cohort, and then applies an outcome-maturity gate before computing label-based performance.
+
+At a deterministic synthetic early-arrival checkpoint, **60.0001% of exposure** has outcomes marked mature. Because this is below the project gate of **95%**, the result is `WAIT_FOR_OUTCOME_MATURITY`: frequency and pure-premium performance metrics are deliberately withheld and no model/pricing change is authorised.
+
+At full maturity, the observed 2024 totals are **39,276 claims** and **38,106,351.28 incurred**. The rebuilt bundle reproduces all eight registered 2024 OOT values exactly:
+
+| Target | GLM reference | XGBoost challenger | Result |
+|---|---:|---:|---|
+| Frequency Poisson deviance | **1.118536** | 1.118835 | GLM lower by 0.000299 |
+| Frequency calibration | 0.963088 | 0.960085 | both below 1.0 |
+| Pure-premium Tweedie deviance | **93.931806** | 93.951316 | GLM lower by 0.019510 |
+| Pure-premium calibration | **0.953069** | 0.933593 | GLM closer in aggregate |
+
+The `business_type` review is deliberately aggregate-only. NB contributes **48.18%** of exposure and P **51.82%**. XGBoost is closer to calibration 1.0 for NB frequency/pure premium, while GLM is closer for P frequency/pure premium. There is therefore no segment evidence for an automatic global challenger replacement.
+
+The 2024 outcome values are real historical values; the partial label-arrival timing is synthetic. This is not a claims-development/IBNR study and not post-deployment production evidence.
+
+Decision remains:
+
+> **HOLD / HOLD_SHADOW_ONLY.**
+
+See [RESULTS_V31.md](RESULTS_V31.md) and `action_results/v31/`.
+
 ## Auditable claims and CI
 
-`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Automated tests verify modelling results, temporal/leakage contracts, v0.21 deployment, v0.22 monitoring, v0.23 review-lifecycle and v0.25 runtime evidence.
+`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Lightweight CI verifies modelling evidence, temporal/leakage contracts, deployment/monitoring/review controls, runtime and model-IO compatibility, bundle/release integrity, attestation/admission evidence, the v0.31 persisted outcome review and the concurrent evidence-write contract. Heavy workflows rebuild public data/models when the corresponding source paths change.
 
 ## Repository map
 
 ```text
-README.md                         recruiter / reviewer entry point
-INTERVIEW_EVIDENCE_PACK.md        short explanation and likely interview questions
-EVIDENCE_REGISTRY.md              headline claims -> persisted evidence
-MODEL_CARD.md                     intended use, limits and decision rules
-RESULTS_V20.md                    final offline model-change approval results
-DEPLOYMENT_V21.md                 shadow serving contract and verified deployment gates
-RESULTS_V22.md                    shadow monitoring, temporal drift and stress evidence
-RESULTS_V23.md                    persistent-alert review and recovery lifecycle
-RESULTS_V25.md                    CPU-only runtime size and parity evidence
-deployment/                       FastAPI contracts, bundle loader, drift, telemetry and review code
-build_deployment_bundle_v21.py    reproducible locked model bundle + monitoring baseline
-replay_monitoring_v22.py          2022 control / real 2024 / synthetic stress replay
-run_review_lifecycle_v23.py       deterministic monitoring-to-review replay
-Dockerfile                        CPU-only containerised shadow service
-requirements-runtime.txt          serving-only dependency boundary
-action_results/v21/               persisted non-binary deployment evidence
-action_results/v22/               persisted non-binary monitoring evidence
-action_results/v23/               persisted aggregate review-lifecycle evidence
-action_results/v25/               persisted runtime size/package/parity evidence
-.github/workflows/                data, governance, deployment, monitoring, review and runtime workflows
-tests/                            leakage, evidence, governance, deployment, monitoring, review and runtime contracts
+README.md                              recruiter / reviewer entry point
+INTERVIEW_EVIDENCE_PACK.md             short explanation and likely interview questions
+EVIDENCE_REGISTRY.md                   headline claims -> persisted evidence
+MODEL_CARD.md                          intended use, limits and decision rules
+RESULTS_V20.md                         final offline model-change approval results
+DEPLOYMENT_V21.md                      shadow serving contract and verified deployment gates
+RESULTS_V22.md                         shadow monitoring, temporal drift and stress evidence
+RESULTS_V23.md                         persistent-alert review and recovery lifecycle
+RESULTS_V25.md                         CPU-only runtime size and parity evidence
+RESULTS_V26.md                         native XGBoost model IO and environment compatibility
+RESULTS_V27.md                         content-addressed bundle integrity
+RESULTS_V28.md                         shadow release registry and rollback replay
+RESULTS_V29.md                         GitHub/Sigstore artifact attestation
+RESULTS_V30.md                         attestation-aware shadow release admission
+RESULTS_V31.md                         delayed-outcome maturity and segment calibration review
+deployment/                            FastAPI, bundle, monitoring, review and outcome-monitoring code
+build_deployment_bundle_v21.py         reproducible model bundle + aggregate monitoring baseline
+build_bundle_lock_v27.py               content-addressed bundle lock
+verify_bundle_v27.py                   fail-closed bundle integrity verifier
+verify_release_admission_v30.py        attested shadow release admission policy
+run_outcome_review_v31.py              real-2024 delayed-outcome replay and segment review
+scripts/push_evidence_with_rebase.sh   bounded race-safe evidence persistence helper
+Dockerfile                             CPU-only containerised shadow service
+requirements-runtime.txt               serving-only dependency boundary
+action_results/v21/ ... v31/           persisted non-binary workflow evidence
+.github/workflows/                     data, governance, deployment, release and evidence workflows
+tests/                                 leakage, evidence, model, serving, release and persistence contracts
 ```
-
-## Scope
-
-This is a portfolio model-governance, shadow-deployment, monitoring and review-lifecycle project, not a production pricing engine. It does not set real customer premiums and does not establish transfer to FIRST CENTRAL or the UK motor market. Pure-premium estimates do not include company-specific expenses, reinsurance, commercial adjustments or regulatory approval. Monitoring and review thresholds are demonstration rules rather than insurer/regulatory limits, synthetic stress replays are labelled separately from observed temporal data, and runtime slimming does not change model approval.
