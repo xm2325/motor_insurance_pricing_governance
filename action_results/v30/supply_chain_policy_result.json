@@ -1,0 +1,75 @@
+{
+  "status": "V30_SUPPLY_CHAIN_POLICY_PASS",
+  "sbom": {
+    "format": "CycloneDX",
+    "spec_version": "1.6",
+    "component_count": 112,
+    "required_exact_packages": {
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "scikit-learn": "1.9.0",
+      "joblib": "1.5.3"
+    },
+    "xgboost_components": [
+      "xgboost-cpu"
+    ],
+    "forbidden_packages_present": []
+  },
+  "vulnerability_policy": {
+    "policy": "No unreviewed CRITICAL vulnerabilities; any unpatched CRITICAL must have a non-expired, CVE/package-specific not_affected VEX rationale. Any CRITICAL with a published fix fails. No HIGH vulnerabilities when a fixed version is available. Unfixed HIGH findings are recorded for review but do not fail this demonstration gate.",
+    "high_total": 14,
+    "high_fixable": 0,
+    "critical_total": 3,
+    "critical_fixable": 0,
+    "critical_vex_covered": 3,
+    "critical_unreviewed": 0,
+    "high_unfixed": 14,
+    "vex_expires_on": "2026-09-30",
+    "covered_critical_findings": [
+      {
+        "id": "CVE-2026-13221",
+        "package": "perl-base",
+        "installed_version": "5.40.1-6",
+        "fixed_version": "",
+        "severity": "CRITICAL",
+        "target": "motor-pricing-shadow:runtime-v30 (debian 13.6)",
+        "class": "os-pkgs",
+        "type": "debian",
+        "vex_status": "not_affected",
+        "vex_justification": "vulnerable_code_not_in_execute_path",
+        "impact_statement": "The issue requires compiling an extreme Perl regular expression. The shadow scoring service executes Python/FastAPI only and has no subprocess or Perl execution path. Re-review is mandatory at VEX expiry or when Debian publishes a stable fix."
+      },
+      {
+        "id": "CVE-2026-42496",
+        "package": "perl-base",
+        "installed_version": "5.40.1-6",
+        "fixed_version": "",
+        "severity": "CRITICAL",
+        "target": "motor-pricing-shadow:runtime-v30 (debian 13.6)",
+        "class": "os-pkgs",
+        "type": "debian",
+        "vex_status": "not_affected",
+        "vex_justification": "vulnerable_code_not_in_execute_path",
+        "impact_statement": "The issue concerns Perl Archive::Tar extraction of attacker-controlled links. The shadow scoring service does not invoke Perl or Archive::Tar and does not extract user-supplied archives. Re-review is mandatory at VEX expiry or when Debian publishes a stable fix."
+      },
+      {
+        "id": "CVE-2026-8376",
+        "package": "perl-base",
+        "installed_version": "5.40.1-6",
+        "fixed_version": "",
+        "severity": "CRITICAL",
+        "target": "motor-pricing-shadow:runtime-v30 (debian 13.6)",
+        "class": "os-pkgs",
+        "type": "debian",
+        "vex_status": "not_affected",
+        "vex_justification": "runtime_architecture_not_affected",
+        "impact_statement": "The Debian/Perl issue is documented for 32-bit builds. The validated runtime image is linux/amd64 and the FastAPI service does not invoke Perl. Re-review is mandatory at VEX expiry or when Debian publishes a stable fix."
+      }
+    ],
+    "unreviewed_critical_findings": [],
+    "fixable_high_findings": []
+  },
+  "governance_boundary": "HOLD / HOLD_SHADOW_ONLY remains unchanged",
+  "security_boundary": "This gate reports vulnerabilities visible to the scanner at build time and uses explicit, time-limited exploitability review for unpatched critical findings. It is not a claim that the image is vulnerability-free, permanently secure, or approved for production pricing."
+}
