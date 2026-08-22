@@ -65,6 +65,17 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.29 independent attestation verification | `gh attestation verify` **PASS**, one verification record | `action_results/v29/attestation_verification.json`, `action_results/v29/artifact_attestation_result.json` |
 | v0.29 provenance identity | verification material binds repository, v0.29 workflow/ref and build commit `3119dd27...940e4f` | `action_results/v29/attestation_verification.json` |
 | v0.29 governance boundary | attestation leaves model serving at `HOLD_SHADOW_ONLY`; it is build provenance, not pricing approval | `action_results/v29/artifact_attestation_result.json`, `RESULTS_V29.md` |
+| v0.30 attested admission policy | `V30_ATTESTED_RELEASE_ADMISSION_PASS`; `ADMIT_TO_SHADOW_REGISTRY_ONLY` | `action_results/v30/release_admission_result.json` |
+| v0.30 attestation trust binding | archive digest bound to repository, workflow, SLSA provenance predicate and GitHub Actions build type | `action_results/v30/release_admission_result.json`, `action_results/v30/attested_release_admission_summary.json` |
+| v0.30 release data boundary | **0 raw source-data members** in admitted archive; inner bundle integrity verified across **9 artifacts** | `action_results/v30/release_admission_result.json` |
+| v0.30 negative admission tests | tampered archive, wrong repository and wrong workflow identity all rejected | `action_results/v30/admission_negative_summary.json` |
+| v0.31 early outcome-maturity gate | **60.0001% mature exposure < 95% gate** -> `WAIT_FOR_OUTCOME_MATURITY`; metrics withheld | `action_results/v31/outcome_review_summary.json` |
+| v0.31 mature 2024 outcome review | **168,085 rows; 39,276 claims; 38,106,351.28 incurred**; outcome metrics evaluated only at full maturity | `action_results/v31/outcome_review_summary.json` |
+| v0.31 mature frequency deviance | GLM **1.118536** vs XGBoost **1.118835**; GLM remains slightly lower | `action_results/v31/outcome_review_summary.json` |
+| v0.31 mature pure-premium deviance | GLM **93.931806** vs XGBoost **93.951316**; GLM remains slightly lower | `action_results/v31/outcome_review_summary.json` |
+| v0.31 fresh-bundle historical OOT reconciliation | **8/8 metrics exact; max relative difference 0.0** | `action_results/v31/outcome_review_summary.json` |
+| v0.31 business-type calibration | NB exposure **48.18%**, P **51.82%**; neither model is uniformly closer to 1.0 across both targets/groups | `action_results/v31/business_type_calibration.csv`, `RESULTS_V31.md` |
+| v0.31 governance result | `HOLD` / `HOLD_SHADOW_ONLY`; **no automatic serving or pricing change** | `action_results/v31/outcome_review_summary.json`, `RESULTS_V31.md` |
 
 ## Interpretation rules
 
@@ -96,9 +107,16 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.29 uses GitHub Artifact Attestations to provide **cryptographically verifiable build provenance for one release archive**. This is stronger than the v0.27 self-contained content lock because verification is rooted in GitHub Actions OIDC/Sigstore rather than a repository-local digest alone.
 - v0.29 attestation does **not** prove the model is safe, accurate, regulator-approved or suitable for customer pricing; it links the exact archive digest to the repository/workflow/commit that built it.
 - v0.29 does not expose the raw Mendeley portfolio in the attested archive and does not change `HOLD_SHADOW_ONLY` governance.
+- v0.30 adds an explicit attested release-admission policy. Passing it permits entry to the **shadow release registry only**; it does not promote the model family or approve customer pricing.
+- v0.30 attestation/admission evidence may receive a new archive digest on a later rebuild because build provenance changes. Long-term claims should use the verified policy result and trust bindings rather than assuming one archive SHA is permanent.
+- v0.31 uses **real historical 2024 claim and incurred values**, but its partial label-arrival timing is synthetic. It tests delayed-label monitoring logic; it is not a live claims-development, IBNR or settlement-timing study.
+- The v0.31 60% checkpoint is deliberately below the 95% project maturity gate, so performance metrics are withheld. The 95% threshold is a project rule, not an insurer or regulatory standard.
+- v0.31's exact 8-metric reconciliation is a fresh-training regression diagnostic against the same 2024 historical outcomes. It is not the same contract as v0.26 same-fit serialization parity.
+- v0.31 `business_type` results support segment review rather than automatic global model replacement: XGBoost is closer to calibration 1.0 for NB, while GLM is closer for P on the registered frequency/pure-premium calibration checks.
+- v0.31 does not promote XGBoost, change serving, or change pricing. The model-family decision remains `HOLD` and serving remains `HOLD_SHADOW_ONLY`.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py` and `tests/test_artifact_attestation_evidence_v29.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control and GitHub-attestation headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py`, `tests/test_artifact_attestation_evidence_v29.py`, `tests/test_release_admission_evidence_v30.py` and `tests/test_outcome_review_evidence_v31.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control, attestation/admission and delayed-outcome headline evidence from persisted result files. `tests/test_evidence_push_static_v31.py` also exercises the concurrent evidence-write path with a detached-HEAD Git race simulation. CI fails if the stored evidence no longer supports the registered claims or if the protected evidence-persistence contract regresses.
