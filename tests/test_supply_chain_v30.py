@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import json
 import unittest
 from datetime import date
+from pathlib import Path
 
 from evaluate_supply_chain_v30 import evaluate
 
 
 TODAY = date(2026, 8, 22)
+ROOT = Path(__file__).resolve().parents[1]
+TRIVY_ACTION_SHA = "ed142fd0673e97e23eac54620cfb913e5ce36c25"
+ATTEST_ACTION_SHA = "508db95dd578ae2727ebd6217d5ba78e4fbda05d"
 
 
 class TestSupplyChainV30(unittest.TestCase):
@@ -142,6 +147,23 @@ class TestSupplyChainV30(unittest.TestCase):
         result = evaluate(self._sbom(), scan, self._vex(), today=TODAY)
         self.assertEqual(result["status"], "V30_SUPPLY_CHAIN_POLICY_PASS")
         self.assertEqual(result["vulnerability_policy"]["high_unfixed"], 1)
+
+    def test_supply_chain_actions_are_immutable_pins(self):
+        workflow = (ROOT / ".github/workflows/v30-sbom-security.yml").read_text(encoding="utf-8")
+        self.assertEqual(workflow.count(f"aquasecurity/trivy-action@{TRIVY_ACTION_SHA}"), 2)
+        self.assertIn(f"actions/attest@{ATTEST_ACTION_SHA}", workflow)
+        self.assertNotIn("aquasecurity/trivy-action@v0.36.0", workflow)
+
+    def test_repository_vex_has_debian_tracker_references(self):
+        vex = json.loads((ROOT / "security/vex_v30.json").read_text(encoding="utf-8"))
+        expected = {"CVE-2026-13221", "CVE-2026-42496", "CVE-2026-8376"}
+        self.assertEqual({s["vulnerability"] for s in vex["statements"]}, expected)
+        for statement in vex["statements"]:
+            refs = statement.get("references") or []
+            self.assertEqual(
+                refs,
+                [f"https://security-tracker.debian.org/tracker/{statement['vulnerability']}"],
+            )
 
 
 if __name__ == "__main__":
