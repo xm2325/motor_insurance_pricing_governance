@@ -10,6 +10,7 @@ on:
       - '.github/workflows/v30-sbom-security.yml'
       - 'evaluate_supply_chain_v30.py'
       - 'tests/test_supply_chain_v30.py'
+      - 'security/vex_v30.json'
       - 'Dockerfile'
       - 'requirements-runtime.txt'
       - 'build_deployment_bundle_v21.py'
@@ -20,6 +21,7 @@ on:
       - '.github/workflows/v30-sbom-security.yml'
       - 'evaluate_supply_chain_v30.py'
       - 'tests/test_supply_chain_v30.py'
+      - 'security/vex_v30.json'
       - 'Dockerfile'
       - 'requirements-runtime.txt'
       - 'build_deployment_bundle_v21.py'
@@ -79,8 +81,11 @@ jobs:
           docker build -t motor-pricing-shadow:runtime-v30 .
           IMAGE_ID=$(docker image inspect motor-pricing-shadow:runtime-v30 --format '{{.Id}}')
           IMAGE_BYTES=$(docker image inspect motor-pricing-shadow:runtime-v30 --format '{{.Size}}')
+          IMAGE_ARCH=$(docker image inspect motor-pricing-shadow:runtime-v30 --format '{{.Architecture}}')
           echo "image_id=${IMAGE_ID}" >> "$GITHUB_OUTPUT"
           echo "image_bytes=${IMAGE_BYTES}" >> "$GITHUB_OUTPUT"
+          echo "image_arch=${IMAGE_ARCH}" >> "$GITHUB_OUTPUT"
+          test "$IMAGE_ARCH" = "amd64"
           docker run --rm motor-pricing-shadow:runtime-v30 python -m pip list --format=json > results_v30/runtime_pip_inventory.json
           docker run --rm motor-pricing-shadow:runtime-v30 sh -c 'test ! -e /app/data_spanish_2022_2024 && test ! -e /app/Dataset_of_motor_insurance_portfolio.csv'
           docker save motor-pricing-shadow:runtime-v30 -o dist/motor-pricing-shadow-runtime-v30.tar
@@ -108,11 +113,12 @@ jobs:
           ignore-unfixed: false
           exit-code: '0'
 
-      - name: Enforce v0.30 SBOM and vulnerability policy
+      - name: Enforce v0.30 SBOM, vulnerability and VEX policy
         run: |
           python evaluate_supply_chain_v30.py \
             --sbom results_v30/runtime_sbom.cdx.json \
             --scan results_v30/trivy_vulnerabilities.json \
+            --vex security/vex_v30.json \
             --output results_v30/supply_chain_policy_result.json
 
       - name: Verify sealed bundle still serves with exact same-fit parity
@@ -190,6 +196,7 @@ jobs:
           SBOM_ATTESTATION_URL: ${{ steps.attest_sbom.outputs.attestation-url }}
           IMAGE_ID: ${{ steps.image.outputs.image_id }}
           IMAGE_BYTES: ${{ steps.image.outputs.image_bytes }}
+          IMAGE_ARCH: ${{ steps.image.outputs.image_arch }}
         run: |
           python - <<'PY'
           import hashlib, json, os
@@ -200,17 +207,23 @@ jobs:
           verification = json.loads(Path('results_v30/sbom_attestation_verification.json').read_text())
           sbom_path = Path('results_v30/runtime_sbom.cdx.json')
           archive = Path('dist/motor-pricing-shadow-runtime-v30.tar.gz')
+          vp = policy['vulnerability_policy']
           result = {
               'status': 'V30_RUNTIME_SBOM_SECURITY_PASS',
               'runtime_image_id': os.environ['IMAGE_ID'],
               'runtime_image_bytes': int(os.environ['IMAGE_BYTES']),
+              'runtime_image_architecture': os.environ['IMAGE_ARCH'],
               'runtime_archive_sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
               'sbom_sha256': hashlib.sha256(sbom_path.read_bytes()).hexdigest(),
               'sbom_component_count': policy['sbom']['component_count'],
-              'high_total': policy['vulnerability_policy']['high_total'],
-              'high_fixable': policy['vulnerability_policy']['high_fixable'],
-              'critical_total': policy['vulnerability_policy']['critical_total'],
-              'critical_fixable': policy['vulnerability_policy']['critical_fixable'],
+              'high_total': vp['high_total'],
+              'high_fixable': vp['high_fixable'],
+              'critical_total': vp['critical_total'],
+              'critical_fixable': vp['critical_fixable'],
+              'critical_vex_covered': vp['critical_vex_covered'],
+              'critical_unreviewed': vp['critical_unreviewed'],
+              'high_unfixed': vp['high_unfixed'],
+              'vex_expires_on': vp['vex_expires_on'],
               'security_policy_status': policy['status'],
               'http_parity_max_absolute_error': parity['max_absolute_error'],
               'sbom_attestation_id': os.environ.get('SBOM_ATTESTATION_ID'),
@@ -234,6 +247,7 @@ jobs:
           cp results_v30/runtime_http_parity.json action_results/v30/
           cp results_v30/runtime_image_archive.sha256 action_results/v30/
           cp results_v30/sbom_attestation_verification.json action_results/v30/
+          cp security/vex_v30.json action_results/v30/vex_v30.json
           python - <<'PY'
           import json, os
           from pathlib import Path
@@ -261,4 +275,5 @@ jobs:
           name: motor-pricing-runtime-sbom-security-v30
           path: |
             results_v30/
+            security/vex_v30.json
           if-no-files-found: warn
