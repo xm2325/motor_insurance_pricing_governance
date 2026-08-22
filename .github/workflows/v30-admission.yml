@@ -1,0 +1,228 @@
+name: Motor pricing attested release admission v0.30
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.30-attested-release-admission
+    paths:
+      - '.github/workflows/v30-admission.yml'
+      - 'verify_release_admission_v30.py'
+      - 'tests/test_release_admission_v30.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'deployment/**'
+      - 'requirements.txt'
+  pull_request:
+    paths:
+      - '.github/workflows/v30-admission.yml'
+      - 'verify_release_admission_v30.py'
+      - 'tests/test_release_admission_v30.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'deployment/**'
+      - 'requirements.txt'
+
+concurrency:
+  group: v30-admission-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  attested-release-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run admission, integrity and model-IO contracts
+        run: |
+          python -m unittest -v \
+            tests/test_release_admission_v30.py \
+            tests/test_bundle_integrity_v27.py \
+            tests/test_model_io_contract_v26.py \
+            tests/test_deployment_contract.py
+
+      - name: Verify source and build sealed shadow bundle
+        env:
+          RELEASE_LABEL: attested-shadow-release-v30
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+          python build_deployment_bundle_v21.py
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Build deterministic v0.30 release archive
+        id: package
+        run: |
+          mkdir -p dist results_v30
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -cf - deployment_artifacts | gzip -n > dist/motor-pricing-shadow-bundle-v30.tar.gz
+          ARCHIVE_SHA=$(sha256sum dist/motor-pricing-shadow-bundle-v30.tar.gz | awk '{print $1}')
+          ARCHIVE_BYTES=$(stat -c '%s' dist/motor-pricing-shadow-bundle-v30.tar.gz)
+          echo "archive_sha256=${ARCHIVE_SHA}" >> "$GITHUB_OUTPUT"
+          echo "archive_bytes=${ARCHIVE_BYTES}" >> "$GITHUB_OUTPUT"
+          printf '%s  %s\n' "$ARCHIVE_SHA" 'dist/motor-pricing-shadow-bundle-v30.tar.gz' \
+            > results_v30/release_archive.sha256
+
+      - name: Generate GitHub build provenance attestation
+        id: attest
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/motor-pricing-shadow-bundle-v30.tar.gz
+          show-summary: true
+
+      - name: Verify attestation against this repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify dist/motor-pricing-shadow-bundle-v30.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --format json > results_v30/attestation_verification.json
+          jq -e 'length == 1' results_v30/attestation_verification.json >/dev/null
+
+      - name: Apply v0.30 shadow release admission policy
+        run: |
+          python verify_release_admission_v30.py \
+            dist/motor-pricing-shadow-bundle-v30.tar.gz \
+            results_v30/attestation_verification.json \
+            --out results_v30/release_admission_result.json
+
+      - name: Exercise fail-closed admission cases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp dist/motor-pricing-shadow-bundle-v30.tar.gz results_v30/tampered.tar.gz
+          printf 'x' >> results_v30/tampered.tar.gz
+
+          if gh attestation verify results_v30/tampered.tar.gz \
+              --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Tampered archive unexpectedly passed GitHub attestation verification' >&2
+            exit 1
+          fi
+
+          if gh attestation verify dist/motor-pricing-shadow-bundle-v30.tar.gz \
+              --repo 'octocat/Hello-World' >/dev/null 2>&1; then
+            echo 'Wrong-repository trust policy unexpectedly passed' >&2
+            exit 1
+          fi
+
+          python - <<'PY'
+          import copy, json
+          from pathlib import Path
+          source = json.loads(Path('results_v30/attestation_verification.json').read_text())
+          wrong = copy.deepcopy(source)
+          wrong[0]['verificationResult']['signature']['certificate']['githubWorkflowName'] = 'Wrong workflow'
+          Path('results_v30/wrong_workflow_verification.json').write_text(
+              json.dumps(wrong), encoding='utf-8'
+          )
+          PY
+          if python verify_release_admission_v30.py \
+              dist/motor-pricing-shadow-bundle-v30.tar.gz \
+              results_v30/wrong_workflow_verification.json \
+              --out results_v30/should-not-exist.json; then
+            echo 'Wrong workflow identity unexpectedly passed admission policy' >&2
+            exit 1
+          fi
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = {
+              'status': 'V30_NEGATIVE_ADMISSION_TESTS_PASS',
+              'tampered_archive_attestation_rejected': True,
+              'wrong_repository_attestation_rejected': True,
+              'wrong_workflow_identity_rejected': True,
+              'negative_case_count': 3,
+          }
+          Path('results_v30/admission_negative_summary.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Build v0.30 admission result summary
+        env:
+          ATTESTATION_ID: ${{ steps.attest.outputs.attestation-id }}
+          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          admission = json.loads(Path('results_v30/release_admission_result.json').read_text())
+          negative = json.loads(Path('results_v30/admission_negative_summary.json').read_text())
+          result = {
+              'status': 'V30_ATTESTED_RELEASE_ADMISSION_POLICY_PASS',
+              'admission': admission,
+              'negative_tests': negative,
+              'attestation_id': os.environ.get('ATTESTATION_ID'),
+              'attestation_url': os.environ.get('ATTESTATION_URL'),
+              'governance_boundary': 'HOLD / HOLD_SHADOW_ONLY remains unchanged',
+          }
+          Path('results_v30/attested_release_admission_summary.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.30 evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v30
+          cp results_v30/release_admission_result.json action_results/v30/
+          cp results_v30/admission_negative_summary.json action_results/v30/
+          cp results_v30/attested_release_admission_summary.json action_results/v30/
+          cp results_v30/release_archive.sha256 action_results/v30/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v30/ACTION_V30_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing attested release admission v0.30',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v30
+          if git diff --cached --quiet; then
+            echo 'No v0.30 evidence changes'
+          else
+            git commit -m "Persist v0.30 attested release admission ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.30 attested admission evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-attested-admission-v30
+          path: |
+            dist/motor-pricing-shadow-bundle-v30.tar.gz
+            results_v30/
+          if-no-files-found: warn

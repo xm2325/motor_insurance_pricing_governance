@@ -1,0 +1,49 @@
+{
+  "status": "V30_ATTESTED_RELEASE_ADMISSION_POLICY_PASS",
+  "admission": {
+    "status": "V30_ATTESTED_RELEASE_ADMISSION_PASS",
+    "decision": "ADMIT_TO_SHADOW_REGISTRY_ONLY",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "archive": {
+      "name": "motor-pricing-shadow-bundle-v30.tar.gz",
+      "bytes": 386591,
+      "sha256": "b49af629a18de1246ea5e9e9eb7ae5413530c867fd173f1eac3727ef13afaebd",
+      "member_count": 12,
+      "raw_source_data_members": 0
+    },
+    "attestation_identity": {
+      "subject_sha256": "b49af629a18de1246ea5e9e9eb7ae5413530c867fd173f1eac3727ef13afaebd",
+      "repository": "xm2325/motor_insurance_pricing_governance",
+      "workflow_name": "Motor pricing attested release admission v0.30",
+      "workflow_path": ".github/workflows/v30-admission.yml",
+      "workflow_ref": "refs/heads/chatgpt/v0.30-attested-release-admission",
+      "source_commit_sha": "a3bd6c11345074fbadbf5673d829ede21ab8cfae",
+      "source_repository_visibility": "public",
+      "runner_environment": "github-hosted",
+      "verified_timestamp_count": 1,
+      "predicate_type": "https://slsa.dev/provenance/v1",
+      "build_type": "https://actions.github.io/buildtypes/workflow/v1"
+    },
+    "inner_bundle": {
+      "integrity_status": "CONTENT_ADDRESSED_BUNDLE_VERIFIED",
+      "lock_digest_sha256": "9f331802c1c902afeb1278f9acf3290667db440db5736c119b2a72448a3cb255",
+      "artifact_count": 9,
+      "total_locked_bytes": 1604577,
+      "model_version": "v0.21-shadow-2022-train-2023-calibration",
+      "bundle_contract_version": "0.27",
+      "dataset_id": "sw4jmdb2sm",
+      "dataset_version": 1
+    },
+    "admission_boundary": "Admission authorises only entry to the shadow release registry. It does not promote the model family, change customer pricing, or establish production safety."
+  },
+  "negative_tests": {
+    "status": "V30_NEGATIVE_ADMISSION_TESTS_PASS",
+    "tampered_archive_attestation_rejected": true,
+    "wrong_repository_attestation_rejected": true,
+    "wrong_workflow_identity_rejected": true,
+    "negative_case_count": 3
+  },
+  "attestation_id": "42363070",
+  "attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42363070",
+  "governance_boundary": "HOLD / HOLD_SHADOW_ONLY remains unchanged"
+}
