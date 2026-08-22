@@ -20,6 +20,8 @@ v0.30 therefore adds:
 6. the existing content-addressed bundle and same-fit scoring parity gates;
 7. a GitHub/Sigstore SBOM attestation for the runtime image archive and an immediate `gh attestation verify` check.
 
+Both `aquasecurity/trivy-action` invocations are pinned to immutable commit `ed142fd0673e97e23eac54620cfb913e5ce36c25` (v0.36.0). `actions/attest` remains pinned to immutable commit `508db95dd578ae2727ebd6217d5ba78e4fbda05d` (v4.2.1).
+
 ## First pass: strict gate failed
 
 The first v0.30 run intentionally used the existing `python:3.12-slim` runtime without changing the security policy after seeing the scan.
@@ -52,7 +54,7 @@ The runtime Dockerfile now runs the Debian package upgrade before installing the
 - unpatched HIGH findings are recorded for review, but do not fail this demonstration gate;
 - the VEX expires on **2026-09-30**, so it cannot silently become permanent.
 
-The VEX currently covers exactly three `perl-base` findings:
+The VEX currently covers exactly three `perl-base` findings and includes the corresponding Debian security-tracker source for each statement:
 
 - `CVE-2026-13221` — vulnerable Perl regex path is not executed by the Python/FastAPI shadow service;
 - `CVE-2026-42496` — Perl `Archive::Tar` extraction path is not used and user-supplied archives are not extracted;
@@ -60,9 +62,9 @@ The VEX currently covers exactly three `perl-base` findings:
 
 If Debian publishes a fixed version for any CRITICAL finding, VEX is no longer sufficient and the build fails until the runtime is updated. If the VEX expires, the build also fails.
 
-## Verified second-run result
+## Verified final result
 
-The successful branch-push workflow persisted evidence under `action_results/v30/`.
+The final successful branch-push workflow persisted evidence under `action_results/v30/` for code SHA `5f1b23ba9c67818976e5ddfea43f9df7b7f404b9`.
 
 | v0.30 result | Verified value |
 |---|---:|
@@ -80,7 +82,7 @@ The successful branch-push workflow persisted evidence under `action_results/v30
 | Same-fit HTTP comparisons | **25 records × 4 fields = 100** |
 | Max absolute HTTP parity error | **0.0** |
 | SBOM attestation verification | **PASS** |
-| GitHub SBOM attestation ID | **42339458** |
+| GitHub SBOM attestation ID | **42340101** |
 
 The important remediation result is:
 
@@ -90,11 +92,11 @@ The remaining 14 HIGH findings have no fixed version in the scanned image accord
 
 ## SBOM and provenance
 
-The successful persisted build recorded:
+The final persisted build recorded:
 
-- runtime archive SHA-256: `ef7df6c86b9addaee81d4a33448ea61953dcd51e32b9c2cc185a165681d46edb`;
-- CycloneDX SBOM SHA-256: `9ae3d9f1a41807d0772441ccacc666173093bb150d75cf008d5905d95b4a1eb4`;
-- GitHub SBOM attestation ID: `42339458`;
+- runtime archive SHA-256: `8e8ec563fb80c85eeb1a662260edbcc06811f16ffc4b02457b7f07fb02ac14f3`;
+- CycloneDX SBOM SHA-256: `e9a4cec2da3c5a197b38b15dfe819c5340df608d51918b31fcd51899366d7a3d`;
+- GitHub SBOM attestation ID: `42340101`;
 - immediate `gh attestation verify` success;
 - no `pytest`, `matplotlib`, `httpx`, `tabulate` or NVIDIA NCCL package in the runtime SBOM;
 - `xgboost-cpu` remains the XGBoost runtime component;
@@ -104,7 +106,7 @@ The SBOM attestation binds the CycloneDX document to the exact runtime image arc
 
 ## Model behaviour did not change
 
-After the Debian security update and SBOM/security changes, the container still loaded the integrity-verified v0.27 hybrid bundle and reproduced the same-fit shadow scores:
+After the Debian security update, VEX/security controls and immutable action pinning, the container still loaded the integrity-verified v0.27 hybrid bundle and reproduced the same-fit shadow scores:
 
 `100 / 100 comparisons passed; max absolute error = 0.0`.
 
