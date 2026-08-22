@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,10 @@ FORBIDDEN_RUNTIME_PACKAGES = {
     "nvidia-nccl-cu13",
     "pytest",
     "tabulate",
+}
+ALLOWED_VEX_JUSTIFICATIONS = {
+    "runtime_architecture_not_affected",
+    "vulnerable_code_not_in_execute_path",
 }
 
 
@@ -73,8 +78,46 @@ def vulnerability_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def evaluate(sbom: dict[str, Any], scan: dict[str, Any]) -> dict[str, Any]:
+def validate_vex(vex: dict[str, Any], *, today: date) -> dict[tuple[str, str], dict[str, Any]]:
+    if vex.get("format") != "project-vex-v1":
+        raise AssertionError("Unsupported or missing VEX format")
+    expiry_raw = str(vex.get("expires_on") or "")
+    try:
+        expiry = date.fromisoformat(expiry_raw)
+    except ValueError as exc:
+        raise AssertionError(f"Invalid VEX expiry: {expiry_raw!r}") from exc
+    if expiry < today:
+        raise AssertionError(f"VEX expired on {expiry.isoformat()} (today {today.isoformat()})")
+
+    index: dict[tuple[str, str], dict[str, Any]] = {}
+    for statement in vex.get("statements") or []:
+        if not isinstance(statement, dict):
+            raise AssertionError("Malformed VEX statement")
+        cve = str(statement.get("vulnerability") or "").strip()
+        package = normalise(statement.get("package", ""))
+        key = (cve, package)
+        if not cve or not package or key in index:
+            raise AssertionError(f"Invalid or duplicate VEX statement: {key}")
+        if statement.get("status") != "not_affected":
+            raise AssertionError(f"Only explicit not_affected VEX is accepted: {key}")
+        if statement.get("justification") not in ALLOWED_VEX_JUSTIFICATIONS:
+            raise AssertionError(f"Unsupported VEX justification for {key}")
+        if len(str(statement.get("impact_statement") or "").strip()) < 80:
+            raise AssertionError(f"VEX impact statement is too short for {key}")
+        index[key] = statement
+    return index
+
+
+def evaluate(
+    sbom: dict[str, Any],
+    scan: dict[str, Any],
+    vex: dict[str, Any],
+    *,
+    today: date | None = None,
+) -> dict[str, Any]:
+    today = date.today() if today is None else today
     packages = sbom_packages(sbom)
+    vex_index = validate_vex(vex, today=today)
 
     missing_exact = {
         name: version
@@ -100,7 +143,27 @@ def evaluate(sbom: dict[str, Any], scan: dict[str, Any]) -> dict[str, Any]:
     fixable_high = [row for row in high if str(row["fixed_version"]).strip()]
     fixable_critical = [row for row in critical if str(row["fixed_version"]).strip()]
 
-    policy_pass = len(critical) == 0 and len(fixable_high) == 0
+    covered_critical: list[dict[str, Any]] = []
+    unreviewed_critical: list[dict[str, Any]] = []
+    for row in critical:
+        # A critical finding with a published fix must be remediated, not VEXed.
+        if str(row["fixed_version"]).strip():
+            unreviewed_critical.append(row)
+            continue
+        statement = vex_index.get((str(row["id"]), normalise(row["package"])))
+        if statement is None:
+            unreviewed_critical.append(row)
+            continue
+        covered_critical.append(
+            {
+                **row,
+                "vex_status": statement["status"],
+                "vex_justification": statement["justification"],
+                "impact_statement": statement["impact_statement"],
+            }
+        )
+
+    policy_pass = len(unreviewed_critical) == 0 and len(fixable_high) == 0
     result = {
         "status": "V30_SUPPLY_CHAIN_POLICY_PASS" if policy_pass else "V30_SUPPLY_CHAIN_POLICY_FAIL",
         "sbom": {
@@ -113,21 +176,28 @@ def evaluate(sbom: dict[str, Any], scan: dict[str, Any]) -> dict[str, Any]:
         },
         "vulnerability_policy": {
             "policy": (
-                "No CRITICAL vulnerabilities. No HIGH vulnerabilities when a fixed version is available. "
-                "Unfixed HIGH findings are recorded for review but do not fail this demonstration gate."
+                "No unreviewed CRITICAL vulnerabilities; any unpatched CRITICAL must have a non-expired, "
+                "CVE/package-specific not_affected VEX rationale. Any CRITICAL with a published fix fails. "
+                "No HIGH vulnerabilities when a fixed version is available. Unfixed HIGH findings are "
+                "recorded for review but do not fail this demonstration gate."
             ),
             "high_total": len(high),
             "high_fixable": len(fixable_high),
             "critical_total": len(critical),
             "critical_fixable": len(fixable_critical),
+            "critical_vex_covered": len(covered_critical),
+            "critical_unreviewed": len(unreviewed_critical),
             "high_unfixed": len(high) - len(fixable_high),
-            "critical_findings": critical,
+            "vex_expires_on": vex["expires_on"],
+            "covered_critical_findings": covered_critical,
+            "unreviewed_critical_findings": unreviewed_critical,
             "fixable_high_findings": fixable_high,
         },
         "governance_boundary": "HOLD / HOLD_SHADOW_ONLY remains unchanged",
         "security_boundary": (
-            "This gate reports vulnerabilities visible to the scanner at build time. It is not a claim "
-            "that the image is vulnerability-free, permanently secure, or approved for production pricing."
+            "This gate reports vulnerabilities visible to the scanner at build time and uses explicit, "
+            "time-limited exploitability review for unpatched critical findings. It is not a claim that "
+            "the image is vulnerability-free, permanently secure, or approved for production pricing."
         ),
     }
     if not policy_pass:
@@ -139,12 +209,14 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sbom", type=Path, required=True)
     parser.add_argument("--scan", type=Path, required=True)
+    parser.add_argument("--vex", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     sbom = json.loads(args.sbom.read_text(encoding="utf-8"))
     scan = json.loads(args.scan.read_text(encoding="utf-8"))
-    result = evaluate(sbom, scan)
+    vex = json.loads(args.vex.read_text(encoding="utf-8"))
+    result = evaluate(sbom, scan, vex)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
