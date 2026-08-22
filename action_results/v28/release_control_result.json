@@ -5,14 +5,15 @@
     "governance_status": "HOLD_SHADOW_ONLY",
     "release_a": {
       "release_id": "shadow-release-a",
-      "lock_digest_sha256": "0356e556b8862c6e2490ddce33a985702350035c7ebd2a3fabac400c5fc55f56",
+      "lock_digest_sha256": "8771c847bb38bad0413a737fcd95e60f857ab6b8ec76022f96ef0f0a10cb7ba0",
       "release_label": "shadow-release-a"
     },
     "release_b": {
       "release_id": "shadow-release-b",
-      "lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
+      "lock_digest_sha256": "3045ae501669a1d1bbbd908b9eb76fc9f50438a7e4da7f0cd9aef56b1c7809e4",
       "release_label": "shadow-release-b"
     },
+    "release_label_identity_check": true,
     "distinct_release_lock_digests": true,
     "identical_locked_artifact_hashes": true,
     "locked_artifact_count": 9,
@@ -30,15 +31,15 @@
     "event_chain": {
       "status": "RELEASE_EVENT_CHAIN_VERIFIED",
       "event_count": 7,
-      "head_event_sha256": "eaf34a5c44f1ef924dcb977112b67f6370413d913ef51dd2621bd6b8bc458153"
+      "head_event_sha256": "1b269a190b387a88e655eab0cb0dd51b488cd3c87b56f00c718a77af27e588e1"
     },
     "registry_path": "results_v28/release_registry.json",
     "interpretation_boundary": "Synthetic release-control replay over two integrity-verified shadow packages with identical model artifacts. It demonstrates release selection and manual rollback controls, not a production incident or customer-pricing change."
   },
   "container_switch": {
     "status": "V28_CONTAINER_ROLLBACK_SWITCH_PASS",
-    "candidate_b_lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
-    "rollback_a_lock_digest_sha256": "0356e556b8862c6e2490ddce33a985702350035c7ebd2a3fabac400c5fc55f56",
+    "candidate_b_lock_digest_sha256": "3045ae501669a1d1bbbd908b9eb76fc9f50438a7e4da7f0cd9aef56b1c7809e4",
+    "rollback_a_lock_digest_sha256": "8771c847bb38bad0413a737fcd95e60f857ab6b8ec76022f96ef0f0a10cb7ba0",
     "distinct_release_identities": true,
     "candidate_b_comparisons": 100,
     "candidate_b_max_absolute_error": 0.0,

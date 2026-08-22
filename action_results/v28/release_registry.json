@@ -7,7 +7,7 @@
     "shadow-release-a": {
       "release_id": "shadow-release-a",
       "bundle_ref": "releases/v28-release-a",
-      "bundle_lock_digest_sha256": "0356e556b8862c6e2490ddce33a985702350035c7ebd2a3fabac400c5fc55f56",
+      "bundle_lock_digest_sha256": "8771c847bb38bad0413a737fcd95e60f857ab6b8ec76022f96ef0f0a10cb7ba0",
       "bundle_contract_version": "0.27",
       "model_version": "v0.21-shadow-2022-train-2023-calibration",
       "governance_status": "HOLD_SHADOW_ONLY",
@@ -18,7 +18,7 @@
     "shadow-release-b": {
       "release_id": "shadow-release-b",
       "bundle_ref": "releases/v28-release-b",
-      "bundle_lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
+      "bundle_lock_digest_sha256": "3045ae501669a1d1bbbd908b9eb76fc9f50438a7e4da7f0cd9aef56b1c7809e4",
       "bundle_contract_version": "0.27",
       "model_version": "v0.21-shadow-2022-train-2023-calibration",
       "governance_status": "HOLD_SHADOW_ONLY",
@@ -34,11 +34,11 @@
       "release_id": "shadow-release-a",
       "actor": "release-engineer",
       "details": {
-        "bundle_lock_digest_sha256": "0356e556b8862c6e2490ddce33a985702350035c7ebd2a3fabac400c5fc55f56",
+        "bundle_lock_digest_sha256": "8771c847bb38bad0413a737fcd95e60f857ab6b8ec76022f96ef0f0a10cb7ba0",
         "bundle_ref": "releases/v28-release-a"
       },
       "previous_event_sha256": null,
-      "event_sha256": "5370e98746cb6a844af460724059f64d669326957303c3ae27ce1da512ad1c80"
+      "event_sha256": "4cb8dbbe9cb754da4c6039ffad36471719f4c18a32b2e044b6856f033358783c"
     },
     {
       "sequence": 2,
@@ -46,11 +46,11 @@
       "release_id": "shadow-release-b",
       "actor": "release-engineer",
       "details": {
-        "bundle_lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
+        "bundle_lock_digest_sha256": "3045ae501669a1d1bbbd908b9eb76fc9f50438a7e4da7f0cd9aef56b1c7809e4",
         "bundle_ref": "releases/v28-release-b"
       },
-      "previous_event_sha256": "5370e98746cb6a844af460724059f64d669326957303c3ae27ce1da512ad1c80",
-      "event_sha256": "76fe6bf1d0b2db0b7fc7e1bed71e443203291e69bede79020544f4d7840b29bb"
+      "previous_event_sha256": "4cb8dbbe9cb754da4c6039ffad36471719f4c18a32b2e044b6856f033358783c",
+      "event_sha256": "7f20ec8ac3832bc680ad56f63a903fb65345806ddad8b1a96f5ca29333178e0a"
     },
     {
       "sequence": 3,
@@ -60,8 +60,8 @@
       "details": {
         "previous_active_release_id": null
       },
-      "previous_event_sha256": "76fe6bf1d0b2db0b7fc7e1bed71e443203291e69bede79020544f4d7840b29bb",
-      "event_sha256": "dd48f94f7792c4845e16623f57321b893dfcf24ee7622a95153e871f0fe34c24"
+      "previous_event_sha256": "7f20ec8ac3832bc680ad56f63a903fb65345806ddad8b1a96f5ca29333178e0a",
+      "event_sha256": "2ba625a3626798ae8edb880d6cd954116b0121b32fb3dba46c03a346d5443716"
     },
     {
       "sequence": 4,
@@ -71,8 +71,8 @@
       "details": {
         "monitoring_status": "GREEN"
       },
-      "previous_event_sha256": "dd48f94f7792c4845e16623f57321b893dfcf24ee7622a95153e871f0fe34c24",
-      "event_sha256": "e936122ef996ba51d6b0aa22912ea728c0d217e829a35ec2a9c112519ab52d39"
+      "previous_event_sha256": "2ba625a3626798ae8edb880d6cd954116b0121b32fb3dba46c03a346d5443716",
+      "event_sha256": "34af20c74a06f70c1122b397d5a2439e78d66c882cdb318726d473e676c0d920"
     },
     {
       "sequence": 5,
@@ -82,8 +82,8 @@
       "details": {
         "previous_active_release_id": "shadow-release-a"
       },
-      "previous_event_sha256": "e936122ef996ba51d6b0aa22912ea728c0d217e829a35ec2a9c112519ab52d39",
-      "event_sha256": "066ee66806da0b75c64b03900cadbb26f86adca5f4aa717894d1a79b9682d58b"
+      "previous_event_sha256": "34af20c74a06f70c1122b397d5a2439e78d66c882cdb318726d473e676c0d920",
+      "event_sha256": "84af2e9f6da551fcd73dbcb3cc5e3ef231486cb2e1a80c2513d23d740b7da88c"
     },
     {
       "sequence": 6,
@@ -96,8 +96,8 @@
         "evidence_ref": "v0.28 synthetic review-required signal",
         "serving_change": "NONE"
       },
-      "previous_event_sha256": "066ee66806da0b75c64b03900cadbb26f86adca5f4aa717894d1a79b9682d58b",
-      "event_sha256": "2c25af895392438aa854b4c61864f8bc7e06278611e11f91703cae30b4f9464f"
+      "previous_event_sha256": "84af2e9f6da551fcd73dbcb3cc5e3ef231486cb2e1a80c2513d23d740b7da88c",
+      "event_sha256": "398b0d6b3e15c58f26c63232554aae2b43196989fd1dceeaa4b1c46a84b1f7b4"
     },
     {
       "sequence": 7,
@@ -110,14 +110,14 @@
         "model_retraining": false,
         "pricing_change": false
       },
-      "previous_event_sha256": "2c25af895392438aa854b4c61864f8bc7e06278611e11f91703cae30b4f9464f",
-      "event_sha256": "eaf34a5c44f1ef924dcb977112b67f6370413d913ef51dd2621bd6b8bc458153"
+      "previous_event_sha256": "398b0d6b3e15c58f26c63232554aae2b43196989fd1dceeaa4b1c46a84b1f7b4",
+      "event_sha256": "1b269a190b387a88e655eab0cb0dd51b488cd3c87b56f00c718a77af27e588e1"
     }
   ],
   "event_chain": {
     "status": "RELEASE_EVENT_CHAIN_VERIFIED",
     "event_count": 7,
-    "head_event_sha256": "eaf34a5c44f1ef924dcb977112b67f6370413d913ef51dd2621bd6b8bc458153"
+    "head_event_sha256": "1b269a190b387a88e655eab0cb0dd51b488cd3c87b56f00c718a77af27e588e1"
   },
   "automation_boundary": "Review and rollback selection do not change serving automatically. Activation requires explicit operator_authorised=True; no customer pricing or model-family promotion is performed."
 }

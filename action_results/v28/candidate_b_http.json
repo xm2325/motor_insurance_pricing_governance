@@ -1,6 +1,6 @@
 {
   "status": "CANDIDATE_B_HTTP_PASS",
-  "lock_digest_sha256": "e66159ebb3242165ea0e8b35b8d9f667cc44b86b6c33d6da39b9c90208a321aa",
+  "lock_digest_sha256": "3045ae501669a1d1bbbd908b9eb76fc9f50438a7e4da7f0cd9aef56b1c7809e4",
   "comparisons": 100,
   "max_absolute_error": 0.0
 }
