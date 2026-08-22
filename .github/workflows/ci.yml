@@ -19,6 +19,7 @@ on:
       - 'action_results/v29/**'
       - 'action_results/v30/**'
       - 'action_results/v31/**'
+      - 'action_results/v32/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'RESULTS_V31.md'
       - 'Dockerfile'
@@ -28,6 +29,7 @@ on:
       - 'deployment/environment.py'
       - 'deployment/provenance.py'
       - 'deployment/outcome_monitoring.py'
+      - 'deployment/recalibration.py'
       - 'scripts/push_evidence_with_rebase.sh'
       - 'build_deployment_bundle_v21.py'
       - 'build_bundle_lock_v27.py'
@@ -35,6 +37,7 @@ on:
       - 'verify_bundle_v27.py'
       - 'verify_release_admission_v30.py'
       - 'run_outcome_review_v31.py'
+      - 'run_business_type_recalibration_v32.py'
       - 'tests/fixtures/v26_locked_parity_reference.json'
       - 'tests/test_oot_contract.py'
       - 'tests/test_evidence_registry.py'
@@ -52,6 +55,8 @@ on:
       - 'tests/test_outcome_monitoring_static_v31.py'
       - 'tests/test_outcome_review_evidence_v31.py'
       - 'tests/test_evidence_push_static_v31.py'
+      - 'tests/test_business_type_recalibration_v32.py'
+      - 'tests/test_business_type_recalibration_static_v32.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
@@ -60,6 +65,7 @@ on:
       - '.github/workflows/v29-attestation.yml'
       - '.github/workflows/v30-admission.yml'
       - '.github/workflows/v31-outcome-review.yml'
+      - '.github/workflows/v32-recalibration.yml'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
@@ -78,6 +84,7 @@ on:
       - 'action_results/v29/**'
       - 'action_results/v30/**'
       - 'action_results/v31/**'
+      - 'action_results/v32/**'
       - 'EVIDENCE_REGISTRY.md'
       - 'RESULTS_V31.md'
       - 'Dockerfile'
@@ -87,6 +94,7 @@ on:
       - 'deployment/environment.py'
       - 'deployment/provenance.py'
       - 'deployment/outcome_monitoring.py'
+      - 'deployment/recalibration.py'
       - 'scripts/push_evidence_with_rebase.sh'
       - 'build_deployment_bundle_v21.py'
       - 'build_bundle_lock_v27.py'
@@ -94,6 +102,7 @@ on:
       - 'verify_bundle_v27.py'
       - 'verify_release_admission_v30.py'
       - 'run_outcome_review_v31.py'
+      - 'run_business_type_recalibration_v32.py'
       - 'tests/fixtures/v26_locked_parity_reference.json'
       - 'tests/test_oot_contract.py'
       - 'tests/test_evidence_registry.py'
@@ -111,6 +120,8 @@ on:
       - 'tests/test_outcome_monitoring_static_v31.py'
       - 'tests/test_outcome_review_evidence_v31.py'
       - 'tests/test_evidence_push_static_v31.py'
+      - 'tests/test_business_type_recalibration_v32.py'
+      - 'tests/test_business_type_recalibration_static_v32.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
@@ -119,6 +130,7 @@ on:
       - '.github/workflows/v29-attestation.yml'
       - '.github/workflows/v30-admission.yml'
       - '.github/workflows/v31-outcome-review.yml'
+      - '.github/workflows/v32-recalibration.yml'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -139,7 +151,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check leakage, evidence, cache, workflow, runtime, model-IO, bundle-integrity, release-control, attestation, admission, outcome-maturity and evidence-push contracts
+      - name: Check leakage, evidence, cache, workflow, runtime, model-IO, bundle-integrity, release-control, attestation, admission, outcome-maturity, recalibration and evidence-push contracts
         id: contract
         run: |
           python -m unittest -v \
@@ -157,7 +169,8 @@ jobs:
             tests/test_release_admission_evidence_v30.py \
             tests/test_outcome_monitoring_static_v31.py \
             tests/test_outcome_review_evidence_v31.py \
-            tests/test_evidence_push_static_v31.py
+            tests/test_evidence_push_static_v31.py \
+            tests/test_business_type_recalibration_static_v32.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
