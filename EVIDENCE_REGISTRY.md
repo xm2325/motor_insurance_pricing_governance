@@ -65,6 +65,15 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.29 independent attestation verification | `gh attestation verify` **PASS**, one verification record | `action_results/v29/attestation_verification.json`, `action_results/v29/artifact_attestation_result.json` |
 | v0.29 provenance identity | verification material binds repository, v0.29 workflow/ref and build commit `3119dd27...940e4f` | `action_results/v29/attestation_verification.json` |
 | v0.29 governance boundary | attestation leaves model serving at `HOLD_SHADOW_ONLY`; it is build provenance, not pricing approval | `action_results/v29/artifact_attestation_result.json`, `RESULTS_V29.md` |
+| v0.30 first strict security gate | **50 HIGH / 36 fixable / 3 CRITICAL**; build failed at policy enforcement before remediation | `security/v30_first_pass_failure.json` |
+| v0.30 published-fix remediation | fixable HIGH findings **36 -> 0** after Debian runtime package upgrade | `security/v30_first_pass_failure.json`, `action_results/v30/runtime_supply_chain_result.json` |
+| v0.30 runtime SBOM | CycloneDX **1.6**, **112 components**, `xgboost-cpu`; no registered dev/GPU packages | `action_results/v30/supply_chain_policy_result.json` |
+| v0.30 final HIGH findings | **14 HIGH**, **0 fixable**, all 14 recorded as unfixed at build time | `action_results/v30/runtime_supply_chain_result.json` |
+| v0.30 final CRITICAL findings | **3 CRITICAL / 0 fixable / 3 VEX-covered / 0 unreviewed** | `action_results/v30/runtime_supply_chain_result.json`, `action_results/v30/vex_v30.json` |
+| v0.30 VEX expiry | exact CVE/package VEX review expires **2026-09-30**; fixed CRITICAL or expiry fails the policy | `action_results/v30/vex_v30.json`, `evaluate_supply_chain_v30.py` |
+| v0.30 runtime security + scoring parity | `amd64`; **100 same-fit HTTP comparisons; max absolute error 0.0** | `action_results/v30/runtime_http_parity.json`, `action_results/v30/runtime_supply_chain_result.json` |
+| v0.30 SBOM attestation | GitHub/Sigstore attestation ID **42340101**; immediate `gh attestation verify` **PASS** | `action_results/v30/runtime_supply_chain_result.json`, `action_results/v30/sbom_attestation_verification.json` |
+| v0.30 immutable scanner/action pins | Trivy v0.36.0 commit `ed142fd0...36c25`; `actions/attest` v4.2.1 commit `508db95d...da05d` | `.github/workflows/v30-sbom-security.yml`, `tests/test_supply_chain_v30.py` |
 
 ## Interpretation rules
 
@@ -96,9 +105,13 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.29 uses GitHub Artifact Attestations to provide **cryptographically verifiable build provenance for one release archive**. This is stronger than the v0.27 self-contained content lock because verification is rooted in GitHub Actions OIDC/Sigstore rather than a repository-local digest alone.
 - v0.29 attestation does **not** prove the model is safe, accurate, regulator-approved or suitable for customer pricing; it links the exact archive digest to the repository/workflow/commit that built it.
 - v0.29 does not expose the raw Mendeley portfolio in the attested archive and does not change `HOLD_SHADOW_ONLY` governance.
+- v0.30 is a **build-time runtime-supply-chain gate**, not evidence that the image is permanently vulnerability-free or production-approved.
+- v0.30 did not weaken the rule after the first failure: published Debian fixes removed all **36 fixable HIGH** findings, while the remaining unfixed findings remain visible in evidence.
+- The three v0.30 CRITICAL VEX statements are CVE/package-specific `not_affected` assessments with Debian tracker references and expiry **2026-09-30**. They are not a blanket ignore list; any published CRITICAL fix, new/unreviewed CRITICAL, package mismatch or VEX expiry must fail the gate.
+- v0.30 SBOM attestation proves provenance for the exact runtime archive/SBOM subject used by the workflow; it does not prove model validity, security against all threats, pricing safety or transport to FIRST CENTRAL / the UK market.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py` and `tests/test_artifact_attestation_evidence_v29.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control and GitHub-attestation headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.
+`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py`, `tests/test_artifact_attestation_evidence_v29.py` and `tests/test_supply_chain_evidence_v30.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control, GitHub-attestation and runtime-supply-chain headline evidence from persisted result files. CI fails if the stored evidence no longer supports the registered claims.

@@ -1,0 +1,279 @@
+name: Motor pricing runtime SBOM and security gate v0.30
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.30-sbom-security-gate
+    paths:
+      - '.github/workflows/v30-sbom-security.yml'
+      - 'evaluate_supply_chain_v30.py'
+      - 'tests/test_supply_chain_v30.py'
+      - 'security/vex_v30.json'
+      - 'Dockerfile'
+      - 'requirements-runtime.txt'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'deployment/**'
+  pull_request:
+    paths:
+      - '.github/workflows/v30-sbom-security.yml'
+      - 'evaluate_supply_chain_v30.py'
+      - 'tests/test_supply_chain_v30.py'
+      - 'security/vex_v30.json'
+      - 'Dockerfile'
+      - 'requirements-runtime.txt'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'deployment/**'
+
+concurrency:
+  group: v30-sbom-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  runtime-supply-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install training dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run v0.30 policy contracts
+        run: python -m unittest -v tests/test_supply_chain_v30.py tests/test_runtime_contract_v25.py tests/test_model_io_contract_v26.py tests/test_bundle_integrity_v27.py
+
+      - name: Rebuild and verify sealed shadow bundle
+        env:
+          RELEASE_LABEL: sbom-security-shadow-release-v30
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+          python build_deployment_bundle_v21.py
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Build CPU-only runtime image and capture inventory
+        id: image
+        run: |
+          mkdir -p results_v30 dist
+          docker build -t motor-pricing-shadow:runtime-v30 .
+          IMAGE_ID=$(docker image inspect motor-pricing-shadow:runtime-v30 --format '{{.Id}}')
+          IMAGE_BYTES=$(docker image inspect motor-pricing-shadow:runtime-v30 --format '{{.Size}}')
+          IMAGE_ARCH=$(docker image inspect motor-pricing-shadow:runtime-v30 --format '{{.Architecture}}')
+          echo "image_id=${IMAGE_ID}" >> "$GITHUB_OUTPUT"
+          echo "image_bytes=${IMAGE_BYTES}" >> "$GITHUB_OUTPUT"
+          echo "image_arch=${IMAGE_ARCH}" >> "$GITHUB_OUTPUT"
+          test "$IMAGE_ARCH" = "amd64"
+          docker run --rm motor-pricing-shadow:runtime-v30 python -m pip list --format=json > results_v30/runtime_pip_inventory.json
+          docker run --rm motor-pricing-shadow:runtime-v30 sh -c 'test ! -e /app/data_spanish_2022_2024 && test ! -e /app/Dataset_of_motor_insurance_portfolio.csv'
+          docker save motor-pricing-shadow:runtime-v30 -o dist/motor-pricing-shadow-runtime-v30.tar
+          gzip -n dist/motor-pricing-shadow-runtime-v30.tar
+          sha256sum dist/motor-pricing-shadow-runtime-v30.tar.gz | tee results_v30/runtime_image_archive.sha256
+
+      - name: Generate CycloneDX runtime SBOM with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: motor-pricing-shadow:runtime-v30
+          format: cyclonedx
+          output: results_v30/runtime_sbom.cdx.json
+          scanners: vuln
+
+      - name: Scan HIGH and CRITICAL runtime vulnerabilities with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: motor-pricing-shadow:runtime-v30
+          format: json
+          output: results_v30/trivy_vulnerabilities.json
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Enforce v0.30 SBOM, vulnerability and VEX policy
+        run: |
+          python evaluate_supply_chain_v30.py \
+            --sbom results_v30/runtime_sbom.cdx.json \
+            --scan results_v30/trivy_vulnerabilities.json \
+            --vex security/vex_v30.json \
+            --output results_v30/supply_chain_policy_result.json
+
+      - name: Verify sealed bundle still serves with exact same-fit parity
+        run: |
+          trap 'docker rm -f motor-pricing-runtime-v30 >/dev/null 2>&1 || true' EXIT
+          docker run -d --name motor-pricing-runtime-v30 \
+            -p 8000:8000 \
+            -e MODEL_BUNDLE_DIR=/models \
+            -v "${PWD}/deployment_artifacts:/models:ro" \
+            motor-pricing-shadow:runtime-v30
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          import httpx
+          import numpy as np
+
+          fixture = json.loads(Path('deployment_artifacts/parity_reference.json').read_text())
+          fields = ['reference_frequency','challenger_frequency','reference_pure_premium','challenger_pure_premium']
+          with httpx.Client(base_url='http://127.0.0.1:8000', timeout=5.0) as client:
+              for _ in range(30):
+                  try:
+                      response = client.get('/health')
+                      if response.status_code == 200:
+                          break
+                  except Exception:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError('runtime did not become healthy')
+              health = response.json()
+              assert health['governance_status'] == 'HOLD_SHADOW_ONLY'
+              assert health['bundle_integrity'] == 'CONTENT_ADDRESSED_BUNDLE_VERIFIED'
+              max_error = 0.0
+              for record, expected in zip(fixture['records'], fixture['scores']):
+                  scored = client.post('/score', json=record)
+                  scored.raise_for_status()
+                  body = scored.json()
+                  for field in fields:
+                      error = abs(float(body[field]) - float(expected[field]))
+                      max_error = max(max_error, error)
+                      assert np.isclose(float(body[field]), float(expected[field]), rtol=1e-12, atol=1e-12)
+          Path('results_v30/runtime_http_parity.json').write_text(json.dumps({
+              'status': 'V30_RUNTIME_HTTP_PARITY_PASS',
+              'records_tested': len(fixture['records']),
+              'fields_per_record': len(fields),
+              'comparisons': len(fixture['records']) * len(fields),
+              'max_absolute_error': max_error,
+              'governance_status': health['governance_status'],
+              'bundle_integrity': health['bundle_integrity'],
+          }, indent=2), encoding='utf-8')
+          PY
+
+      - name: Generate GitHub SBOM attestation for runtime image archive
+        id: attest_sbom
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/motor-pricing-shadow-runtime-v30.tar.gz
+          sbom-path: results_v30/runtime_sbom.cdx.json
+          show-summary: true
+
+      - name: Verify CycloneDX SBOM attestation with GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify dist/motor-pricing-shadow-runtime-v30.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --predicate-type https://cyclonedx.org/bom \
+            --format json > results_v30/sbom_attestation_verification.json
+          test -s results_v30/sbom_attestation_verification.json
+          jq -e 'length > 0' results_v30/sbom_attestation_verification.json >/dev/null
+
+      - name: Build v0.30 result summary
+        env:
+          SBOM_ATTESTATION_ID: ${{ steps.attest_sbom.outputs.attestation-id }}
+          SBOM_ATTESTATION_URL: ${{ steps.attest_sbom.outputs.attestation-url }}
+          IMAGE_ID: ${{ steps.image.outputs.image_id }}
+          IMAGE_BYTES: ${{ steps.image.outputs.image_bytes }}
+          IMAGE_ARCH: ${{ steps.image.outputs.image_arch }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          policy = json.loads(Path('results_v30/supply_chain_policy_result.json').read_text())
+          parity = json.loads(Path('results_v30/runtime_http_parity.json').read_text())
+          verification = json.loads(Path('results_v30/sbom_attestation_verification.json').read_text())
+          sbom_path = Path('results_v30/runtime_sbom.cdx.json')
+          archive = Path('dist/motor-pricing-shadow-runtime-v30.tar.gz')
+          vp = policy['vulnerability_policy']
+          result = {
+              'status': 'V30_RUNTIME_SBOM_SECURITY_PASS',
+              'runtime_image_id': os.environ['IMAGE_ID'],
+              'runtime_image_bytes': int(os.environ['IMAGE_BYTES']),
+              'runtime_image_architecture': os.environ['IMAGE_ARCH'],
+              'runtime_archive_sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
+              'sbom_sha256': hashlib.sha256(sbom_path.read_bytes()).hexdigest(),
+              'sbom_component_count': policy['sbom']['component_count'],
+              'high_total': vp['high_total'],
+              'high_fixable': vp['high_fixable'],
+              'critical_total': vp['critical_total'],
+              'critical_fixable': vp['critical_fixable'],
+              'critical_vex_covered': vp['critical_vex_covered'],
+              'critical_unreviewed': vp['critical_unreviewed'],
+              'high_unfixed': vp['high_unfixed'],
+              'vex_expires_on': vp['vex_expires_on'],
+              'security_policy_status': policy['status'],
+              'http_parity_max_absolute_error': parity['max_absolute_error'],
+              'sbom_attestation_id': os.environ.get('SBOM_ATTESTATION_ID'),
+              'sbom_attestation_url': os.environ.get('SBOM_ATTESTATION_URL'),
+              'sbom_attestation_verify_success': bool(verification),
+              'governance_status': 'HOLD_SHADOW_ONLY',
+              'security_boundary': policy['security_boundary'],
+          }
+          Path('results_v30/runtime_supply_chain_result.json').write_text(
+              json.dumps(result, indent=2), encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2))
+          PY
+
+      - name: Persist v0.30 evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v30
+          cp results_v30/runtime_supply_chain_result.json action_results/v30/
+          cp results_v30/supply_chain_policy_result.json action_results/v30/
+          cp results_v30/runtime_http_parity.json action_results/v30/
+          cp results_v30/runtime_image_archive.sha256 action_results/v30/
+          cp results_v30/sbom_attestation_verification.json action_results/v30/
+          cp security/vex_v30.json action_results/v30/vex_v30.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v30/ACTION_V30_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing runtime SBOM and security gate v0.30',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v30
+          if git diff --cached --quiet; then
+            echo 'No v0.30 evidence changes'
+          else
+            git commit -m "Persist v0.30 runtime SBOM security evidence ${GITHUB_RUN_ID}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Upload v0.30 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-runtime-sbom-security-v30
+          path: |
+            results_v30/
+            security/vex_v30.json
+          if-no-files-found: warn

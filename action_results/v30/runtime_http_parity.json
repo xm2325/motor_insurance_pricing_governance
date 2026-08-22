@@ -1,0 +1,9 @@
+{
+  "status": "V30_RUNTIME_HTTP_PARITY_PASS",
+  "records_tested": 25,
+  "fields_per_record": 4,
+  "comparisons": 100,
+  "max_absolute_error": 0.0,
+  "governance_status": "HOLD_SHADOW_ONLY",
+  "bundle_integrity": "CONTENT_ADDRESSED_BUNDLE_VERIFIED"
+}

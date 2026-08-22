@@ -1,0 +1,23 @@
+{
+  "status": "V30_FIRST_PASS_SECURITY_GATE_FAILED_AS_DESIGNED",
+  "workflow_run_id": "32586229334",
+  "workflow_artifact_id": "9479131884",
+  "workflow_artifact_digest": "sha256:ed43f07cc39ca1e04ca6e59e10aed0a19b692d20b3b4fc27e11b5f02c4fc0d61",
+  "head_sha": "ebcf8dd36a4d3ea68ed81e232a8f50cf6f0a1da3",
+  "runtime_base_observed": "debian 13.6",
+  "scan_summary": {
+    "high_total": 50,
+    "high_fixable": 36,
+    "high_unfixed": 14,
+    "critical_total": 3,
+    "critical_fixable": 0,
+    "critical_unfixed": 3
+  },
+  "remediation_triggered": [
+    "Apply Debian package upgrades already published for the base image before Python runtime installation",
+    "Require CVE/package-specific, non-expired VEX for any unpatched CRITICAL finding",
+    "Reject any CRITICAL finding once a fixed version is published",
+    "Retain the pre-specified rule that fixable HIGH findings fail the build"
+  ],
+  "interpretation": "This file records the first strict v0.30 gate failure from the immutable GitHub Actions artifact. It is retained to show that the final PASS followed remediation rather than weakening the security policy."
+}
