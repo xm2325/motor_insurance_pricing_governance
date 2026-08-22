@@ -93,7 +93,7 @@ jobs:
           sha256sum dist/motor-pricing-shadow-runtime-v30.tar.gz | tee results_v30/runtime_image_archive.sha256
 
       - name: Generate CycloneDX runtime SBOM with Trivy
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: motor-pricing-shadow:runtime-v30
@@ -102,7 +102,7 @@ jobs:
           scanners: vuln
 
       - name: Scan HIGH and CRITICAL runtime vulnerabilities with Trivy
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: motor-pricing-shadow:runtime-v30
