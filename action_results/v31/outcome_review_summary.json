@@ -1,0 +1,168 @@
+{
+  "status": "V31_OUTCOME_MATURITY_REVIEW_PASS",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "replay_year": 2024,
+    "rows": 168085,
+    "outcomes": [
+      "total_claims",
+      "total_incurred"
+    ],
+    "outcome_values_are_real": true,
+    "label_arrival_timing_is_synthetic": true
+  },
+  "bundle": {
+    "model_version": "v0.21-shadow-2022-train-2023-calibration",
+    "bundle_contract_version": "0.27",
+    "governance_status": "HOLD_SHADOW_ONLY",
+    "integrity_status": "CONTENT_ADDRESSED_BUNDLE_VERIFIED"
+  },
+  "maturity_policy": {
+    "early_replay_target_exposure_fraction": 0.6,
+    "minimum_mature_exposure_fraction": 0.95,
+    "early_status": "WAIT_FOR_OUTCOME_MATURITY",
+    "mature_status": "OUTCOME_PERFORMANCE_EVALUATED"
+  },
+  "early_partial_outcomes": {
+    "rows_total": 168085,
+    "rows_with_mature_outcomes": 100567,
+    "total_exposure": 126014.36438356164,
+    "mature_exposure": 75608.69041095891,
+    "mature_exposure_fraction": 0.6000005696241241,
+    "minimum_mature_exposure_fraction": 0.95,
+    "metrics_evaluated": false,
+    "pricing_change_authorised": false,
+    "model_promotion_authorised": false,
+    "status": "WAIT_FOR_OUTCOME_MATURITY",
+    "decision": "NO_PERFORMANCE_CONCLUSION",
+    "reason": "Observed outcome exposure is below the maturity gate; performance metrics are intentionally withheld."
+  },
+  "fully_mature_outcomes": {
+    "rows_total": 168085,
+    "rows_with_mature_outcomes": 168085,
+    "total_exposure": 126014.36438356164,
+    "mature_exposure": 126014.36438356164,
+    "mature_exposure_fraction": 1.0,
+    "minimum_mature_exposure_fraction": 0.95,
+    "metrics_evaluated": true,
+    "pricing_change_authorised": false,
+    "model_promotion_authorised": false,
+    "status": "OUTCOME_PERFORMANCE_EVALUATED",
+    "decision": "REVIEW_ONLY_NO_AUTOMATIC_MODEL_CHANGE",
+    "observed_claims": 39276.0,
+    "observed_incurred": 38106351.28,
+    "frequency": {
+      "reference": {
+        "poisson_deviance": 1.1185362628672493,
+        "calibration_ratio_pred_over_actual": 0.963088025952147
+      },
+      "challenger": {
+        "poisson_deviance": 1.1188352761606644,
+        "calibration_ratio_pred_over_actual": 0.9600850351705676
+      }
+    },
+    "pure_premium": {
+      "reference": {
+        "tweedie_deviance_p1_5": 93.93180592411453,
+        "calibration_ratio_pred_over_actual": 0.9530693581893147
+      },
+      "challenger": {
+        "tweedie_deviance_p1_5": 93.95131588528709,
+        "calibration_ratio_pred_over_actual": 0.9335929964684005
+      }
+    },
+    "glm_minus_xgb_frequency_deviance": -0.00029901329341508465,
+    "glm_minus_xgb_tweedie_deviance": -0.019509961172559542
+  },
+  "business_type_calibration": [
+    {
+      "segment": "NB",
+      "rows": 96391,
+      "exposure": 60713.460273972596,
+      "exposure_share": 0.48179793288623346,
+      "claims": 17798.0,
+      "incurred": 18126693.609500002,
+      "reference_frequency_calibration_ratio": 0.9953216781829944,
+      "reference_pure_premium_calibration_ratio": 0.8610499889822428,
+      "challenger_frequency_calibration_ratio": 1.0025239520766767,
+      "challenger_pure_premium_calibration_ratio": 0.9165434439433804
+    },
+    {
+      "segment": "P",
+      "rows": 71694,
+      "exposure": 65300.90410958904,
+      "exposure_share": 0.5182020671137666,
+      "claims": 21478.0,
+      "incurred": 19979657.6705,
+      "reference_frequency_calibration_ratio": 0.9363772268831175,
+      "reference_pure_premium_calibration_ratio": 1.0365546180103011,
+      "challenger_frequency_calibration_ratio": 0.924917522222671,
+      "challenger_pure_premium_calibration_ratio": 0.949061330305593
+    }
+  ],
+  "historical_oot_reconciliation": {
+    "status": "HISTORICAL_OOT_RECONCILIATION_PASS",
+    "checks": {
+      "reference_frequency_poisson_deviance": {
+        "current_bundle_outcome_replay": 1.1185362628672493,
+        "historical_locked_oot": 1.1185362628672493,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "challenger_frequency_poisson_deviance": {
+        "current_bundle_outcome_replay": 1.1188352761606644,
+        "historical_locked_oot": 1.1188352761606644,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "reference_frequency_calibration": {
+        "current_bundle_outcome_replay": 0.963088025952147,
+        "historical_locked_oot": 0.963088025952147,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "challenger_frequency_calibration": {
+        "current_bundle_outcome_replay": 0.9600850351705676,
+        "historical_locked_oot": 0.9600850351705676,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "reference_pure_premium_tweedie_deviance": {
+        "current_bundle_outcome_replay": 93.93180592411453,
+        "historical_locked_oot": 93.93180592411453,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "challenger_pure_premium_tweedie_deviance": {
+        "current_bundle_outcome_replay": 93.95131588528709,
+        "historical_locked_oot": 93.95131588528709,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "reference_pure_premium_calibration": {
+        "current_bundle_outcome_replay": 0.9530693581893147,
+        "historical_locked_oot": 0.9530693581893147,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "challenger_pure_premium_calibration": {
+        "current_bundle_outcome_replay": 0.9335929964684005,
+        "historical_locked_oot": 0.9335929964684005,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      }
+    },
+    "max_relative_difference": 0.0,
+    "relative_tolerance": 0.002,
+    "interpretation": "Fresh training/build replay against the same historical 2024 outcomes. This is a regression diagnostic, not an exact same-fit serialization claim."
+  },
+  "review_resolution": {
+    "v23_recommended_action": "REVIEW_PORTFOLIO_MIX_AND_SEGMENT_CALIBRATION",
+    "v31_action": "EXECUTE_LABEL_BASED_SEGMENT_CALIBRATION_REVIEW",
+    "automatic_serving_change": false,
+    "automatic_pricing_change": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY"
+  },
+  "interpretation_boundary": "This replays fully observed historical 2024 outcomes through a freshly rebuilt shadow bundle. The outcomes are real, but the partial-maturity timing is synthetic. The exercise validates delayed-label monitoring and review controls; it is not post-deployment production evidence and does not establish transfer to FIRST CENTRAL or the UK motor market."
+}
