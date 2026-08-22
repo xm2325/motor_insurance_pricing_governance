@@ -10,6 +10,7 @@ on:
       - 'deployment/outcome_monitoring.py'
       - 'run_outcome_review_v31.py'
       - 'tests/test_outcome_monitoring_v31.py'
+      - 'scripts/push_evidence_with_rebase.sh'
       - '.github/workflows/v31-outcome-review.yml'
       - 'build_deployment_bundle_v21.py'
       - 'build_bundle_lock_v27.py'
@@ -20,6 +21,7 @@ on:
       - 'deployment/outcome_monitoring.py'
       - 'run_outcome_review_v31.py'
       - 'tests/test_outcome_monitoring_v31.py'
+      - 'scripts/push_evidence_with_rebase.sh'
       - '.github/workflows/v31-outcome-review.yml'
       - 'build_deployment_bundle_v21.py'
       - 'build_bundle_lock_v27.py'
@@ -126,7 +128,7 @@ jobs:
             echo 'No v0.31 evidence changes'
           else
             git commit -m "Persist v0.31 delayed-outcome review ${GITHUB_RUN_ID}"
-            git push origin HEAD:${GITHUB_REF_NAME}
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
           fi
 
       - name: Upload v0.31 review evidence
