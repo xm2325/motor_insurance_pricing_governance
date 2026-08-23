@@ -1,218 +1,216 @@
-# Model Card - Motor Pricing Decision Workbench
+# Model Card — Motor Insurance Pricing & Model Governance Workbench
 
-## Intended use
+## Purpose
 
-Portfolio demonstration of insurance data-science reasoning across claim frequency, severity, expected loss, calibration, temporal validation, model-change governance, shadow deployment and operational monitoring.
+This project is a reproducible model-risk workbench for one question:
 
-## Not intended for
+> **Does an XGBoost challenger improve motor-insurance claim-frequency and pure-premium targets reliably enough, across calendar time and independent portfolios, to justify advancing beyond GLM reference models?**
 
-- setting real customer premiums;
-- underwriting decisions;
-- regulatory or actuarial sign-off;
-- inference about FIRST CENTRAL production models, SLAs or thresholds;
-- claiming transfer from a Spanish or French public portfolio to the UK market.
+The project deliberately separates **development signal**, **validation evidence**, **operational readiness** and **approval authority**. A model can be technically deployable in shadow mode while still lacking enough evidence for promotion.
 
-## Data
+## Current status
 
-Two public motor-insurance sources have different roles.
+| Item | Current state |
+|---|---|
+| Model-family decision | **HOLD** |
+| Serving boundary | **HOLD_SHADOW_ONLY** |
+| Promotion review | **NOT_OPEN** |
+| Model promotion authorised | **No** |
+| Customer-pricing change authorised | **No** |
+| Preregistered external target gates | **0 / 4 pass** |
+| Model Change Committee readiness | **EVIDENCE_GAP_HOLD — 5 / 8 gates pass** |
 
-1. `freMTPL2` is the detailed cross-sectional governance benchmark used for model architecture, calibration, disagreement analysis and stress tests.
-2. Mendeley dataset `sw4jmdb2sm`, version 1, supplies the main temporal evidence: **354,140 Spanish motor policy-year observations and 47 variables covering 2022, 2023 and 2024**.
+The three current committee blockers are:
 
-The Mendeley source is downloaded in GitHub Actions rather than committed. The verified main CSV is 94,710,312 bytes with SHA-256 `6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4`.
+1. `G2_LOCKED_TEMPORAL_SUPPORT` — the original Spanish locked OOT result did not support a global model-family switch;
+2. `G3_PREREGISTERED_EXTERNAL_SUPPORT` — Australia and Belgium provide four preregistered external target gates, with zero passes;
+3. `G4_FRESH_INDEPENDENT_EVIDENCE` — the Spanish, Australian and Belgian validation datasets have already been used and are now consumed for fresh candidate selection.
 
-## Target definitions
+A human-signoff flag cannot override failed evidence gates. Even a future all-pass machine state can only open a human review; this repository never authorises customer pricing automatically.
 
-- Frequency: `total_claims / total_exposure`.
-- Expected loss / pure premium: `total_incurred / total_exposure`.
-- Exposure is used as a modelling weight / denominator rather than a predictive feature.
+## Model inventory
 
-## Feature policy
-
-The temporal models use 14 selected driver, vehicle and policy characteristics.
-
-Numeric:
-
-- driver age;
-- vehicle age;
-- age at driving licence;
-- vehicle value;
-- seats;
-- power-to-weight ratio.
-
-Categorical:
-
-- policy type;
-- business type;
-- payment frequency;
-- bonus score;
-- fuel type;
-- vehicle brand;
-- municipality type;
-- circulation area.
-
-The following are intentionally excluded from predictive features and are rejected by the v0.21/v0.22 online schema:
-
-- `insured_id` and `year`;
-- `policy_status`, because its timing within the calendar observation period can be post-period;
-- current premium fields;
-- current claim-count fields;
-- current incurred-loss fields;
-- exposure itself as a feature.
-
-## Locked temporal design
-
-The deployment-style OOT design is:
-
-- **2022:** training;
-- **2023:** aggregate scaling / calibration only;
-- **2024:** untouched final OOT evaluation.
-
-No 2024 outcome is used to fit the model or calibration scale.
-
-## Model families
+The shadow bundle contains four reference/challenger models:
 
 - Poisson GLM frequency reference;
 - XGBoost Poisson frequency challenger;
 - Tweedie GLM pure-premium reference;
 - XGBoost Tweedie pure-premium challenger.
 
-## Verified locked 2024 OOT results
+The v0.21 manifest records the model artifacts, locked calibration scales, feature-contract digest and artifact SHA-256 values. The API exposes side-by-side risk scores for shadow comparison and deliberately exposes no `/quote` or `/price` endpoint.
+
+## Target definitions
+
+- **Claim frequency:** claim count per unit exposure.
+- **Pure premium / expected loss:** incurred claim amount per unit exposure.
+- Exposure is used as an offset/weight or denominator as appropriate, not as a predictive feature.
+
+## Evidence and data lineage
+
+Different datasets have deliberately different evidence roles.
+
+| Portfolio | Role at first use | Current role | Can support new candidate selection now? |
+|---|---|---|---|
+| French `freMTPL2` | Cross-sectional development benchmark | Development benchmark | **No — not promotion evidence** |
+| Spanish `sw4jmdb2sm` 2024 | `LOCKED_OOT_FIRST_USE` | `CONSUMED_RETROSPECTIVE_VALIDATION` | **No** |
+| Australian `ausprivauto0405` | `INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE` | `CONSUMED_EXTERNAL_VALIDATION_DATASET` | **No** |
+| Belgian `beMTPL97` | `INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE` | `CONSUMED_EXTERNAL_VALIDATION_DATASET` | **No** |
+
+The distinction matters: rerunning, resplitting or retuning on an already inspected validation portfolio cannot make it independent again.
+
+## Development benchmark
+
+On the French `freMTPL2` frequency benchmark, the comparable XGBoost Poisson model reduced weighted Poisson deviance by **5.43%** relative to the Poisson GLM with geography and increased top-10% exposure claim capture from **20.59% to 31.17%**.
+
+This is strong **challenger-development evidence**. It is not an out-of-time pricing uplift, observed commercial impact or promotion decision.
+
+## Spanish calendar validation
+
+The Spanish public motor portfolio contains **354,140 policy-year observations and 47 variables** covering 2022–2024. The original prospective roles were:
+
+- **2022:** model training;
+- **2023:** aggregate calibration;
+- **2024:** locked OOT evaluation at **first use**.
+
+The feature contract excludes current premiums, current claim counts, current incurred losses, policy status, year and customer ID from predictive inputs.
+
+### First-use locked 2024 results
+
+Frequency:
+
+- GLM Poisson deviance: **1.118536**;
+- XGBoost Poisson deviance: **1.118835**;
+- top-10% exposure claim capture: **26.62% GLM vs 27.04% XGBoost**;
+- paired bootstrap GLM-minus-XGB deviance interval: **[-0.00155, 0.00083]**.
+
+Pure premium:
+
+- GLM Tweedie deviance: **93.931806**;
+- XGBoost Tweedie deviance: **93.951316**;
+- aggregate calibration: **0.953 GLM vs 0.934 XGBoost**;
+- the paired bootstrap interval crossed zero.
+
+The registered decision remained **HOLD**. Later monitoring, outcome review, recalibration, cohort and uncertainty work reused 2024, so v0.35 now records the period as `CONSUMED_RETROSPECTIVE_VALIDATION` for future decision-making while preserving the historical fact that it was independent at first locked use.
+
+## Australian preregistered external replication
+
+`ausprivauto0405` contains **67,856** policies. Source, split, features, models, calibration, metrics, bootstrap and support gates were merged on main **before row-level access**.
+
+Registered external results:
 
 ### Frequency
 
-- Poisson GLM locked deviance: **1.11854**
-- XGBoost locked deviance: **1.11884**
-- Poisson GLM locked calibration ratio: **0.963**
-- XGBoost locked calibration ratio: **0.960**
-- top-10% exposure claim capture: **26.62% GLM vs 27.04% XGBoost**
-
-The XGBoost ranking gain is small and does not improve locked OOT deviance. The 250-resample GLM-minus-XGBoost Poisson-deviance difference has a 95% interval of **[-0.00155, 0.00083]**.
+- GLM deviance: **0.814742**;
+- XGBoost deviance: **0.817878**;
+- XGBoost relative deviance improvement: **-0.3849%**;
+- bootstrap 95% interval for relative improvement: approximately **[-0.7799%, -0.0381%]**;
+- decision: `NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT`.
 
 ### Pure premium
 
-- Tweedie GLM locked deviance: **93.9318**
-- XGBoost Tweedie locked deviance: **93.9513**
-- Tweedie GLM locked calibration ratio: **0.953**
-- XGBoost locked calibration ratio: **0.934**
-- top-10% exposure loss capture: **20.44% GLM vs 21.13% XGBoost**
+The immutable origin-main evidence records:
 
-The 250-resample GLM-minus-XGBoost Tweedie-deviance difference has a 95% interval of **[-0.988, 0.856]**.
+- GLM deviance: **129.840909**;
+- XGBoost deviance: **114.956067**;
+- favourable XGBoost point improvement: **+11.4639%**;
+- bootstrap lower bound: approximately **-10.6885%**;
+- top-10% exposure loss capture: **18.48% GLM vs 11.09% XGBoost**;
+- decision: `NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT`.
 
-## Rolling-origin stability
+The favourable point estimate was not promoted into a positive conclusion because the preregistered uncertainty gate failed and ranking performance moved adversely.
 
-The rolling-origin audit is a **model-family stability check**, not a replacement for the locked OOT gate.
+Repeated Australian executions also exposed that one iterative Tweedie GLM point metric was not exactly reproducible across hosted runs even though the registered decisions remained negative. That numerical issue was retained rather than hidden and led to stronger prospective reproducibility requirements.
 
-### 2022 train -> 2023 test
+## Belgian preregistered external replication
 
-- frequency deviance: **1.13619 GLM vs 1.13646 XGBoost**;
-- frequency bootstrap interval: **[-0.00189, 0.00095]**;
-- pure-premium deviance: **92.6970 GLM vs 93.2707 XGBoost**;
-- pure-premium bootstrap interval: **[-2.149, 0.880]**.
+`beMTPL97` contains **163,212 unique policies**. The protocol was merged before row-level access and prospectively fixed solver, tolerance and single-thread numerical controls.
 
-No stable XGBoost advantage is present.
+### Frequency
 
-### 2022+2023 train -> 2024 test
+- GLM deviance: **0.604357**;
+- XGBoost deviance: **0.602598**;
+- XGBoost relative improvement: **+0.2910%**;
+- bootstrap 95% interval: approximately **[+0.0987%, +0.4876%]**;
+- registered decision: `NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT`.
 
-- frequency deviance: **1.11199 GLM vs 1.10843 XGBoost**;
-- frequency top-10% claim capture: **26.98% vs 27.42%**;
-- frequency bootstrap interval: **[0.00236, 0.00513]**, supporting a small XGBoost frequency gain;
-- pure-premium deviance: **92.8213 GLM vs 93.1606 XGBoost**;
-- pure-premium calibration: **0.948 GLM vs 0.842 XGBoost**;
-- pure-premium bootstrap interval: **[-0.793, 0.160]**.
+The uncertainty interval is positive, but the point improvement misses the fixed **0.5% project materiality threshold**. That threshold is a project demonstration rule, not an insurer or regulatory standard, and it was not relaxed after observing the result.
 
-The frequency advantage appears after adding 2023 to the training window, but the expected-loss challenger still does not show stable superiority.
+### Pure premium
 
-## Transport and tail checks
+- GLM deviance: **79.843311**;
+- XGBoost deviance: **79.586308**;
+- XGBoost relative improvement: **+0.3219%**;
+- bootstrap 95% interval: approximately **[-0.7918%, +1.3082%]**;
+- top-10% loss capture: **20.45% GLM vs 19.12% XGBoost**;
+- registered decision: `NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT`.
 
-The 2024 evaluation includes both returning and new policy IDs:
+Two completed Actions executions in different observed Azure regions reproduced all registered aggregate metrics within the preregistered tolerances. Maximum absolute difference was **1.42×10⁻¹⁴** and maximum relative difference **6.90×10⁻¹⁴**. This strengthens confidence in the recorded negative decisions; it does not convert them into positive challenger support.
 
-- 105,307 test IDs were seen in 2022 or 2023;
-- 62,778 were unseen before 2024.
+## Cross-portfolio evidence synthesis
 
-Pure-premium calibration differs by transport cohort:
+v0.43 keeps the original evidence classes and decisions rather than constructing a pooled meta-analysis or subjective evidence-weighting score.
 
-- returning IDs: GLM **0.994**, XGBoost **0.950**;
-- new IDs: GLM **0.825**, XGBoost **0.881**.
+Across Australia and Belgium:
 
-v0.18 adds bootstrap intervals around these cohort estimates. v0.17 separately shows that the highest-loss 1% of positive-loss 2024 policy rows contribute **20.52%** of incurred, so severity-tail behaviour is treated as a model-risk issue rather than hidden by one cap.
+- external portfolios evaluated: **2**;
+- preregistered target gates evaluated: **4**;
+- preregistered target gates passed: **0**;
+- fresh independent validation datasets currently available: **0**.
 
-## Value for complexity
+The correct conclusion is **not** “XGBoost is universally worse than GLM”. Some challenger point and ranking metrics are favourable. The conclusion is that the existing evidence is insufficient to open a global model-family promotion review.
 
-On the measured GitHub runner, XGBoost Tweedie is approximately **111x larger** on disk and about **3.65x slower** for 2024 inference than the Tweedie GLM while not improving locked OOT Tweedie deviance. These are environment-specific diagnostics, not universal model benchmarks.
+## Operational readiness
 
-## Current model-family decision
+Operational controls are deliberately evaluated separately from model evidence.
 
-**KEEP HOLD / NO MODEL-FAMILY PROMOTION.**
+The repository demonstrates:
 
-The promotion gate requires stable expected-loss evidence, calibration, temporal repeatability, transport and acceptable value for additional complexity. The current evidence does not satisfy that standard.
+- FastAPI/Docker shadow scoring and offline/online parity;
+- aggregate monitoring without raw request payload persistence;
+- review hysteresis with no automatic pricing/model switch;
+- CPU runtime packaging and native XGBoost model IO;
+- content-addressed bundle integrity;
+- manual release and rollback controls;
+- GitHub/Sigstore build provenance;
+- attested release admission restricted to `ADMIT_TO_SHADOW_REGISTRY_ONLY`;
+- zero raw-source-data members in the admitted release archive.
 
-## v0.21 shadow deployment boundary
+The synthetic release-control replay rejects unauthorised rollback and requires explicit operator authorisation. These are project engineering controls, not production incidents, insurer approval or proof of pricing safety.
 
-Technical deployability is separated from approval. v0.21 packages the four locked reference/challenger models into a versioned FastAPI/Docker shadow-scoring service.
+## Model Change Committee readiness
 
-Serving status is:
+v0.44 converts the persisted evidence dossier into a fail-closed machine readiness gate for a hypothetical human model-change review.
 
-**`HOLD_SHADOW_ONLY`**
+Current request `MCR-XGB-MOTOR-001` is:
 
-The API exposes `/health`, `/model-info`, `/score` and `/batch-score`; it deliberately exposes no `/quote` or `/price` route. The model bundle records the feature-contract hash, locked calibration scales and SHA-256 digests for every serialised model artifact.
+**`EVIDENCE_GAP_HOLD` — 5 of 8 required gates pass.**
 
-Verified deployment controls include:
+Passing gates demonstrate development signal, prospective reproducibility controls, shadow deployment boundaries, release/rollback control and attested shadow admission. They cannot compensate for the three failed evidence gates.
 
-- exact 25-record offline-online prediction parity (max absolute error **0.0**);
-- deterministic 1,000-policy batch scoring;
-- rejection of forbidden current-outcome fields;
-- unseen-category warnings;
-- Docker build and live HTTP scoring parity.
+## Intended use
 
-These controls establish a deployable shadow demonstration, not approval for customer pricing.
+Appropriate uses include:
 
-## v0.22 monitoring boundary
+- demonstrating insurance model-development and validation reasoning;
+- comparing GLM references with ML challengers;
+- showing preregistration, holdout-consumption controls and external replication;
+- demonstrating model-risk, reproducibility and shadow-release governance;
+- explaining why negative or mixed evidence can correctly lead to HOLD.
 
-v0.22 adds aggregate operational monitoring to the shadow service. Monitoring stores no raw request payloads, customer identifiers or policy rows.
+## Not intended for
 
-It tracks:
+This project must not be represented as:
 
-- request/error rates;
-- latency and batch size;
-- unseen-category rate;
-- reference/challenger disagreement distributions;
-- feature-distribution PSI against an aggregate 2022 training baseline.
+- a real customer-pricing or underwriting system;
+- evidence of profit, conversion or premium uplift;
+- validation of FIRST CENTRAL models, thresholds or governance policy;
+- proof of transfer to the current UK motor market;
+- an insurer, actuarial or regulatory approval;
+- a real Model Change Committee decision;
+- production-safety evidence.
 
-The training baseline stores numeric quantile bins and categorical proportions only. Feature-drift alerts require at least **500 records**.
+## Work required before any production-like claim
 
-A seeded 5,000-record 2022 control replay is GREEN with max PSI **0.00973**. A seeded real 5,000-record 2024 replay triggers feature drift with max PSI **1.4116** on `business_type`, while reference/challenger disagreement p95 remains near the 2022 control (**0.94x** frequency, **1.04x** pure premium).
+A production-like claim would require, at minimum, governed target-portfolio rating and claims data with as-of feature lineage, insurer-specific actuarial and pricing review, agreed acceptance thresholds, fairness/proxy and regulatory review, expense/reinsurance/commercial treatment, security and operational controls, prospective target-portfolio validation, outcome-linked monitoring and authorised business/model-risk approval.
 
-Full-year business-type mix shifts from **97.91% new business / 2.09% existing-renewal** in 2022 to **57.35% / 42.65%** in 2024. This identifies a portfolio-composition change; it does not by itself establish predictive deterioration.
-
-An explicitly synthetic stress replay verifies error-rate, unseen-category, feature-drift and relative disagreement alerts. These are monitoring-behaviour tests, not observed production incidents.
-
-Monitoring thresholds, including PSI 0.25 and the 500-record minimum, are project demonstration rules rather than insurer/regulatory limits.
-
-## Key risks and limits
-
-- claim severity remains heavy-tailed;
-- aggregate calibration can hide transport-segment error;
-- feature drift can occur without an immediate model-disagreement shift and requires later outcome monitoring;
-- the public Spanish portfolio represents one insurer and does not establish UK-market transport;
-- policy-year data do not provide the full operational data lineage of a production insurer;
-- bonus score is treated as an available rating characteristic, but its exact production as-of construction is source-specific;
-- model-selection and monitoring thresholds in this repository are demonstration rules, not insurer policy;
-- synthetic proposition and monitoring-stress simulations are not observed business outcomes/incidents.
-
-## Engineering controls
-
-The repository tests and GitHub Actions workflows protect:
-
-- forbidden current premium/outcome/post-period fields;
-- the locked 2022/2023/2024 temporal roles;
-- evidence-registry headline values;
-- model-bundle hashes and offline-online parity;
-- batch determinism and unknown-category handling;
-- aggregate-only monitoring telemetry;
-- feature PSI alert behaviour and minimum sample gating;
-- Docker/network serving and monitoring endpoints.
-
-## Required work before any production-like claim
-
-UK/company-specific data validation, rating-factor lineage, fairness/proxy review, actuarial review, pricing governance, external telemetry storage/aggregation design, outcome-linked monitoring, expense/reinsurance treatment, security review, regulatory review, business-owner approval and prospective validation on the target portfolio.
+For this public project specifically, reopening the challenger evidence review requires a **genuinely new independent external dataset or independent calendar period whose row-level outcomes have not already been inspected**, with the protocol merged before access and any positive result reproduced under the prospective multi-run numerical controls.
