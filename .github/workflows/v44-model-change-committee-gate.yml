@@ -1,0 +1,153 @@
+name: Model change committee gate v0.44
+
+on:
+  pull_request:
+    paths:
+      - 'governance/model_change_committee_policy_v44.json'
+      - 'governance/model_change_committee_v44.py'
+      - 'build_model_change_committee_decision_v44.py'
+      - 'scripts/migrate_evidence_registry_v44.py'
+      - 'tests/test_model_change_committee_v44.py'
+      - 'RESULTS_V44.md'
+      - '.github/workflows/v44-model-change-committee-gate.yml'
+      - 'action_results/v43/model_family_evidence_synthesis_summary.json'
+      - 'action_results/v21/manifest.json'
+      - 'action_results/v28/release_control_result.json'
+      - 'action_results/v30/release_admission_result.json'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/model_change_committee_policy_v44.json'
+      - 'governance/model_change_committee_v44.py'
+      - 'build_model_change_committee_decision_v44.py'
+      - 'scripts/migrate_evidence_registry_v44.py'
+      - 'tests/test_model_change_committee_v44.py'
+      - 'RESULTS_V44.md'
+      - '.github/workflows/v44-model-change-committee-gate.yml'
+      - 'action_results/v43/model_family_evidence_synthesis_summary.json'
+      - 'action_results/v21/manifest.json'
+      - 'action_results/v28/release_control_result.json'
+      - 'action_results/v30/release_admission_result.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fail-closed-model-change-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run v0.44 committee gate contracts
+        run: python -m unittest -v tests/test_model_change_committee_v44.py
+      - name: Build current committee readiness decision
+        run: python build_model_change_committee_decision_v44.py
+      - name: Apply and verify idempotent evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v44.py
+          python scripts/migrate_evidence_registry_v44.py
+          git diff -- EVIDENCE_REGISTRY.md
+      - name: Verify fail-closed decision boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v44/model_change_committee_decision_v44.json').read_text())
+          assert result['status'] == 'V44_MODEL_CHANGE_COMMITTEE_GATE_COMPLETE'
+          d = result['machine_gate_decision']
+          assert d['status'] == 'EVIDENCE_GAP_HOLD'
+          assert d['required_gate_count'] == 8
+          assert d['required_gate_pass_count'] == 5
+          assert d['required_gate_fail_count'] == 3
+          assert d['blocker_ids'] == [
+              'G2_LOCKED_TEMPORAL_SUPPORT',
+              'G3_PREREGISTERED_EXTERNAL_SUPPORT',
+              'G4_FRESH_INDEPENDENT_EVIDENCE',
+          ]
+          assert d['human_committee_review_open'] is False
+          assert d['automatic_model_promotion_authorised'] is False
+          assert d['automatic_customer_pricing_change_authorised'] is False
+          assert d['human_signoff_can_override_failed_evidence_gate'] is False
+          op = result['operational_readiness']
+          assert op['shadow_deployment_boundary'] is True
+          assert op['release_and_rollback_control'] is True
+          assert op['attested_shadow_admission'] is True
+          boundary = result['governance_boundary']
+          assert boundary['project_demo_not_insurer_policy'] is True
+          assert boundary['first_central_or_current_uk_transport_claimed'] is False
+          assert boundary['human_committee_decision_recorded'] is False
+          assert boundary['customer_pricing_authority_present'] is False
+          PY
+      - name: Assert no row-level data or model artifacts were created
+        run: |
+          mkdir -p results_v44 action_results/v44
+          if find results_v44 action_results/v44 -type f \( -name '*.rda' -o -name '*.csv' -o -name '*.parquet' -o -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' \) | grep -q .; then
+            echo 'v0.44 committee gate must remain aggregate governance only' >&2
+            exit 1
+          fi
+      - name: Persist v0.44 aggregate committee evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v44
+          cp results_v44/model_change_committee_decision_v44.json action_results/v44/
+          cp results_v44/MODEL_CHANGE_COMMITTEE_PACK_V44.md action_results/v44/
+          cp governance/model_change_committee_policy_v44.json action_results/v44/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          decision = json.loads(Path('results_v44/model_change_committee_decision_v44.json').read_text())
+          Path('action_results/v44/ACTION_V44_STATUS.json').write_text(json.dumps({
+              'workflow': 'Model change committee gate v0.44',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'row_level_data_accessed': False,
+              'model_fit_executed': False,
+              'machine_gate_status': decision['machine_gate_decision']['status'],
+              'required_gate_pass_count': decision['machine_gate_decision']['required_gate_pass_count'],
+              'required_gate_count': decision['machine_gate_decision']['required_gate_count'],
+              'human_committee_review_open': False,
+              'model_promotion_authorised': False,
+              'pricing_change_authorised': False,
+              'evidence_role': 'ROLLING_AGGREGATE_COMMITTEE_GATE',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v44/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.44 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v44/model_change_committee_decision_v44.json "$origin_dir/"
+          cp action_results/v44/MODEL_CHANGE_COMMITTEE_PACK_V44.md "$origin_dir/"
+          cp action_results/v44/model_change_committee_policy_v44.json "$origin_dir/"
+          cp action_results/v44/ACTION_V44_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v44/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V44_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_AGGREGATE_COMMITTEE_GATE_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v44 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.44 evidence changes'
+          else
+            git commit -m "Persist v0.44 model change committee gate ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.44 committee pack
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-model-change-committee-v44
+          path: results_v44/
+          if-no-files-found: warn
