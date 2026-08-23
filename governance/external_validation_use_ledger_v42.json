@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.42",
+  "dataset_id": "beMTPL97",
+  "source_repository": "dutangc/CASdatasets",
+  "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+  "source_file_sha256": "955a821a7a693bf18076c425e4d5a5a99889f3c89e1fbd99eca6239c11e963a6",
+  "rows": 163212,
+  "locked_test_rows": 32643,
+  "initial_role": "INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE",
+  "current_role": "CONSUMED_EXTERNAL_VALIDATION_DATASET",
+  "independent_external_validation_available": false,
+  "candidate_selection_allowed": false,
+  "fresh_independent_confirmation_allowed": false,
+  "material_use_events": [
+    {
+      "version": "v0.40",
+      "purpose": "preregister_source_split_features_models_metrics_gates_and_reproducibility_before_row_level_access",
+      "row_level_outcomes_accessed": false,
+      "locked_test_metrics_generated": false
+    },
+    {
+      "version": "v0.41",
+      "run_id": 32637645586,
+      "purpose": "first_source_access_aborted_before_model_fit",
+      "row_level_outcomes_accessed": true,
+      "locked_test_metrics_generated": false
+    },
+    {
+      "version": "v0.41",
+      "run_id": 32637809066,
+      "purpose": "first_completed_preregistered_model_execution",
+      "row_level_outcomes_accessed": true,
+      "locked_test_metrics_generated": true
+    },
+    {
+      "version": "v0.41",
+      "run_id": 32637884887,
+      "purpose": "main_reproduction_and_immutable_origin_persistence",
+      "row_level_outcomes_accessed": true,
+      "locked_test_metrics_generated": true
+    },
+    {
+      "version": "v0.42",
+      "purpose": "aggregate_only_numerical_reproducibility_and_consumption_closeout",
+      "row_level_outcomes_accessed": false,
+      "locked_test_metrics_generated": false
+    }
+  ],
+  "allowed_future_purposes": [
+    "regression_reproduction_of_frozen_v0_40_protocol",
+    "numerical_reproducibility_audit",
+    "post_hoc_diagnostics_no_candidate_selection",
+    "governance_contract_testing",
+    "aggregate_evidence_synthesis"
+  ],
+  "forbidden_future_purposes": [
+    "fit_new_model_parameters",
+    "fit_new_calibration_parameters",
+    "hyperparameter_search",
+    "change_feature_set_after_outcome_inspection",
+    "change_solver_or_tolerance_to_improve_locked_test_result",
+    "resplit_or_reseed_for_candidate_selection",
+    "select_new_candidate_policy",
+    "independent_confirmation",
+    "authorise_model_family_promotion",
+    "authorise_customer_pricing"
+  ],
+  "next_independent_evidence_requirement": "A genuinely new external dataset or independent calendar period whose row-level outcomes have not been inspected by this project, preregistered before row-level access and subject to the prospective numerical-reproducibility policy.",
+  "decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  },
+  "interpretation": "The Belgian portfolio supplied independent external evidence at its preregistered first completed v0.41 execution. Its locked-test outcomes have now been evaluated and reproduced, so the dataset is consumed for future candidate selection and cannot become independent again through rerunning, resplitting, retuning or alternative solver choices."
+}
