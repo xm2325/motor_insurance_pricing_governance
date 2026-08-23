@@ -98,8 +98,9 @@ class ModelRiskInventoryV46Tests(unittest.TestCase):
         for marker in [
             "not an out-of-time pricing uplift",
             "not an insurer or regulatory standard",
-            "not direct validation",
-            "not a real customer-pricing or underwriting system",
+            "not direct validation of the fitted spanish model artifacts",
+            "this project must not be represented as",
+            "a real customer-pricing or underwriting system",
             "proof of transfer to the current uk motor market",
             "a real model change committee decision",
         ]:
