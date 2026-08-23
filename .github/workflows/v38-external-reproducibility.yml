@@ -1,0 +1,74 @@
+name: External validation numerical reproducibility audit v0.38
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'governance/external_reproducibility_audit_v38.json'
+      - 'tests/test_external_reproducibility_evidence_v38.py'
+      - 'tests/test_external_reproducibility_static_v38.py'
+      - 'tests/test_external_reproducibility_docs_v38.py'
+      - 'action_results/v37/**'
+      - 'RESULTS_V37.md'
+      - 'RESULTS_V38.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - 'README.md'
+      - '.github/workflows/v38-external-reproducibility.yml'
+  pull_request:
+    paths:
+      - 'governance/external_reproducibility_audit_v38.json'
+      - 'tests/test_external_reproducibility_evidence_v38.py'
+      - 'tests/test_external_reproducibility_static_v38.py'
+      - 'tests/test_external_reproducibility_docs_v38.py'
+      - 'action_results/v37/**'
+      - 'RESULTS_V37.md'
+      - 'RESULTS_V38.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - 'README.md'
+      - '.github/workflows/v38-external-reproducibility.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  external-reproducibility-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify persisted v0.37 and v0.38 reconciliation contract
+        run: |
+          python -m unittest -v tests/test_external_reproducibility_evidence_v38.py
+          python -m unittest -v tests/test_external_reproducibility_static_v38.py
+          python -m unittest -v tests/test_external_reproducibility_docs_v38.py
+      - name: Persist aggregate v0.38 audit evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p action_results/v38
+          cp governance/external_reproducibility_audit_v38.json action_results/v38/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v38/ACTION_V38_STATUS.json').write_text(json.dumps({
+              'workflow': 'External validation numerical reproducibility audit v0.38',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'v37_decision_reproduced': True,
+              'pure_premium_point_metric_exactly_reproduced': False,
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v38
+          if git diff --cached --quiet; then
+            echo 'No v0.38 evidence changes'
+          else
+            git commit -m "Persist v0.38 external reproducibility audit ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi

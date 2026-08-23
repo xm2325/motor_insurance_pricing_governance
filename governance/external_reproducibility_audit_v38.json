@@ -1,0 +1,122 @@
+{
+  "schema_version": "0.38",
+  "status": "V38_DECISION_REPRODUCIBLE_METRIC_VARIATION_REVIEW",
+  "scope": "Reconcile repeated executions of the frozen v0.36 Australian external replication protocol without changing the protocol, split, models, calibration or gates.",
+  "source_protocol": {
+    "v36_preregistration_sha256": "b20d38b51f767761fe4b4f85d58988f7032dbcc7d7afc96041f3858c0165e3c1",
+    "v36_main_sha": "49339232a6b913e111b6e4e66dfa4517d9396bc9",
+    "v37_merge_sha": "1e975b5258f3442da5c72dd9794fad2bf5303ae6",
+    "source_file_sha256": "c8aeabd0b75e16a2b9a7452cfb3e8e2b3ec36a27171d35c2862bc8278777461c",
+    "rules_changed_for_audit": false
+  },
+  "executions": [
+    {
+      "name": "final_pr_execution",
+      "workflow_run_id": "32633450710",
+      "attempt_role": "final PR head execution",
+      "runner_region": "centralus",
+      "head_sha": "f11ca4c7b32371982d2a36553487ce70128cc03d",
+      "summary_sha256": "6f3fd009e70fdb3eaebcfe46126b14bf853848ac164ac8ce23059daa8974d7df",
+      "source_audit_sha256": "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e",
+      "frequency_relative_deviance_improvement": -0.0038490389381724555,
+      "frequency_decision": "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+      "pure_premium_reference_deviance": 126.22046948252975,
+      "pure_premium_challenger_deviance": 114.95606738904532,
+      "pure_premium_relative_deviance_improvement": 0.08924386147243368,
+      "pure_premium_bootstrap_q025": -0.10687062749220161,
+      "pure_premium_positive_draw_rate": 0.618,
+      "pure_premium_decision": "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT"
+    },
+    {
+      "name": "final_pr_rerun",
+      "workflow_run_id": "32633450710",
+      "attempt_role": "manual rerun of the same final PR job after discrepancy discovery",
+      "runner_region": "westcentralus",
+      "head_sha": "f11ca4c7b32371982d2a36553487ce70128cc03d",
+      "summary_sha256": "6f3fd009e70fdb3eaebcfe46126b14bf853848ac164ac8ce23059daa8974d7df",
+      "source_audit_sha256": "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e",
+      "frequency_relative_deviance_improvement": -0.0038490389381724555,
+      "frequency_decision": "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+      "pure_premium_reference_deviance": 126.22046948252975,
+      "pure_premium_challenger_deviance": 114.95606738904532,
+      "pure_premium_relative_deviance_improvement": 0.08924386147243368,
+      "pure_premium_bootstrap_q025": -0.10687062749220161,
+      "pure_premium_positive_draw_rate": 0.618,
+      "pure_premium_decision": "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT"
+    },
+    {
+      "name": "main_execution",
+      "workflow_run_id": "32633520755",
+      "attempt_role": "post-merge main execution and persisted evidence source",
+      "runner_region": "northcentralus",
+      "head_sha": "1e975b5258f3442da5c72dd9794fad2bf5303ae6",
+      "summary_sha256": "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
+      "source_audit_sha256": "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e",
+      "frequency_relative_deviance_improvement": -0.0038490389381815593,
+      "frequency_decision": "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+      "pure_premium_reference_deviance": 129.8409094852542,
+      "pure_premium_challenger_deviance": 114.95606738904532,
+      "pure_premium_relative_deviance_improvement": 0.11463907758516845,
+      "pure_premium_bootstrap_q025": -0.10688474539068529,
+      "pure_premium_positive_draw_rate": 0.618,
+      "pure_premium_decision": "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT"
+    }
+  ],
+  "reconciliation": {
+    "source_audit_identical_across_observed_runs": true,
+    "split_and_feature_contract_identical": true,
+    "dependency_versions_identical": true,
+    "runner_image_version_identical": true,
+    "runner_regions_differed": true,
+    "frequency_decision_reproduced": true,
+    "frequency_point_metric_effectively_stable": true,
+    "pure_premium_xgb_point_metric_reproduced": true,
+    "pure_premium_glm_point_metric_exactly_reproduced": false,
+    "pure_premium_glm_deviance_pr": 126.22046948252975,
+    "pure_premium_glm_deviance_main": 129.8409094852542,
+    "pure_premium_glm_deviance_relative_difference_pr_denominator": 0.02868346170448651,
+    "pure_premium_xgb_improvement_difference_absolute": 0.025395216112734764,
+    "pure_premium_bootstrap_lower_bound_difference_absolute": 0.000014117898483684277,
+    "pure_premium_positive_draw_rate_reproduced": true,
+    "pure_premium_decision_reproduced": true,
+    "observed_cause_boundary": "The differing runner region/hardware allocation is consistent with numerical convergence sensitivity in the iterative Tweedie GLM, but this audit does not establish a unique causal mechanism."
+  },
+  "authoritative_v37_evidence": {
+    "source": "action_results/v37/australian_external_replication_summary.json",
+    "summary_sha256": "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
+    "workflow_run_id": "32633520755",
+    "source_sha": "1e975b5258f3442da5c72dd9794fad2bf5303ae6",
+    "reason": "The post-merge main execution is the persisted repository evidence. Earlier PR executions are retained as reproducibility-audit comparators, not silently substituted for main."
+  },
+  "future_external_evidence_policy": {
+    "applies_to_protocols_registered_after_v38": true,
+    "minimum_independent_actions_executions_for_positive_gate": 2,
+    "same_locked_source_split_features_models_and_gate_required": true,
+    "decision_labels_must_agree": true,
+    "if_decision_labels_disagree": "NUMERICAL_REPRODUCIBILITY_REVIEW_REQUIRED_AND_NO_POSITIVE_EXTERNAL_CLAIM",
+    "default_max_relative_key_metric_difference_for_exact_reproducibility": 0.001,
+    "threshold_boundary": "0.1% is a future project reproducibility-review rule, not an insurer or regulatory threshold; a future preregistration may set a stricter threshold before data access.",
+    "if_metric_difference_exceeds_registered_tolerance_but_decision_agrees": "METRIC_NUMERICAL_REPRODUCIBILITY_REVIEW",
+    "positive_external_support_requires_metric_reproducibility": true,
+    "record_iterative_solver_convergence_metadata": true,
+    "record_runner_image_and_dependency_versions": true,
+    "record_thread_environment": true,
+    "future_thread_environment_defaults": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "future_iterative_estimators_must_explicitly_register_solver_and_tolerance": true,
+    "no_retroactive_change_to_v36_protocol": true
+  },
+  "decision": {
+    "v37_frequency_external_support": false,
+    "v37_pure_premium_external_support": false,
+    "v37_decision_reproducible_across_observed_runs": true,
+    "v37_pure_premium_point_metric_exact_reproducibility_claim_allowed": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  }
+}

@@ -10,6 +10,8 @@ The complete modelling protocol was merged to main in v0.36 **before row-level A
 
 The first row-level execution then used that protocol without changing the split, features, model hyperparameters, calibration rules, bootstrap or decision thresholds.
 
+**Evidence convention after v0.38 audit:** the post-merge main run is the authoritative persisted v0.37 result. Earlier PR runs are retained as numerical-reproducibility comparators. The registered decisions agree, but the pure-premium Tweedie GLM point deviance did not reproduce exactly across hosted runners. See `RESULTS_V38.md`.
+
 ## Source audit
 
 Pinned source:
@@ -45,7 +47,7 @@ Calibration scales were within the preregistered `[0.5, 2.0]` range and were not
 - GLM: **1.02080**;
 - XGBoost: **1.01795**.
 
-Locked-test results:
+Authoritative main locked-test results:
 
 | Metric | Poisson GLM | XGBoost |
 |---|---:|---:|
@@ -70,25 +72,25 @@ The calibration non-inferiority check passes, but both the required >=0.5% point
 
 ## Secondary confirmatory endpoint — pure premium
 
-Calibration scales are again valid and unclipped:
+Authoritative main calibration scales are valid and unclipped:
 
 - GLM: **1.01377**;
 - XGBoost: **1.10226**.
 
-Locked-test results:
+Authoritative main locked-test results from run **32633520755**:
 
 | Metric | Tweedie GLM | XGBoost |
 |---|---:|---:|
-| Tweedie deviance, p=1.5 | 126.2205 | **114.9561** |
+| Tweedie deviance, p=1.5 | 129.8409 | **114.9561** |
 | Aggregate calibration | 0.93933 | **0.94033** |
-| Absolute log-calibration error | 0.06258 | **0.06153** |
+| Absolute log-calibration error | 0.06259 | **0.06153** |
 | Top-10% exposure loss capture | **18.48%** | 11.09% |
 
-The point deviance improvement is a large **+8.924%**. It is not treated as confirmatory because the preregistered paired bootstrap is much less stable:
+The authoritative main point deviance improvement is **+11.4639%**. It is not treated as confirmatory because the preregistered paired bootstrap remains much less stable:
 
-> **95% CI [-10.69%, +29.53%]**
+> **95% CI [-10.6885%, +33.8421%]**
 
-with median **+7.78%** and **61.8%** of draws above zero.
+with median **+10.4135%** and **61.8%** of draws above zero.
 
 Registered decision:
 
@@ -96,12 +98,19 @@ Registered decision:
 
 The point-improvement and calibration checks pass, but the required positive bootstrap lower bound fails. The large deterioration in top-10% loss capture is also retained as a descriptive trade-off rather than hidden, although ranking capture was not part of the preregistered pass gate.
 
+### Numerical reproducibility note
+
+The final PR execution and a later rerun of the exact same PR job, on two different hosted-runner allocations, both produced Tweedie GLM deviance **126.220469** and XGBoost point improvement **+8.9244%**. The post-merge main execution produced GLM deviance **129.840909** and point improvement **+11.4639%** while the XGBoost deviance, source audit, split, package versions, bootstrap conclusion and registered decision remained stable.
+
+Therefore v0.37 must **not** be described as having exact pure-premium point-metric reproducibility across runners. `RESULTS_V38.md` records the three-run reconciliation and prospective safeguards.
+
 ## Interpretation across Spain and Australia
 
 This external portfolio does **not** support a simple story that XGBoost should replace the GLM globally:
 
 - the primary Australian frequency endpoint favours the GLM on deviance, with the entire registered bootstrap interval below zero;
 - the Australian pure-premium point estimate favours XGBoost strongly, but uncertainty spans material harm to material benefit and the tail-ranking result moves in the opposite direction;
+- the pure-premium GLM point metric also exposed cross-run numerical sensitivity, further strengthening the case for conservative external-evidence governance;
 - this contrasts with some later Spanish XGBoost frequency recalibration evidence, showing why repeated success on one reused historical period would have been insufficient evidence for promotion.
 
 That non-uniformity is the useful result.
