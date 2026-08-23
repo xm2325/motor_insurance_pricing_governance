@@ -6,6 +6,7 @@ on:
     paths:
       - 'governance/external_reproducibility_audit_v38.json'
       - 'tests/test_external_reproducibility_evidence_v38.py'
+      - 'tests/test_external_reproducibility_static_v38.py'
       - 'action_results/v37/**'
       - 'RESULTS_V37.md'
       - 'RESULTS_V38.md'
@@ -16,6 +17,7 @@ on:
     paths:
       - 'governance/external_reproducibility_audit_v38.json'
       - 'tests/test_external_reproducibility_evidence_v38.py'
+      - 'tests/test_external_reproducibility_static_v38.py'
       - 'action_results/v37/**'
       - 'RESULTS_V37.md'
       - 'RESULTS_V38.md'
@@ -38,7 +40,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify persisted v0.37 and v0.38 reconciliation contract
-        run: python -m unittest -v tests/test_external_reproducibility_evidence_v38.py
+        run: |
+          python -m unittest -v tests/test_external_reproducibility_evidence_v38.py
+          python -m unittest -v tests/test_external_reproducibility_static_v38.py
       - name: Persist aggregate v0.38 audit evidence
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
