@@ -19,6 +19,7 @@ def main() -> None:
     interview = interview_path.read_text(encoding="utf-8")
     registry = registry_path.read_text(encoding="utf-8")
     top = readme.split("\n---\n", 1)[0]
+    interview_lower = interview.lower()
 
     checks = {
         "readme_mentions_external_gate_summary": "0/4 preregistered external target gates pass" in top,
@@ -34,7 +35,10 @@ def main() -> None:
                 "G4_FRESH_INDEPENDENT_EVIDENCE",
             ]
         ),
-        "interview_preserves_no_uk_transfer_boundary": "not FIRST CENTRAL policy" in interview and "current UK motor market" in interview,
+        "interview_preserves_no_uk_transfer_boundary": (
+            "project proves the model works for uk motor insurance or first central" in interview_lower
+            and "it does not" in interview_lower
+        ),
         "registry_contains_v43_v44": "| v0.43 model-family evidence synthesis |" in registry and "| v0.44 model-change committee machine gate |" in registry,
     }
 
