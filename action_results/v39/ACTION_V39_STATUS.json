@@ -1,0 +1,8 @@
+{
+  "workflow": "External validation reuse firewall v0.39",
+  "run_id": "32634813763",
+  "sha": "b44dff4c44f38309ef47c302bfdcc4c8bf6bbb82",
+  "status": "success",
+  "australian_external_validation_consumed": true,
+  "fresh_independent_external_evidence_required": true
+}

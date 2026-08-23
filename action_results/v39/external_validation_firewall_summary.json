@@ -1,0 +1,56 @@
+{
+  "status": "V39_EXTERNAL_VALIDATION_FIREWALL_PASS",
+  "consumed_external_dataset": {
+    "dataset_id": "ausprivauto0405",
+    "source_file_sha256": "c8aeabd0b75e16a2b9a7452cfb3e8e2b3ec36a27171d35c2862bc8278777461c",
+    "rows": 67856,
+    "locked_test_rows": 13572,
+    "initial_role": "INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE",
+    "current_role": "CONSUMED_EXTERNAL_VALIDATION_DATASET",
+    "independent_external_validation_available": false,
+    "candidate_selection_allowed": false,
+    "material_use_event_count": 3,
+    "material_use_event_ids": [
+      "v0.36",
+      "v0.37",
+      "v0.38"
+    ],
+    "allowed_future_purposes": [
+      "regression_reproduction",
+      "numerical_reproducibility_audit",
+      "post_hoc_diagnostics_no_candidate_selection",
+      "governance_contract_testing"
+    ],
+    "forbidden_future_purposes": [
+      "fit_new_model_parameters",
+      "fit_new_calibration_parameters",
+      "hyperparameter_search",
+      "select_new_candidate_policy",
+      "independent_confirmation",
+      "authorise_model_family_promotion",
+      "authorise_customer_pricing"
+    ]
+  },
+  "new_external_dataset_firewall": {
+    "row_level_access_requires_registered_dataset": true,
+    "preregistration_only_before_row_level_access_is_allowed_for_unregistered_dataset": true,
+    "preregistration_must_fix_source_split_features_models_metrics_gates_and_numerical_reproducibility_rules": true,
+    "minimum_independent_actions_executions_for_positive_external_support": 2,
+    "positive_external_support_requires_matching_decisions": true,
+    "positive_external_support_requires_registered_metric_reproducibility": true,
+    "iterative_estimators_require_registered_solver_and_tolerance": true,
+    "default_thread_environment": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "next_independent_evidence_requirement": "A genuinely new external dataset or new independent period whose row-level outcomes have not been inspected in this project, with the protocol merged before row-level access."
+  },
+  "decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  },
+  "interpretation": "The Australian portfolio was independent at its preregistered first external execution in v0.37, but its train/calibration/test outcomes have now been used and its locked test has been repeatedly reproduced for numerical audit. It therefore cannot supply fresh candidate-selection or independent confirmation evidence. A new external dataset or period must be preregistered on main before row-level access."
+}
