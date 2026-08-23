@@ -64,7 +64,7 @@ class RepositoryFrontDoorV45Tests(unittest.TestCase):
     def test_interview_pack_preserves_scientific_boundaries(self):
         for marker in [
             "project demonstration rule",
-            "not FIRST CENTRAL policy",
+            "not FIRST CENTRAL/insurer policy",
             "No observed commercial uplift",
             "failed evidence gates cannot be overridden",
             "never authorise model promotion or customer pricing",
