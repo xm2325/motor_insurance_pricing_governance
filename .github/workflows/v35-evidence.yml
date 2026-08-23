@@ -1,0 +1,35 @@
+name: Persisted v0.35 validation firewall evidence contract
+
+on:
+  pull_request:
+    paths:
+      - 'action_results/v35/**'
+      - 'governance/validation_use_ledger_v35.json'
+      - 'README.md'
+      - 'RESULTS_V35.md'
+      - 'tests/test_validation_firewall_evidence_v35.py'
+      - '.github/workflows/v35-evidence.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'action_results/v35/**'
+      - 'governance/validation_use_ledger_v35.json'
+      - 'README.md'
+      - 'RESULTS_V35.md'
+      - 'tests/test_validation_firewall_evidence_v35.py'
+      - '.github/workflows/v35-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  persisted-v35-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify persisted v0.35 validation-firewall evidence
+        run: python -m unittest -v tests/test_validation_firewall_evidence_v35.py
