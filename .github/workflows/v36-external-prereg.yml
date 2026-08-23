@@ -1,0 +1,86 @@
+name: Australian external validation preregistration v0.36
+
+on:
+  pull_request:
+    paths:
+      - 'governance/external_validation_prereg_v36.json'
+      - 'validate_external_validation_prereg_v36.py'
+      - 'tests/test_external_validation_prereg_v36.py'
+      - 'RESULTS_V36.md'
+      - '.github/workflows/v36-external-prereg.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/external_validation_prereg_v36.json'
+      - 'validate_external_validation_prereg_v36.py'
+      - 'tests/test_external_validation_prereg_v36.py'
+      - 'RESULTS_V36.md'
+      - '.github/workflows/v36-external-prereg.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  external-validation-preregistration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify preregistration contracts before row-level access
+        run: python -m unittest -v tests/test_external_validation_prereg_v36.py
+      - name: Seal preregistration protocol
+        run: python validate_external_validation_prereg_v36.py
+      - name: Verify no external row-level data entered v0.36
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v36/external_validation_prereg_lock.json').read_text())
+          assert result['status'] == 'V36_EXTERNAL_VALIDATION_PREREGISTRATION_LOCKED'
+          assert result['registered_before_row_level_access'] is True
+          assert result['row_level_external_data_present'] is False
+          assert result['source_dataset'] == 'ausprivauto0405'
+          assert result['source_commit'] == '227fb56b8734bdb7c0327a41180e01d2ddaeaf26'
+          assert result['bootstrap_draws'] == 500
+          assert result['model_family_decision'] == 'HOLD'
+          assert result['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert result['execution_allowed_only_after_preregistration_is_on_main'] is True
+          PY
+      - name: Persist v0.36 preregistration lock
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v36
+          cp results_v36/external_validation_prereg_lock.json action_results/v36/
+          cp governance/external_validation_prereg_v36.json action_results/v36/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v36/ACTION_V36_STATUS.json').write_text(json.dumps({
+              'workflow': 'Australian external validation preregistration v0.36',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'row_level_external_data_accessed': False,
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v36
+          if git diff --cached --quiet; then
+            echo 'No v0.36 preregistration evidence changes'
+          else
+            git commit -m "Persist v0.36 Australian external preregistration ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload preregistration lock
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-external-validation-prereg-v36
+          path: results_v36/
+          if-no-files-found: warn
