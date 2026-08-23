@@ -44,8 +44,8 @@ class BelgianExternalReplicationV41Tests(unittest.TestCase):
     def test_downloader_uses_only_registered_pinned_source(self) -> None:
         text = DOWNLOADER.read_text(encoding="utf-8")
         self.assertIn("source['upstream_repository']", text)
-        self.assertIn("source['upstream_commit']", text)
-        self.assertIn("source['upstream_path']", text)
+        self.assertIn('commit = source["upstream_commit"]', text)
+        self.assertIn('upstream_path = source["upstream_path"]', text)
         self.assertIn('destination = OUTDIR / "beMTPL97.rda"', text)
         self.assertIn('frame["id"].duplicated()', text)
         self.assertIn('(exposure > 1)', text)
@@ -67,7 +67,7 @@ class BelgianExternalReplicationV41Tests(unittest.TestCase):
         self.assertIn('"positive_external_support_authorised": False', text)
         self.assertIn("SECOND_EXECUTION_REQUIRED_BEFORE_ANY_POSITIVE_SUPPORT", text)
 
-    def test_workflow_sets_registered_single_thread_environment(self) -> None:
+    def test_workflow_sets_registered_single_thread_environment_and_origin_snapshot(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
         for assignment in ("OMP_NUM_THREADS: '1'", "OPENBLAS_NUM_THREADS: '1'", "MKL_NUM_THREADS: '1'"):
             self.assertIn(assignment, text)
@@ -75,6 +75,10 @@ class BelgianExternalReplicationV41Tests(unittest.TestCase):
         self.assertIn("download_belgian_motor_v41.py", text)
         self.assertIn("run_belgian_external_replication_v41.py", text)
         self.assertIn("scripts/push_evidence_with_rebase.sh", text)
+        self.assertIn('origin_dir="action_results/v41/origin/${GITHUB_RUN_ID}"', text)
+        self.assertIn("IMMUTABLE_EXECUTION_SNAPSHOT", text)
+        self.assertIn("ROLLING_LATEST_FIRST_EXECUTION_REGRESSION", text)
+        self.assertIn("Refusing to overwrite immutable v0.41 origin snapshot", text)
 
 
 if __name__ == "__main__":
