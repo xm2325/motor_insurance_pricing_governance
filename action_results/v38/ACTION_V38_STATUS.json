@@ -1,7 +1,7 @@
 {
   "workflow": "External validation numerical reproducibility audit v0.38",
-  "run_id": "32634487795",
-  "sha": "1b2cd931c7c28edd7b064a032a875f8c0ef969fd",
+  "run_id": "32634813802",
+  "sha": "b44dff4c44f38309ef47c302bfdcc4c8bf6bbb82",
   "status": "success",
   "v37_decision_reproduced": true,
   "pure_premium_point_metric_exactly_reproduced": false
