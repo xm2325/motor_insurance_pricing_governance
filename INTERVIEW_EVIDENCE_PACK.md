@@ -1,129 +1,181 @@
 # Interview Evidence Pack
 
-Use this file as the short-form explanation of the project. Every headline number below is mapped in `EVIDENCE_REGISTRY.md`.
+Use this file as the short-form explanation of the project. Every headline number is mapped in `EVIDENCE_REGISTRY.md`; the current machine-readable synthesis is under `action_results/v43/` and the model-change gate under `action_results/v44/`.
 
 ## 20-second version
 
-I built a motor-insurance pricing and model-governance workbench to test whether a more flexible ML challenger actually deserved to replace a GLM. XGBoost looked substantially better on a cross-sectional frequency benchmark, but I then challenged that result using a separate 354,140-policy-year longitudinal portfolio with a locked 2022 train, 2023 calibration and 2024 out-of-time test. In 2024, XGBoost captured only 0.42 percentage points more claims in the highest-risk 10% of exposure and did not improve Poisson deviance; the bootstrap interval crossed zero. Rolling-origin retraining later produced a small 0.32% frequency-deviance gain, but no stable pure-premium advantage, so I kept the model-family decision at HOLD.
+I built a motor-insurance pricing and model-governance workbench to test whether XGBoost actually deserved to replace a GLM. XGBoost looked materially better on a French cross-sectional frequency benchmark, with a **5.43% Poisson-deviance reduction**, but I then challenged that signal using a locked Spanish calendar OOT design and two preregistered external portfolios from Australia and Belgium. The Spanish 2024 test did not support a global model-family switch, and **0 of 4 preregistered Australian/Belgian target gates passed**. I also made the validation lifecycle fail closed: once outcomes were inspected, those datasets were marked consumed rather than reused as fresh evidence. The repository can deploy, monitor, attest and roll back models in shadow mode, but the current Model Change Committee gate is still **`EVIDENCE_GAP_HOLD` (5/8 gates pass)**, so model promotion remains closed.
 
 ## 2-minute walkthrough
 
 ### 1. Business question
 
-The question was not "can XGBoost beat a GLM on one split?" It was:
+The question was not “can XGBoost beat a GLM on one split?” It was:
 
-> Does the challenger improve the pricing target reliably enough, across time and customer cohorts, to justify a model-family change?
+> Does the challenger improve the pricing target reliably enough across time and independent portfolios to justify a model-family change, while keeping deployment readiness separate from approval?
 
-That changes the evaluation design. A higher ranking metric alone is not enough if calibration, expected loss or temporal transport deteriorate.
+That means ranking improvement alone is insufficient. I also need loss-function improvement, calibration, uncertainty, temporal/external transport, reproducibility and a controlled validation lifecycle.
 
-### 2. Cross-sectional benchmark
+### 2. Development benchmark: strong enough to investigate
 
-On the French freMTPL2 benchmark, the full-data XGBoost Poisson model reduced weighted Poisson deviance by 5.43% relative to the Poisson GLM with the same geography variables, and increased claims captured in the highest-risk 10% of exposure from 20.59% to 31.17%.
+On the public French freMTPL2 benchmark, the comparable XGBoost Poisson model reduced weighted Poisson deviance by **5.43%** versus the Poisson GLM with geography and increased claims captured in the highest-risk 10% of exposure from **20.59% to 31.17%**.
 
-That was strong enough to justify a challenger, but not enough to justify deployment.
+That is a meaningful challenger-development signal. It is **not** an OOT pricing uplift, commercial impact or promotion decision.
 
-### 3. Real calendar OOT
+### 3. First locked calendar OOT: the strong signal does not transport cleanly
 
-I then added a separate public Spanish motor portfolio with 354,140 policy-year records and 47 variables. GitHub Actions downloads and audits the raw source before modelling.
+I added a separate public Spanish motor portfolio covering 2022–2024. The original design was fixed as:
 
-The locked design is:
+- **2022:** model training;
+- **2023:** aggregate calibration only;
+- **2024:** locked out-of-time evaluation at first use.
 
-- 2022: train;
-- 2023: estimate an aggregate calibration scale only;
-- 2024: untouched out-of-time evaluation.
+On **168,085** usable 2024 policy-years:
 
-The feature contract excludes current premiums, current claim counts, current incurred losses, policy status, year and customer ID from the predictive feature set.
+- frequency Poisson deviance: GLM **1.11854**, XGBoost 1.11884;
+- frequency top-10% claim capture: 26.62% vs **27.04%**;
+- GLM-minus-XGB frequency bootstrap interval: **[-0.00155, 0.00083]**;
+- pure-premium Tweedie deviance: GLM **93.9318**, XGBoost 93.9513.
 
-### 4. 2024 result
+So XGBoost ranked slightly differently but did not improve the registered target loss functions. The original model-family decision remained **HOLD**.
 
-On 168,085 usable 2024 policy-years:
+### 4. Validation data are not infinitely reusable
 
-- Poisson GLM deviance: 1.11854;
-- XGBoost Poisson deviance: 1.11884;
-- top-10% claim capture: 26.62% vs 27.04%;
-- 250-bootstrap GLM-minus-XGB deviance interval: [-0.00155, 0.00083].
+Later versions used 2024 for monitoring, realised-outcome review, recalibration evaluation, cohort transport and uncertainty work. I therefore added a machine-readable validation-use ledger. Spanish 2024 keeps its historical status as independent at first locked OOT use, but its **current** role is `CONSUMED_RETROSPECTIVE_VALIDATION`.
 
-So XGBoost ranked a little better, but the overall loss function did not improve and the uncertainty interval crossed zero.
+That means I cannot tune another candidate on 2024 and then call the same period an independent confirmation sample.
 
-Pure premium gave the same governance answer:
+### 5. Australia: preregister first, then accept the result
 
-- Tweedie GLM deviance: 93.9318;
-- XGBoost Tweedie deviance: 93.9513;
-- calibration: 0.953 vs 0.934;
-- bootstrap interval crossed zero.
+For Australian `ausprivauto0405` (**67,856 policies**), I merged the source/split/features/models/metrics/gates protocol before row-level access.
 
-### 5. Rolling-origin check
+Registered outcomes:
 
-I did not retune the locked 2024 result. Instead, I used rolling-origin evaluation as a separate stability diagnostic.
+- **frequency:** GLM 0.814742 vs XGBoost 0.817878; XGB relative deviance improvement **-0.3849%**; bootstrap interval entirely below zero → `NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT`;
+- **pure premium:** the frozen origin-main run had GLM 129.8409 vs XGBoost 114.9561, a favourable XGB point estimate, but the bootstrap lower bound was **-10.69%** and top-10 loss capture deteriorated materially → `NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT`.
 
-- 2022 -> 2023: no stable XGBoost frequency advantage;
-- 2022+2023 -> 2024: XGBoost achieved a small 0.32% frequency-deviance reduction, with a positive bootstrap interval;
-- pure premium still did not show a stable XGBoost advantage.
+I did not relax the gates after seeing this mixed result.
 
-That tells me the frequency result is sensitive to how recent the training data are. It does not justify changing the pricing-model family on its own.
+### 6. A reproducibility failure became a governance improvement
 
-### 6. Transport by customer cohort
+Repeated Australian runs preserved the negative decisions but exposed sensitivity in one iterative Tweedie GLM point estimate. Instead of hiding it, I separated **decision reproducibility** from **point-metric reproducibility** and changed the prospective external-validation policy: future positive evidence needs a registered solver/tolerance/thread environment plus at least two independent GitHub Actions executions within the registered numerical tolerance.
 
-The 2024 population contains both returning and new policy IDs.
+This is important because a model-governance pipeline should detect when the evidence-generating process itself is unstable.
 
-Pure-premium calibration:
+### 7. Belgium: second preregistered external test with prospective numerical controls
 
-- returning policies: GLM 0.994, XGBoost 0.950;
-- new policies: GLM 0.825, XGBoost 0.881.
+For Belgian `beMTPL97` (**163,212 unique policies**), the protocol was again merged before row-level access. Poisson/Tweedie GLMs used preregistered `newton-cholesky`, `tol=1e-10`, and single-thread numerical settings.
 
-The relative model performance changes across cohorts. That is another reason to avoid a global promotion decision based only on aggregate metrics.
+Registered results:
 
-### 7. Decision
+- **frequency:** GLM 0.604357 vs XGBoost 0.602598; XGB **+0.2910%**; bootstrap 95% approximately **[+0.0987%, +0.4876%]**. The direction is favourable, but it misses the fixed **0.5%** materiality threshold → no registered external support;
+- **pure premium:** GLM 79.8433 vs XGBoost 79.5863; XGB **+0.3219%**; bootstrap 95% approximately **[-0.7918%, +1.3082%]** → point and CI support gates fail;
+- pure-premium top-10 loss capture moves **20.45% → 19.12%**, which I retain as an adverse ranking trade-off.
 
-**HOLD / no model-family promotion.**
+Two completed Actions executions in different observed Azure regions reproduced all registered aggregate metrics within the preregistered tolerance: maximum absolute difference **1.42×10⁻¹⁴**, maximum relative difference **6.90×10⁻¹⁴**.
 
-I would require the challenger to improve the actual pricing target, remain acceptably calibrated, and transport across relevant customer cohorts and time windows. A small frequency-only gain is not sufficient.
+Again, reproducible negative decisions remain negative.
+
+### 8. Evidence synthesis: do not average away conflicting evidence
+
+v0.43 builds an aggregate dossier without a pooled meta-analysis or subjective evidence weights. Different portfolios keep their original evidence classes and registered decisions.
+
+Across Australia and Belgium there are **4 preregistered external target gates and 0 passes**. The strong freMTPL2 benchmark remains useful development evidence, but it cannot override the failed external gates.
+
+Current state:
+
+- model-family decision: **HOLD**;
+- serving: **HOLD_SHADOW_ONLY**;
+- promotion review: **NOT_OPEN**.
+
+### 9. Operational readiness is deliberately not model approval
+
+Separately, the project demonstrates:
+
+- FastAPI/Docker shadow scoring and offline/online parity;
+- aggregate monitoring and review hysteresis;
+- content-addressed model bundles;
+- manual release/rollback control;
+- GitHub/Sigstore build provenance;
+- attested admission restricted to the **shadow release registry**.
+
+Those controls show that a model can be operationally well governed while still lacking enough validation evidence for pricing promotion.
+
+### 10. Model Change Committee gate
+
+v0.44 converts the evidence dossier into a fail-closed machine readiness check for a hypothetical human model-change review.
+
+Current request `MCR-XGB-MOTOR-001` is:
+
+**`EVIDENCE_GAP_HOLD` — 5 of 8 required gates pass.**
+
+The three blockers are:
+
+1. `G2_LOCKED_TEMPORAL_SUPPORT` — original Spanish OOT does not support a global family switch;
+2. `G3_PREREGISTERED_EXTERNAL_SUPPORT` — **0/4** Australian/Belgian external target gates pass;
+3. `G4_FRESH_INDEPENDENT_EVIDENCE` — Spanish, Australian and Belgian validation datasets are now consumed.
+
+Even if a `human_signoff_recorded=true` flag is supplied, failed evidence gates cannot be overridden. If all machine gates passed in the future, the highest automatic state would only be `READY_FOR_HUMAN_COMMITTEE_REVIEW`; this code can never authorise model promotion or customer pricing.
 
 ## Likely interview questions
 
 ### Why keep a GLM reference?
 
-GLMs give a strong statistical baseline for insurance frequency and pure-premium modelling. They are comparatively easy to audit, their multiplicative effects are familiar in pricing work, and they make it easier to determine whether the complexity of a challenger buys enough incremental value.
+GLMs are strong insurance baselines and make the incremental value of complexity explicit. The point is not that GLMs are automatically preferable; it is that a challenger should demonstrate enough incremental value to justify additional complexity and governance burden.
 
-### Why use XGBoost at all?
+### Why use XGBoost at all if the final decision is HOLD?
 
-It can capture nonlinearities and interactions that a simple GLM specification may miss. The cross-sectional benchmark demonstrated that this can materially improve frequency ranking. The point of the project was to test whether that improvement survives stronger validation.
+Because the benchmark showed a real development signal: **5.43% lower Poisson deviance** and substantially higher top-decile claim capture. A good challenger process should investigate that signal rather than assume the simpler model wins. The stronger validation stages then determine whether the gain survives.
 
-### Why not promote XGBoost if top-10 capture is higher?
+### Why not promote XGBoost when Belgian frequency has a positive bootstrap interval?
 
-Because top-risk capture is only one ranking metric. A pricing-model change should improve the target loss function and calibration as well. In the locked 2024 test the frequency deviance did not improve, the bootstrap interval crossed zero, and the pure-premium model did not show a stable gain.
+Because the preregistered Belgian rule required both positive uncertainty evidence **and at least 0.5% relative deviance improvement**. The observed improvement is **0.291%**. Changing or rounding the materiality threshold after seeing the result would invalidate the prospective test.
 
-### Why use a separate calibration year?
+The 0.5% threshold is a **project demonstration rule**, not an insurer or regulatory standard.
 
-To avoid using the final test period to set the aggregate price level. The 2023 calibration factor is locked before any 2024 evaluation. This separates calibration from performance measurement and prevents a test-period scaling adjustment from making a model look better than it would have been prospectively.
+### Why not tune on Australia or Belgium now that you know where XGBoost struggled?
 
-### Why rolling-origin validation after a locked OOT test?
+I can use those datasets for diagnostics or frozen-protocol regression, but not for a new claim of independent confirmation. Their outcomes have been inspected, so the validation-use ledger marks them consumed. A genuinely new candidate-selection claim needs new unseen data or a new independent period.
 
-To understand temporal stability, not to replace the locked test. The rolling-origin windows show whether the model-family conclusion is repeatable as the information set expands. They showed that XGBoost frequency becomes slightly better with fresher data, while pure premium still does not support promotion.
+### Why no pooled score across Spain, Australia and Belgium?
 
-### Why separate new and returning business?
+The portfolios differ in geography, period, feature definitions and context. A hand-built weighted score could hide those differences and let me choose weights that favour the challenger. I retain each registered decision instead. The synthesis answers a governance question — whether the existing evidence is sufficient to open promotion review — rather than claiming a pooled causal effect.
 
-A model can be well calibrated in aggregate while transporting differently to customers with no prior portfolio history. The 2024 result shows this directly: the GLM is closer on returning policies, while XGBoost is closer on new policies. That matters for pricing strategy and monitoring.
+### What did you learn from the Australian numerical reproducibility issue?
 
-### What would you do next in a real insurer?
+A stable decision is not the same as a stable point estimate. One iterative GLM point metric shifted across hosted executions even though both registered decisions stayed negative. I made that visible and prospectively tightened solver, tolerance, thread and multi-run requirements. The Belgian implementation then reproduced within those pre-set tolerances across two observed runner regions.
 
-I would move from public demonstration data to the insurer's governed rating data, verify as-of feature lineage, include expense/reinsurance/commercial components, agree acceptance thresholds with pricing and actuarial stakeholders, check relevant proxy/fairness risks, and run prospective shadow monitoring before any controlled deployment.
+### Why does deployment readiness not open promotion review?
+
+Because software controls answer a different question. Shadow serving, monitoring, rollback and provenance show that the system can be operated safely as a project demo. They do not prove the challenger improves the pricing target. v0.44 therefore has operational gates passing while evidence gates keep the request on HOLD.
+
+### What would reopen the model-family review?
+
+A genuinely new external dataset or independent calendar period whose outcomes have not been inspected, with source/split/features/models/metrics/gates and numerical controls registered before row-level access. Any positive external result would also need the two-independent-Actions reproducibility requirement. Even then, the machine gate would only open a human review; a separate authorised governance decision would still be required.
+
+### What would you do differently inside a real insurer?
+
+I would use governed rating and claims data with as-of feature lineage; align acceptance thresholds with pricing/actuarial/model-risk stakeholders; incorporate expense, reinsurance and commercial constraints; examine proxy/fairness and regulatory obligations; and run controlled prospective shadow monitoring. The public project demonstrates the evaluation and governance mechanics, not insurer-specific approval.
 
 ## STAR version
 
-**Situation:** A flexible XGBoost challenger looked much stronger than a Poisson GLM on a standard motor-frequency benchmark.
+**Situation:** XGBoost looked materially stronger than a Poisson GLM on a standard motor-frequency benchmark.
 
-**Task:** Determine whether that apparent improvement was strong and stable enough to justify a pricing-model family change.
+**Task:** Determine whether that apparent improvement was reliable enough across time and independent portfolios to justify opening a model-family promotion review — without confusing engineering deployability with statistical evidence.
 
-**Action:** I built a second longitudinal validation track using 354,140 Spanish policy-years, locked 2022 for training, 2023 for calibration and 2024 for untouched OOT testing, added bootstrap uncertainty, rolling-origin checks, transport analysis for new vs returning policies, and CI tests to prevent leakage or stale headline claims.
+**Action:** I built a locked Spanish calendar OOT track, added validation-use ledgers to prevent holdout recycling, preregistered Australian and Belgian external replications before row-level access, retained negative/mixed results without relaxing gates, added numerical-reproducibility controls after detecting an iterative-fit stability issue, and linked the resulting evidence to shadow deployment, rollback, provenance and a fail-closed Model Change Committee readiness gate.
 
-**Result:** The original 5.43% frequency improvement did not transport as a stable pricing-model advantage. Locked 2024 XGBoost claim capture increased by only 0.42 pp with no deviance gain; rolling-origin retraining produced a small 0.32% frequency gain but still no pure-premium advantage. I therefore kept the challenger at HOLD rather than promoting it on a single favourable metric.
+**Result:** The original **5.43%** development benchmark did not become a stable promotion case. The original Spanish OOT remained HOLD; **0/4 preregistered Australian/Belgian external target gates passed**; Belgian negative results reproduced within the prospective numerical tolerance. Operational gates pass, but the current model-change request remains **`EVIDENCE_GAP_HOLD` with 5/8 gates passing**, so model promotion and customer pricing remain unauthorised.
 
 ## Claims to avoid
 
 Do not say:
 
-- "XGBoost improved motor pricing by 5.4%." The 5.43% result is frequency deviance on the cross-sectional benchmark.
-- "The model increased profit/conversion." Proposition simulations are synthetic.
-- "The project proves the model works for UK motor insurance or FIRST CENTRAL." It does not.
-- "XGBoost is worse than GLM." The correct conclusion is that evidence for a global model-family promotion is not stable across targets and time windows.
+- “XGBoost improved motor pricing by 5.4%.” The 5.43% result is frequency deviance on a cross-sectional development benchmark.
+- “The external studies prove GLM is universally better.” Australia and Belgium answer registered model-family questions in their own portfolio contexts; some XGBoost point/ranking metrics are favourable.
+- “Belgian frequency passed because its bootstrap CI is positive.” It failed the preregistered 0.5% materiality gate.
+- “The 0.5% threshold is an industry standard.” It is a project review rule.
+- “The project proves the model works for UK motor insurance or FIRST CENTRAL.” It does not.
+- “The model was approved by a committee.” v0.44 is a machine readiness gate for a hypothetical human review; no human approval is recorded.
+- “Deployment, attestation or rollback proves the model is safe for customer pricing.” Those are operational/provenance controls, not pricing approval.
+- “The project increased profit or conversion.” No observed commercial uplift is claimed.
