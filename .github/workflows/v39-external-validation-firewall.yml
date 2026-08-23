@@ -1,0 +1,86 @@
+name: External validation reuse firewall v0.39
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'governance/external_validation_use_ledger_v39.json'
+      - 'governance/external_validation_firewall_v39.py'
+      - 'run_external_validation_firewall_v39.py'
+      - 'tests/test_external_validation_firewall_v39.py'
+      - 'RESULTS_V39.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - 'README.md'
+      - '.github/workflows/v39-external-validation-firewall.yml'
+  pull_request:
+    paths:
+      - 'governance/external_validation_use_ledger_v39.json'
+      - 'governance/external_validation_firewall_v39.py'
+      - 'run_external_validation_firewall_v39.py'
+      - 'tests/test_external_validation_firewall_v39.py'
+      - 'RESULTS_V39.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - 'README.md'
+      - '.github/workflows/v39-external-validation-firewall.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  external-validation-firewall:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify consumed external validation contracts
+        run: python -m unittest -v tests/test_external_validation_firewall_v39.py
+      - name: Build v0.39 firewall evidence
+        run: python run_external_validation_firewall_v39.py
+      - name: Verify governance boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v39/external_validation_firewall_summary.json').read_text())
+          assert result['status'] == 'V39_EXTERNAL_VALIDATION_FIREWALL_PASS'
+          consumed = result['consumed_external_dataset']
+          assert consumed['current_role'] == 'CONSUMED_EXTERNAL_VALIDATION_DATASET'
+          assert consumed['independent_external_validation_available'] is False
+          assert consumed['candidate_selection_allowed'] is False
+          assert result['decision']['model_family_decision'] == 'HOLD'
+          assert result['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert result['decision']['model_promotion_authorised'] is False
+          assert result['decision']['pricing_change_authorised'] is False
+          PY
+      - name: Persist v0.39 external firewall evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p action_results/v39
+          cp results_v39/external_validation_firewall_summary.json action_results/v39/
+          cp governance/external_validation_use_ledger_v39.json action_results/v39/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v39/ACTION_V39_STATUS.json').write_text(json.dumps({
+              'workflow': 'External validation reuse firewall v0.39',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'australian_external_validation_consumed': True,
+              'fresh_independent_external_evidence_required': True,
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v39
+          if git diff --cached --quiet; then
+            echo 'No v0.39 evidence changes'
+          else
+            git commit -m "Persist v0.39 external validation firewall ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi

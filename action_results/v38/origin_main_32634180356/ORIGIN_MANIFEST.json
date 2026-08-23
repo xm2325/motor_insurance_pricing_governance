@@ -1,0 +1,12 @@
+{
+  "evidence_role": "IMMUTABLE_ORIGIN_MAIN_STATUS",
+  "workflow": "External validation numerical reproducibility audit v0.38",
+  "workflow_run_id": "32634180356",
+  "source_sha": "1ab61c36ed4ad8002d7f3e4391446e88af5c44c1",
+  "registered_audit_path": "governance/external_reproducibility_audit_v38.json",
+  "persisted_audit_path": "action_results/v38/external_reproducibility_audit_v38.json",
+  "rolling_latest_status_path": "action_results/v38/ACTION_V38_STATUS.json",
+  "lineage_boundary": "The origin status freezes the first successful post-merge v0.38 audit run. The top-level v0.38 status is rolling workflow metadata and may advance when protected documentation/evidence paths retrigger the unchanged audit.",
+  "v37_decision_reproduced": true,
+  "pure_premium_point_metric_exactly_reproduced": false
+}
