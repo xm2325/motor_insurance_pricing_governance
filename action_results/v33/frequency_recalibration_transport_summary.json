@@ -63,31 +63,31 @@
       "fresh_replay_reconciliation": {
         "checks": {
           "baseline_deviance": {
-            "observed": 1.1185362628672493,
+            "observed": 1.118536262940881,
             "v32_persisted": 1.1185362628672493,
-            "absolute_difference": 0.0,
-            "relative_difference": 0.0
+            "absolute_difference": 7.363176734997978e-11,
+            "relative_difference": 6.582868146020813e-11
           },
           "candidate_deviance": {
-            "observed": 1.1180907056053262,
+            "observed": 1.1180907056255136,
             "v32_persisted": 1.1180907056053262,
-            "absolute_difference": 0.0,
-            "relative_difference": 0.0
+            "absolute_difference": 2.0187407301364146e-11,
+            "relative_difference": 1.8055250079585297e-11
           },
           "baseline_calibration": {
-            "observed": 0.963088025952147,
+            "observed": 0.9630880253555653,
             "v32_persisted": 0.963088025952147,
-            "absolute_difference": 0.0,
-            "relative_difference": 0.0
+            "absolute_difference": 5.965817839737042e-10,
+            "relative_difference": 6.194467877262827e-10
           },
           "candidate_calibration": {
-            "observed": 0.9704466803524903,
+            "observed": 0.9704466796701726,
             "v32_persisted": 0.9704466803524903,
-            "absolute_difference": 0.0,
-            "relative_difference": 0.0
+            "absolute_difference": 6.823176468273573e-10,
+            "relative_difference": 7.030964818999871e-10
           }
         },
-        "max_relative_difference": 0.0,
+        "max_relative_difference": 7.030964818999871e-10,
         "relative_tolerance": 0.002
       },
       "major_cohort_summary": {
@@ -95,8 +95,8 @@
         "gate_breach_count": 0,
         "calibration_improved_count": 8,
         "deviance_improved_count": 10,
-        "max_abs_log_calibration_deterioration": 0.010991523110533225,
-        "max_relative_deviance_worsening": 0.0012227945830625142,
+        "max_abs_log_calibration_deterioration": 0.010991523024598243,
+        "max_relative_deviance_worsening": 0.0012227945145166785,
         "decision": "TRANSPORT_STABLE_FOR_FURTHER_SHADOW_TESTING"
       },
       "breaches": []
