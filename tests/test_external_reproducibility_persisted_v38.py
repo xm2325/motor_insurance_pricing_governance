@@ -12,6 +12,10 @@ PERSISTED = ROOT / "action_results" / "v38" / "external_reproducibility_audit_v3
 REGISTERED = ROOT / "governance" / "external_reproducibility_audit_v38.json"
 V37_STATUS = ROOT / "action_results" / "v37" / "ACTION_V37_STATUS.json"
 V37_SUMMARY = ROOT / "action_results" / "v37" / "australian_external_replication_summary.json"
+ORIGIN_DIR = ROOT / "action_results" / "v37" / "origin_main_32633520755"
+ORIGIN_SUMMARY = ORIGIN_DIR / "australian_external_replication_summary.json"
+ORIGIN_SOURCE = ORIGIN_DIR / "australian_source_audit.json"
+ORIGIN_MANIFEST = ORIGIN_DIR / "ORIGIN_MANIFEST.json"
 
 
 def digest(path: Path) -> str:
@@ -25,6 +29,8 @@ class PersistedExternalReproducibilityV38Tests(unittest.TestCase):
         cls.audit = json.loads(PERSISTED.read_text(encoding="utf-8"))
         cls.v37_status = json.loads(V37_STATUS.read_text(encoding="utf-8"))
         cls.v37 = json.loads(V37_SUMMARY.read_text(encoding="utf-8"))
+        cls.origin = json.loads(ORIGIN_SUMMARY.read_text(encoding="utf-8"))
+        cls.origin_manifest = json.loads(ORIGIN_MANIFEST.read_text(encoding="utf-8"))
 
     def test_main_v38_workflow_is_locked(self) -> None:
         self.assertEqual(self.status["workflow"], "External validation numerical reproducibility audit v0.38")
@@ -38,7 +44,7 @@ class PersistedExternalReproducibilityV38Tests(unittest.TestCase):
         self.assertEqual(digest(PERSISTED), digest(REGISTERED))
         self.assertEqual(self.audit["status"], "V38_DECISION_REPRODUCIBLE_METRIC_VARIATION_REVIEW")
 
-    def test_authoritative_v37_main_evidence_is_not_replaced_by_pr_metric(self) -> None:
+    def test_origin_v37_main_evidence_is_immutable_and_matches_original_artifact(self) -> None:
         auth = self.audit["authoritative_v37_evidence"]
         self.assertEqual(auth["workflow_run_id"], "32633520755")
         self.assertEqual(auth["source_sha"], "1e975b5258f3442da5c72dd9794fad2bf5303ae6")
@@ -46,8 +52,41 @@ class PersistedExternalReproducibilityV38Tests(unittest.TestCase):
             auth["summary_sha256"],
             "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
         )
-        self.assertEqual(self.v37_status["run_id"], "32633520755")
-        self.assertEqual(self.v37["pure_premium"]["locked_test"]["reference_deviance"], 129.8409094852542)
+        self.assertEqual(digest(ORIGIN_SUMMARY), auth["summary_sha256"])
+        self.assertEqual(
+            digest(ORIGIN_SOURCE),
+            "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e",
+        )
+        self.assertEqual(self.origin_manifest["evidence_role"], "IMMUTABLE_ORIGIN_MAIN_SNAPSHOT")
+        self.assertEqual(self.origin_manifest["workflow_run_id"], "32633520755")
+        self.assertEqual(self.origin_manifest["artifact_id"], "9491692169")
+        self.assertEqual(self.origin["pure_premium"]["locked_test"]["reference_deviance"], 129.8409094852542)
+        self.assertFalse(self.origin["decision"]["secondary_pure_premium_external_replication_passed"])
+
+    def test_rolling_latest_v37_evidence_may_advance_without_erasing_origin(self) -> None:
+        self.assertEqual(self.v37_status["workflow"], "Australian external motor replication v0.37")
+        self.assertEqual(self.v37_status["status"], "success")
+        self.assertFalse(self.v37_status["raw_external_data_persisted"])
+        self.assertNotEqual(self.v37_status["run_id"], "32633520755")
+        self.assertEqual(
+            self.v37["source"]["file_sha256"],
+            "c8aeabd0b75e16a2b9a7452cfb3e8e2b3ec36a27171d35c2862bc8278777461c",
+        )
+        self.assertEqual(
+            self.v37["frequency"]["registered_gate"]["decision"],
+            "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+        )
+        self.assertEqual(
+            self.v37["pure_premium"]["registered_gate"]["decision"],
+            "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+        )
+        self.assertIn(
+            digest(V37_SUMMARY),
+            {
+                "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
+                "6f3fd009e70fdb3eaebcfe46126b14bf853848ac164ac8ce23059daa8974d7df",
+            },
+        )
 
     def test_decision_reproducibility_and_metric_variation_are_both_retained(self) -> None:
         rec = self.audit["reconciliation"]
