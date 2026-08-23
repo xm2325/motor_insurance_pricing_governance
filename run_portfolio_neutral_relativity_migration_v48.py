@@ -44,14 +44,22 @@ def sha256_file(path: Path) -> str:
 
 
 def portfolio_neutralise(reference: np.ndarray, challenger: np.ndarray, exposure: np.ndarray):
-    reference_total = float(np.sum(reference * exposure))
-    challenger_total = float(np.sum(challenger * exposure))
+    # XGBoost predictions can arrive as float32. Cast the three arrays before
+    # aggregate normalisation so the portfolio-neutral identity is not limited by
+    # float32 multiplication/accumulation. This changes no fitted model score;
+    # it only improves the precision of the aggregate-neutral diagnostic scale.
+    reference64 = np.asarray(reference, dtype=np.float64)
+    challenger64 = np.asarray(challenger, dtype=np.float64)
+    exposure64 = np.asarray(exposure, dtype=np.float64)
+    reference_total = float(np.sum(reference64 * exposure64, dtype=np.float64))
+    challenger_total = float(np.sum(challenger64 * exposure64, dtype=np.float64))
     if reference_total <= 0 or challenger_total <= 0:
         raise RuntimeError("Predicted technical-risk totals must be positive")
     neutral_scale = reference_total / challenger_total
-    normalised_challenger = challenger * neutral_scale
-    normalised_total = float(np.sum(normalised_challenger * exposure))
+    normalised_challenger = challenger64 * neutral_scale
+    normalised_total = float(np.sum(normalised_challenger * exposure64, dtype=np.float64))
     return normalised_challenger, {
+        "calculation_dtype": "float64",
         "reference_predicted_total": reference_total,
         "raw_challenger_predicted_total": challenger_total,
         "raw_challenger_total_over_reference": challenger_total / reference_total,
@@ -165,11 +173,11 @@ def main() -> None:
     for target in ["frequency", "pure_premium"]:
         reference, challenger = score_pair(x_test, models, locked_scales, target)
         normalised, neutralisation = portfolio_neutralise(reference, challenger, exposure)
-        ratio = normalised / reference
+        ratio = normalised / np.asarray(reference, dtype=np.float64)
         change = ratio - 1.0
         target_values[target] = {
-            "reference": reference,
-            "raw_challenger": challenger,
+            "reference": np.asarray(reference, dtype=np.float64),
+            "raw_challenger": np.asarray(challenger, dtype=np.float64),
             "normalised_challenger": normalised,
             "change": change,
         }
@@ -213,6 +221,7 @@ def main() -> None:
         },
         "portfolio_neutralisation": {
             "formula": "normalised_challenger = raw_challenger * sum(reference * exposure) / sum(raw_challenger * exposure)",
+            "calculation_dtype": "float64",
             "purpose": "Force the challenger and reference to the same aggregate predicted technical-risk total before measuring redistribution across policies and segments.",
             "uses_2024_outcomes": False,
             "uses_actual_premium": False,
