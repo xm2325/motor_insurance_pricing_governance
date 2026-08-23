@@ -6,18 +6,18 @@
     "governance_status": "HOLD_SHADOW_ONLY",
     "archive": {
       "name": "motor-pricing-shadow-bundle-v30.tar.gz",
-      "bytes": 386579,
-      "sha256": "98e72e4de28a55d9b637435f29c6b736b7c33368c894515e7dbe478a02a27442",
+      "bytes": 386588,
+      "sha256": "894bacc974f8cfbe8512c032faafb4a0dd46d9ee8dbb6cdf830a3e5051faa2d7",
       "member_count": 12,
       "raw_source_data_members": 0
     },
     "attestation_identity": {
-      "subject_sha256": "98e72e4de28a55d9b637435f29c6b736b7c33368c894515e7dbe478a02a27442",
+      "subject_sha256": "894bacc974f8cfbe8512c032faafb4a0dd46d9ee8dbb6cdf830a3e5051faa2d7",
       "repository": "xm2325/motor_insurance_pricing_governance",
       "workflow_name": "Motor pricing attested release admission v0.30",
       "workflow_path": ".github/workflows/v30-admission.yml",
       "workflow_ref": "refs/heads/main",
-      "source_commit_sha": "9f9d4077c72cf2c56925238749945c3838b50d2e",
+      "source_commit_sha": "17e4c79e5080e05a011d7a7aaab9a50e81d95064",
       "source_repository_visibility": "public",
       "runner_environment": "github-hosted",
       "verified_timestamp_count": 1,
@@ -26,7 +26,7 @@
     },
     "inner_bundle": {
       "integrity_status": "CONTENT_ADDRESSED_BUNDLE_VERIFIED",
-      "lock_digest_sha256": "e3040254d0e40fc74a2169f3426634977c75534e892ec6b0404de9f8a07cb621",
+      "lock_digest_sha256": "ee490f5ebc362415d2b1074b3c29c9f6a5dcbe6c29fc0da2f35b14fb93396162",
       "artifact_count": 9,
       "total_locked_bytes": 1604579,
       "model_version": "v0.21-shadow-2022-train-2023-calibration",
@@ -43,7 +43,7 @@
     "wrong_workflow_identity_rejected": true,
     "negative_case_count": 3
   },
-  "attestation_id": "42370008",
-  "attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42370008",
+  "attestation_id": "42407704",
+  "attestation_url": "https://github.com/xm2325/motor_insurance_pricing_governance/attestations/42407704",
   "governance_boundary": "HOLD / HOLD_SHADOW_ONLY remains unchanged"
 }
