@@ -1,0 +1,35 @@
+name: Static v0.34 recalibration uncertainty contract
+
+on:
+  pull_request:
+    paths:
+      - 'deployment/calibration_uncertainty.py'
+      - 'run_frequency_recalibration_uncertainty_v34.py'
+      - 'tests/test_frequency_recalibration_uncertainty_static_v34.py'
+      - 'RESULTS_V34.md'
+      - '.github/workflows/v34-recalibration-uncertainty.yml'
+      - '.github/workflows/v34-static.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'deployment/calibration_uncertainty.py'
+      - 'run_frequency_recalibration_uncertainty_v34.py'
+      - 'tests/test_frequency_recalibration_uncertainty_static_v34.py'
+      - 'RESULTS_V34.md'
+      - '.github/workflows/v34-recalibration-uncertainty.yml'
+      - '.github/workflows/v34-static.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-v34-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify v0.34 leakage and registered-rule contracts
+        run: python -m unittest -v tests/test_frequency_recalibration_uncertainty_static_v34.py

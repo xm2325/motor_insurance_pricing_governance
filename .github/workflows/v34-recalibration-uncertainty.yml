@@ -1,0 +1,149 @@
+name: Motor pricing recalibration factor uncertainty v0.34
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.34-recalibration-bootstrap-uncertainty
+    paths:
+      - 'deployment/calibration_uncertainty.py'
+      - 'run_frequency_recalibration_uncertainty_v34.py'
+      - 'tests/test_frequency_recalibration_uncertainty_v34.py'
+      - 'tests/test_frequency_recalibration_uncertainty_static_v34.py'
+      - '.github/workflows/v34-recalibration-uncertainty.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+      - 'scripts/push_evidence_with_rebase.sh'
+      - 'action_results/v32/business_type_recalibration_summary.json'
+  pull_request:
+    paths:
+      - 'deployment/calibration_uncertainty.py'
+      - 'run_frequency_recalibration_uncertainty_v34.py'
+      - 'tests/test_frequency_recalibration_uncertainty_v34.py'
+      - 'tests/test_frequency_recalibration_uncertainty_static_v34.py'
+      - '.github/workflows/v34-recalibration-uncertainty.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+      - 'scripts/push_evidence_with_rebase.sh'
+      - 'action_results/v32/business_type_recalibration_summary.json'
+
+concurrency:
+  group: v34-uncertainty-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  recalibration-factor-uncertainty:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run v0.34 numeric contracts
+        run: python -m unittest -v tests/test_frequency_recalibration_uncertainty_v34.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build current globally calibrated shadow bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Seal and verify content-addressed bundle
+        env:
+          RELEASE_LABEL: v34-recalibration-factor-uncertainty
+        run: |
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Run 2023 factor-bootstrap uncertainty and 2024 sensitivity review
+        run: python run_frequency_recalibration_uncertainty_v34.py
+
+      - name: Verify v0.34 leakage and governance boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('results_v34/frequency_recalibration_uncertainty_summary.json').read_text())
+          assert result['status'] == 'V34_RECALIBRATION_FACTOR_UNCERTAINTY_REVIEW_PASS'
+          source = result['source']
+          assert source['factor_bootstrap_year'] == 2023
+          assert source['evaluation_year'] == 2024
+          assert source['bootstrap_draws'] == 500
+          assert source['paired_indices_across_frequency_fields'] is True
+          assert source['2024_labels_used_for_bootstrap_factor_fit'] is False
+          assert source['factor_draws_are_clipped'] is False
+          assert result['decision']['bundle_change_authorised'] is False
+          assert result['decision']['pricing_change_authorised'] is False
+          assert result['decision']['model_promotion_authorised'] is False
+          assert result['decision']['model_family_decision'] == 'HOLD'
+          assert result['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          for field, evidence in result['models'].items():
+              assert evidence['factor_reconciliation']['max_relative_difference'] <= 0.002
+              assert evidence['fresh_v32_metric_reconciliation']['max_relative_difference'] <= 0.002
+          print(json.dumps({
+              'status': result['status'],
+              'robust_fields': result['decision']['robust_fields'],
+              'robust_field_count': result['decision']['robust_field_count'],
+          }, indent=2))
+          PY
+
+      - name: Persist v0.34 aggregate evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v34
+          cp results_v34/frequency_recalibration_uncertainty_summary.json action_results/v34/
+          cp results_v34/frequency_recalibration_factor_bootstrap_summary.csv action_results/v34/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v34/ACTION_V34_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing recalibration factor uncertainty v0.34',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v34
+          if git diff --cached --quiet; then
+            echo 'No v0.34 evidence changes'
+          else
+            git commit -m "Persist v0.34 recalibration factor uncertainty ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+
+      - name: Upload v0.34 review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-recalibration-factor-uncertainty-v34
+          path: results_v34/
+          if-no-files-found: warn
