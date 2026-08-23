@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import unittest
 from pathlib import Path
 
@@ -21,13 +22,31 @@ class FrequencyRecalibrationTransportStaticV33Tests(unittest.TestCase):
         self.assertIn('"2024_labels_used_for_fit": False', source)
         self.assertIn('"test_2024_labels_used_for_fit"', source)
 
-    def test_transport_dimensions_are_orthogonal_to_fit_dimension(self) -> None:
+    def test_transport_dimensions_are_ast_locked_and_orthogonal_to_fit_dimension(self) -> None:
         source = RUNNER.read_text(encoding="utf-8")
-        self.assertIn('"seen_before_2024"', source)
-        self.assertIn('"driver_age_band"', source)
-        self.assertIn('"policy_type"', source)
-        self.assertIn('"payment_frequency"', source)
-        self.assertNotIn('"business_type",\n)', source)
+        tree = ast.parse(source)
+        assignments = [
+            node
+            for node in tree.body
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+            and (
+                (isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "TRANSPORT_DIMENSIONS" for t in node.targets))
+                or (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "TRANSPORT_DIMENSIONS")
+            )
+        ]
+        self.assertEqual(len(assignments), 1)
+        value = assignments[0].value
+        self.assertIsInstance(value, (ast.Tuple, ast.List))
+        dimensions = [
+            element.value
+            for element in value.elts
+            if isinstance(element, ast.Constant) and isinstance(element.value, str)
+        ]
+        self.assertEqual(
+            dimensions,
+            ["seen_before_2024", "driver_age_band", "policy_type", "payment_frequency"],
+        )
+        self.assertNotIn("business_type", dimensions)
 
     def test_governance_and_guardrails_are_explicit(self) -> None:
         source = RUNNER.read_text(encoding="utf-8")
