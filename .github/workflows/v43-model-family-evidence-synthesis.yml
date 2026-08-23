@@ -1,0 +1,151 @@
+name: Model-family evidence synthesis v0.43
+
+on:
+  pull_request:
+    paths:
+      - 'governance/model_family_evidence_synthesis_policy_v43.json'
+      - 'build_model_family_review_pack_v43.py'
+      - 'scripts/migrate_evidence_registry_v43.py'
+      - 'tests/test_model_family_evidence_synthesis_v43.py'
+      - 'RESULTS_V43.md'
+      - '.github/workflows/v43-model-family-evidence-synthesis.yml'
+      - 'results/fremtpl2_full_frequency_benchmark.csv'
+      - 'action_results/spanish_oot_2024/oot_2024_summary.json'
+      - 'action_results/v35/validation_firewall_summary.json'
+      - 'action_results/v37/origin_main_32633520755/australian_external_replication_summary.json'
+      - 'governance/external_validation_use_ledger_v39.json'
+      - 'action_results/v42/belgian_external_closeout_summary.json'
+      - 'action_results/v42/external_validation_use_ledger_v42.json'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/model_family_evidence_synthesis_policy_v43.json'
+      - 'build_model_family_review_pack_v43.py'
+      - 'scripts/migrate_evidence_registry_v43.py'
+      - 'tests/test_model_family_evidence_synthesis_v43.py'
+      - 'RESULTS_V43.md'
+      - '.github/workflows/v43-model-family-evidence-synthesis.yml'
+      - 'results/fremtpl2_full_frequency_benchmark.csv'
+      - 'action_results/spanish_oot_2024/oot_2024_summary.json'
+      - 'action_results/v35/validation_firewall_summary.json'
+      - 'action_results/v37/origin_main_32633520755/australian_external_replication_summary.json'
+      - 'governance/external_validation_use_ledger_v39.json'
+      - 'action_results/v42/belgian_external_closeout_summary.json'
+      - 'action_results/v42/external_validation_use_ledger_v42.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate-model-family-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run aggregate-only v0.43 contracts
+        run: python -m unittest -v tests/test_model_family_evidence_synthesis_v43.py
+      - name: Build machine summary and review pack
+        run: python build_model_family_review_pack_v43.py
+      - name: Apply and verify idempotent evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v43.py
+          python scripts/migrate_evidence_registry_v43.py
+          git diff -- EVIDENCE_REGISTRY.md
+      - name: Verify review decision and evidence boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v43/model_family_evidence_synthesis_summary.json').read_text())
+          assert result['status'] == 'V43_MODEL_FAMILY_EVIDENCE_SYNTHESIS_COMPLETE'
+          p = result['portfolio_level_summary']
+          assert p['external_portfolios_evaluated'] == 2
+          assert p['external_target_gates_evaluated'] == 4
+          assert p['external_target_gates_passed'] == 0
+          assert p['external_frequency_gates_passed'] == 0
+          assert p['external_pure_premium_gates_passed'] == 0
+          assert p['current_fresh_independent_validation_dataset_available'] is False
+          d = result['decision']
+          assert d['model_family_decision'] == 'HOLD'
+          assert d['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert d['promotion_review_status'] == 'NOT_OPEN'
+          assert d['model_promotion_authorised'] is False
+          assert d['pricing_change_authorised'] is False
+          b = result['synthesis_boundaries']
+          assert b['pooled_meta_analysis_claimed'] is False
+          assert b['evidence_weighting_score_used'] is False
+          assert b['benchmark_used_as_promotion_evidence'] is False
+          assert b['consumed_validation_relabelled_independent'] is False
+          assert b['first_central_or_current_uk_transport_claimed'] is False
+          PY
+      - name: Assert workflow did not create row-level data or model artifacts
+        run: |
+          mkdir -p results_v43 action_results/v43
+          if find results_v43 action_results/v43 -type f \( -name '*.rda' -o -name '*.csv' -o -name '*.parquet' -o -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' \) | grep -q .; then
+            echo 'v0.43 must remain aggregate evidence synthesis only' >&2
+            exit 1
+          fi
+      - name: Persist v0.43 aggregate review evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v43
+          cp results_v43/model_family_evidence_synthesis_summary.json action_results/v43/
+          cp results_v43/MODEL_FAMILY_REVIEW_PACK_V43.md action_results/v43/
+          cp governance/model_family_evidence_synthesis_policy_v43.json action_results/v43/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v43/ACTION_V43_STATUS.json').write_text(json.dumps({
+              'workflow': 'Model-family evidence synthesis v0.43',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'row_level_data_accessed': False,
+              'model_fit_executed': False,
+              'pooled_meta_analysis_used': False,
+              'evidence_weighting_score_used': False,
+              'promotion_review_status': 'NOT_OPEN',
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'evidence_role': 'ROLLING_AGGREGATE_MODEL_REVIEW',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v43/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.43 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v43/model_family_evidence_synthesis_summary.json "$origin_dir/"
+          cp action_results/v43/MODEL_FAMILY_REVIEW_PACK_V43.md "$origin_dir/"
+          cp action_results/v43/model_family_evidence_synthesis_policy_v43.json "$origin_dir/"
+          cp action_results/v43/ACTION_V43_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v43/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V43_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_AGGREGATE_MODEL_REVIEW_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v43 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.43 evidence changes'
+          else
+            git commit -m "Persist v0.43 model-family evidence synthesis ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.43 review pack
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-model-family-review-v43
+          path: results_v43/
+          if-no-files-found: warn
