@@ -1,0 +1,352 @@
+{
+  "status": "V32_BUSINESS_TYPE_RECALIBRATION_REVIEW_PASS",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "model_train_year": 2022,
+    "global_calibration_year": 2023,
+    "segment_recalibration_fit_year": 2023,
+    "untouched_evaluation_year": 2024,
+    "segment": "business_type",
+    "calibration_rows": 118835,
+    "evaluation_rows": 168085,
+    "2024_labels_used_for_candidate_fit": false
+  },
+  "guardrails": {
+    "minimum_segment_rows": 500,
+    "minimum_segment_exposure_share": 0.01,
+    "multiplier_floor": 0.5,
+    "multiplier_cap": 2.0,
+    "max_relative_deviance_worsening": 0.001,
+    "baseline_reconciliation_relative_tolerance": 0.002,
+    "candidate_support_rule": "all 2023 segments supported AND 2024 worst-segment absolute log calibration error improves AND aggregate calibration is not worse AND relative deviance worsening <= 0.1%"
+  },
+  "results": {
+    "reference_frequency": {
+      "target": "frequency",
+      "role": "GLM reference",
+      "fit_period": {
+        "year": 2023,
+        "rows": 118835,
+        "labels_used": "total_claims",
+        "test_2024_labels_used_for_fit": false,
+        "segment": "business_type",
+        "multipliers": {
+          "NB": {
+            "segment": "NB",
+            "rows": 83270,
+            "exposure": 49941.419178082186,
+            "exposure_share": 0.6060922575602607,
+            "observed": 14693.0,
+            "predicted": 15048.812629999024,
+            "calibration_ratio_pred_over_actual": 1.024216472469817,
+            "raw_multiplier": 0.9763560993981859,
+            "locked_multiplier": 0.9763560993981859,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          },
+          "P": {
+            "segment": "P",
+            "rows": 35565,
+            "exposure": 32457.61917808219,
+            "exposure_share": 0.3939077424397392,
+            "observed": 10465.0,
+            "predicted": 10109.187370000975,
+            "calibration_ratio_pred_over_actual": 0.9659997486861897,
+            "raw_multiplier": 1.0351969566866372,
+            "locked_multiplier": 1.0351969566866372,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          }
+        }
+      },
+      "baseline_2024": {
+        "deviance": 1.1185362628672493,
+        "calibration_ratio_pred_over_actual": 0.963088025952147,
+        "max_segment_abs_log_calibration_error": 0.06573686352109095
+      },
+      "candidate_2024": {
+        "deviance": 1.1180907056053262,
+        "calibration_ratio_pred_over_actual": 0.9704466803524903,
+        "max_segment_abs_log_calibration_error": 0.03114515859221435,
+        "relative_deviance_change": -0.0003983395771013365
+      },
+      "candidate_gate": {
+        "all_segments_supported": true,
+        "segment_calibration_improved": true,
+        "aggregate_calibration_not_worse": true,
+        "deviance_guardrail_pass": true,
+        "max_relative_deviance_worsening": 0.001,
+        "decision": "SUPPORTED_FOR_FURTHER_SHADOW_TESTING"
+      },
+      "portfolio_mix_decomposition": {
+        "calibration_period_ratio": 0.9999999999999999,
+        "mix_only_counterfactual_ratio": 0.9927204725450764,
+        "test_period_ratio": 0.963088025952147,
+        "total_log_calibration_change": -0.03761046331147569,
+        "portfolio_mix_log_component": -0.007306152505453676,
+        "within_segment_time_log_component": -0.030304310806022014,
+        "decomposition_residual": 0.0,
+        "shared_test_exposure_share": 1.0
+      }
+    },
+    "challenger_frequency": {
+      "target": "frequency",
+      "role": "XGBoost challenger",
+      "fit_period": {
+        "year": 2023,
+        "rows": 118835,
+        "labels_used": "total_claims",
+        "test_2024_labels_used_for_fit": false,
+        "segment": "business_type",
+        "multipliers": {
+          "NB": {
+            "segment": "NB",
+            "rows": 83270,
+            "exposure": 49941.419178082186,
+            "exposure_share": 0.6060922575602607,
+            "observed": 14693.0,
+            "predicted": 15153.553748566788,
+            "calibration_ratio_pred_over_actual": 1.0313451132217237,
+            "raw_multiplier": 0.9696075418209841,
+            "locked_multiplier": 0.9696075418209841,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          },
+          "P": {
+            "segment": "P",
+            "rows": 35565,
+            "exposure": 32457.61917808219,
+            "exposure_share": 0.3939077424397392,
+            "observed": 10465.0,
+            "predicted": 10004.447658763987,
+            "calibration_ratio_pred_over_actual": 0.9559911761838498,
+            "raw_multiplier": 1.046034759433477,
+            "locked_multiplier": 1.046034759433477,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          }
+        }
+      },
+      "baseline_2024": {
+        "deviance": 1.1188352761606644,
+        "calibration_ratio_pred_over_actual": 0.9600850351705676,
+        "max_segment_abs_log_calibration_error": 0.07805071060984149
+      },
+      "candidate_2024": {
+        "deviance": 1.1181190316026728,
+        "calibration_ratio_pred_over_actual": 0.9695617558874555,
+        "max_segment_abs_log_calibration_error": 0.033044114703298176,
+        "relative_deviance_change": -0.0006401698026982094
+      },
+      "candidate_gate": {
+        "all_segments_supported": true,
+        "segment_calibration_improved": true,
+        "aggregate_calibration_not_worse": true,
+        "deviance_guardrail_pass": true,
+        "max_relative_deviance_worsening": 0.001,
+        "decision": "SUPPORTED_FOR_FURTHER_SHADOW_TESTING"
+      },
+      "portfolio_mix_decomposition": {
+        "calibration_period_ratio": 1.0000000559396922,
+        "mix_only_counterfactual_ratio": 0.9905776594554357,
+        "test_period_ratio": 0.9600850351705676,
+        "total_log_calibration_change": -0.04073347608009735,
+        "portfolio_mix_log_component": -0.009467067560428147,
+        "within_segment_time_log_component": -0.0312664085196692,
+        "decomposition_residual": -6.938893903907228e-18,
+        "shared_test_exposure_share": 1.0
+      }
+    },
+    "reference_pure_premium": {
+      "target": "pure_premium",
+      "role": "GLM reference",
+      "fit_period": {
+        "year": 2023,
+        "rows": 118835,
+        "labels_used": "total_incurred",
+        "test_2024_labels_used_for_fit": false,
+        "segment": "business_type",
+        "multipliers": {
+          "NB": {
+            "segment": "NB",
+            "rows": 83270,
+            "exposure": 49941.419178082186,
+            "exposure_share": 0.6060922575602607,
+            "observed": 13607490.402500002,
+            "predicted": 13163809.409941666,
+            "calibration_ratio_pred_over_actual": 0.9673943556501189,
+            "raw_multiplier": 1.0337046047038068,
+            "locked_multiplier": 1.0337046047038068,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          },
+          "P": {
+            "segment": "P",
+            "rows": 35565,
+            "exposure": 32457.61917808219,
+            "exposure_share": 0.3939077424397392,
+            "observed": 9880863.9515,
+            "predicted": 10324544.944058333,
+            "calibration_ratio_pred_over_actual": 1.0449030565278634,
+            "raw_multiplier": 0.9570265813203064,
+            "locked_multiplier": 0.9570265813203064,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          }
+        }
+      },
+      "baseline_2024": {
+        "deviance": 93.93180592411453,
+        "calibration_ratio_pred_over_actual": 0.9530693581893147,
+        "max_segment_abs_log_calibration_error": 0.14960271702695152
+      },
+      "candidate_2024": {
+        "deviance": 93.8458029436866,
+        "calibration_ratio_pred_over_actual": 0.9435192791594701,
+        "max_segment_abs_log_calibration_error": 0.11645366386025588,
+        "relative_deviance_change": -0.0009155895554419091
+      },
+      "candidate_gate": {
+        "all_segments_supported": true,
+        "segment_calibration_improved": true,
+        "aggregate_calibration_not_worse": false,
+        "deviance_guardrail_pass": true,
+        "max_relative_deviance_worsening": 0.001,
+        "decision": "RETAIN_GLOBAL_CALIBRATION"
+      },
+      "portfolio_mix_decomposition": {
+        "calibration_period_ratio": 0.9999999999999999,
+        "mix_only_counterfactual_ratio": 1.009698998761154,
+        "test_period_ratio": 0.9530693581893147,
+        "total_log_calibration_change": -0.04806759918361739,
+        "portfolio_mix_log_component": 0.009652265407516016,
+        "within_segment_time_log_component": -0.0577198645911334,
+        "decomposition_residual": 0.0,
+        "shared_test_exposure_share": 1.0
+      }
+    },
+    "challenger_pure_premium": {
+      "target": "pure_premium",
+      "role": "XGBoost challenger",
+      "fit_period": {
+        "year": 2023,
+        "rows": 118835,
+        "labels_used": "total_incurred",
+        "test_2024_labels_used_for_fit": false,
+        "segment": "business_type",
+        "multipliers": {
+          "NB": {
+            "segment": "NB",
+            "rows": 83270,
+            "exposure": 49941.419178082186,
+            "exposure_share": 0.6060922575602607,
+            "observed": 13607490.402500002,
+            "predicted": 14044911.580746315,
+            "calibration_ratio_pred_over_actual": 1.0321456172525354,
+            "raw_multiplier": 0.9688555406182863,
+            "locked_multiplier": 0.9688555406182863,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          },
+          "P": {
+            "segment": "P",
+            "rows": 35565,
+            "exposure": 32457.61917808219,
+            "exposure_share": 0.3939077424397392,
+            "observed": 9880863.9515,
+            "predicted": 9443443.58478086,
+            "calibration_ratio_pred_over_actual": 0.9557305546492485,
+            "raw_multiplier": 1.0463200063400697,
+            "locked_multiplier": 1.0463200063400697,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          }
+        }
+      },
+      "baseline_2024": {
+        "deviance": 93.95131588528709,
+        "calibration_ratio_pred_over_actual": 0.9335929964684005,
+        "max_segment_abs_log_calibration_error": 0.08714581081449106
+      },
+      "candidate_2024": {
+        "deviance": 93.95753387506893,
+        "calibration_ratio_pred_over_actual": 0.9430634722085972,
+        "max_segment_abs_log_calibration_error": 0.1187855699088035,
+        "relative_deviance_change": 6.618310476280698e-05
+      },
+      "candidate_gate": {
+        "all_segments_supported": true,
+        "segment_calibration_improved": false,
+        "aggregate_calibration_not_worse": true,
+        "deviance_guardrail_pass": true,
+        "max_relative_deviance_worsening": 0.001,
+        "decision": "RETAIN_GLOBAL_CALIBRATION"
+      },
+      "portfolio_mix_decomposition": {
+        "calibration_period_ratio": 1.000000034550193,
+        "mix_only_counterfactual_ratio": 0.9904378874734173,
+        "test_period_ratio": 0.9335929964684005,
+        "total_log_calibration_change": -0.06871473422865129,
+        "portfolio_mix_log_component": -0.009608157614973814,
+        "within_segment_time_log_component": -0.05910657661367748,
+        "decomposition_residual": 0.0,
+        "shared_test_exposure_share": 1.0
+      }
+    }
+  },
+  "v31_baseline_reconciliation": {
+    "status": "V31_BASELINE_RECONCILIATION_PASS",
+    "checks": {
+      "reference_frequency": {
+        "v32_baseline": 1.1185362628672493,
+        "v31_persisted": 1.1185362628672493,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "challenger_frequency": {
+        "v32_baseline": 1.1188352761606644,
+        "v31_persisted": 1.1188352761606644,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "reference_pure_premium": {
+        "v32_baseline": 93.93180592411453,
+        "v31_persisted": 93.93180592411453,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      },
+      "challenger_pure_premium": {
+        "v32_baseline": 93.95131588528709,
+        "v31_persisted": 93.95131588528709,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0
+      }
+    },
+    "max_relative_difference": 0.0,
+    "relative_tolerance": 0.002,
+    "interpretation": "Fresh training/build regression diagnostic against the persisted v0.31 OOT baseline. This is not the v0.26 same-fit serialization parity contract."
+  },
+  "candidate_summary": {
+    "supported_fields": [
+      "reference_frequency",
+      "challenger_frequency"
+    ],
+    "supported_field_count": 2,
+    "total_field_count": 4,
+    "bundle_change_authorised": false,
+    "pricing_change_authorised": false,
+    "model_promotion_authorised": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "interpretation": "A field-level SUPPORTED_FOR_FURTHER_SHADOW_TESTING result is evidence for more shadow validation of that recalibration rule only. It is not permission to alter the sealed serving bundle."
+  },
+  "interpretation_boundary": "Segment multipliers use only 2023 labels. 2024 labels are used only after the candidate is locked, for OOT comparison. The mix-only counterfactual uses 2024 business_type/exposure shares but not 2024 claims or incurred values. This remains one Spanish insurer and does not establish transfer to FIRST CENTRAL or the UK motor market."
+}

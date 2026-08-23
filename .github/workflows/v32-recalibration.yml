@@ -1,0 +1,150 @@
+name: Motor pricing business-type recalibration review v0.32
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.32-business-type-recalibration
+    paths:
+      - 'deployment/recalibration.py'
+      - 'run_business_type_recalibration_v32.py'
+      - 'tests/test_business_type_recalibration_v32.py'
+      - 'tests/test_business_type_recalibration_static_v32.py'
+      - '.github/workflows/v32-recalibration.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+      - 'scripts/push_evidence_with_rebase.sh'
+      - 'action_results/v31/outcome_review_summary.json'
+  pull_request:
+    paths:
+      - 'deployment/recalibration.py'
+      - 'run_business_type_recalibration_v32.py'
+      - 'tests/test_business_type_recalibration_v32.py'
+      - 'tests/test_business_type_recalibration_static_v32.py'
+      - '.github/workflows/v32-recalibration.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+      - 'scripts/push_evidence_with_rebase.sh'
+      - 'action_results/v31/outcome_review_summary.json'
+
+concurrency:
+  group: v32-recalibration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  business-type-recalibration-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run v0.32 numeric contracts
+        run: python -m unittest -v tests/test_business_type_recalibration_v32.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build current globally calibrated shadow bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Seal and verify content-addressed bundle
+        env:
+          RELEASE_LABEL: v32-business-type-recalibration-review
+        run: |
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Run 2023-only business-type recalibration and untouched 2024 review
+        run: python run_business_type_recalibration_v32.py
+
+      - name: Verify v0.32 leakage and governance boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('results_v32/business_type_recalibration_summary.json').read_text())
+          assert result['status'] == 'V32_BUSINESS_TYPE_RECALIBRATION_REVIEW_PASS'
+          assert result['source']['segment_recalibration_fit_year'] == 2023
+          assert result['source']['untouched_evaluation_year'] == 2024
+          assert result['source']['2024_labels_used_for_candidate_fit'] is False
+          assert result['v31_baseline_reconciliation']['status'] == 'V31_BASELINE_RECONCILIATION_PASS'
+          assert result['v31_baseline_reconciliation']['max_relative_difference'] <= 0.002
+          assert result['candidate_summary']['bundle_change_authorised'] is False
+          assert result['candidate_summary']['pricing_change_authorised'] is False
+          assert result['candidate_summary']['model_promotion_authorised'] is False
+          assert result['candidate_summary']['model_family_decision'] == 'HOLD'
+          assert result['candidate_summary']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          for field, evidence in result['results'].items():
+              assert evidence['fit_period']['year'] == 2023
+              assert evidence['fit_period']['test_2024_labels_used_for_fit'] is False
+          print(json.dumps({
+              'status': result['status'],
+              'supported_fields': result['candidate_summary']['supported_fields'],
+              'supported_field_count': result['candidate_summary']['supported_field_count'],
+              'v31_baseline_max_relative_difference': result['v31_baseline_reconciliation']['max_relative_difference'],
+          }, indent=2))
+          PY
+
+      - name: Persist v0.32 aggregate evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v32
+          cp results_v32/business_type_recalibration_summary.json action_results/v32/
+          cp results_v32/business_type_recalibration_multipliers.csv action_results/v32/
+          cp results_v32/business_type_2024_candidate_comparison.csv action_results/v32/
+          cp results_v32/business_type_mix_decomposition.csv action_results/v32/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v32/ACTION_V32_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing business-type recalibration review v0.32',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v32
+          if git diff --cached --quiet; then
+            echo 'No v0.32 evidence changes'
+          else
+            git commit -m "Persist v0.32 business-type recalibration review ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+
+      - name: Upload v0.32 review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-business-type-recalibration-v32
+          path: results_v32/
+          if-no-files-found: warn
