@@ -6,6 +6,7 @@ on:
       - 'deployment/calibration_uncertainty.py'
       - 'run_frequency_recalibration_uncertainty_v34.py'
       - 'tests/test_frequency_recalibration_uncertainty_static_v34.py'
+      - 'RESULTS_V34.md'
       - '.github/workflows/v34-recalibration-uncertainty.yml'
       - '.github/workflows/v34-static.yml'
   push:
@@ -14,6 +15,7 @@ on:
       - 'deployment/calibration_uncertainty.py'
       - 'run_frequency_recalibration_uncertainty_v34.py'
       - 'tests/test_frequency_recalibration_uncertainty_static_v34.py'
+      - 'RESULTS_V34.md'
       - '.github/workflows/v34-recalibration-uncertainty.yml'
       - '.github/workflows/v34-static.yml'
   workflow_dispatch:
