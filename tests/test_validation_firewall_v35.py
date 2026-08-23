@@ -16,6 +16,7 @@ from governance.validation_firewall import (
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER_PATH = ROOT / "governance" / "validation_use_ledger_v35.json"
+README_PATH = ROOT / "README.md"
 
 
 class ValidationFirewallV35Tests(unittest.TestCase):
@@ -82,6 +83,13 @@ class ValidationFirewallV35Tests(unittest.TestCase):
         self.assertTrue(firewall["requires_new_independent_period_or_external_validation"])
         self.assertEqual(firewall["model_family_decision"], "HOLD")
         self.assertEqual(firewall["serving_status"], "HOLD_SHADOW_ONLY")
+
+    def test_readme_preserves_first_use_history_without_current_untouched_claim(self) -> None:
+        readme = README_PATH.read_text(encoding="utf-8")
+        self.assertIn("2024 untouched at first locked OOT evaluation", readme)
+        self.assertIn("CONSUMED_RETROSPECTIVE_VALIDATION", readme)
+        self.assertIn("future promotion requires a genuinely new independent period", readme)
+        self.assertNotIn("2024 untouched OOT**", readme)
 
 
 if __name__ == "__main__":
