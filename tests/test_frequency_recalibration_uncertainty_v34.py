@@ -39,7 +39,7 @@ class FrequencyRecalibrationUncertaintyV34Tests(unittest.TestCase):
 
     def test_bootstrap_factors_are_deterministic_and_paired(self) -> None:
         segment = np.asarray(["NB"] * 6 + ["P"] * 6, dtype=object)
-        claims = np.asarray([0, 1, 0, 2, 1, 0, 1, 0, 2, 1, 0, 1], dtype=float)
+        claims = np.asarray([1, 2, 1, 3, 2, 1, 2, 1, 3, 2, 1, 2], dtype=float)
         exposure = np.ones(len(segment), dtype=float)
         pred_a = np.asarray([0.5, 0.7, 0.6, 0.8, 0.7, 0.6, 0.7, 0.8, 0.9, 0.7, 0.8, 0.9])
         pred_b = pred_a * 2.0
