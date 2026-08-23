@@ -1,0 +1,81 @@
+name: Frozen-model disagreement attribution v0.47
+
+on:
+  pull_request:
+    paths:
+      - 'run_frozen_model_disagreement_attribution_v47.py'
+      - 'tests/test_disagreement_attribution_v47.py'
+      - '.github/workflows/v47-disagreement-attribution.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+      - 'download_spanish_motor_2022_2024.py'
+      - 'discover_spanish_motor_2022_2024.py'
+      - 'requirements.txt'
+      - 'action_results/v35/validation_firewall_summary.json'
+  workflow_dispatch:
+
+jobs:
+  frozen-disagreement-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Verify validation firewall before diagnostic
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          f = json.loads(Path('action_results/v35/validation_firewall_summary.json').read_text())
+          assert f['2024']['current_role'] == 'CONSUMED_RETROSPECTIVE_VALIDATION'
+          assert 'post_hoc_diagnostics' in f['firewall']['allowed_future_2024_purposes']
+          assert 'select_new_candidate_policy' in f['firewall']['forbidden_future_2024_purposes']
+          assert 'authorise_model_family_promotion' in f['firewall']['forbidden_future_2024_purposes']
+          PY
+      - name: Discover Spanish source
+        run: python discover_spanish_motor_2022_2024.py
+      - name: Download or reuse and verify source
+        run: python download_spanish_motor_2022_2024.py
+      - name: Run frozen-model disagreement attribution
+        env:
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+          MKL_NUM_THREADS: '1'
+        run: python run_frozen_model_disagreement_attribution_v47.py
+      - name: Run v0.47 diagnostic contracts
+        run: python -m unittest -v tests/test_disagreement_attribution_v47.py
+      - name: Assert aggregate persistence boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s = json.loads(Path('results_v47/disagreement_attribution_summary_v47.json').read_text())
+          assert s['analysis_role'] == 'POST_HOC_DIAGNOSTIC_ON_CONSUMED_RETROSPECTIVE_VALIDATION'
+          assert s['candidate_selection_allowed'] is False
+          assert s['model_or_calibration_parameter_change'] is False
+          assert s['promotion_evidence_created'] is False
+          assert s['source']['diagnostic_2024_outcome_labels_read'] is False
+          assert s['method_boundary']['effects_additive'] is False
+          assert s['method_boundary']['causal_interpretation_claimed'] is False
+          assert s['persisted_row_level_data'] is False
+          PY
+          test ! -e results_v47/raw_rows.csv
+          test ! -e results_v47/predictions.csv
+      - name: Upload v0.47 aggregate diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-disagreement-attribution-v47
+          path: results_v47/
+          if-no-files-found: error
