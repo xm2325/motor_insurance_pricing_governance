@@ -1,0 +1,11 @@
+{
+  "workflow": "Repository front-door sync v0.45",
+  "run_id": "32642365402",
+  "sha": "59cdfee4bf2cbc4c161d479f1222dc187dbc0b07",
+  "status": "success",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_decisions_changed": false,
+  "front_door_current_through": "v0.44",
+  "evidence_role": "IMMUTABLE_DOCUMENTATION_SYNC_SNAPSHOT"
+}

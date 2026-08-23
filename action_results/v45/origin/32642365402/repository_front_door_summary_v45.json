@@ -1,0 +1,38 @@
+{
+  "status": "V45_REPOSITORY_FRONT_DOOR_SYNC_PASS",
+  "scope": "documentation_and_evidence_navigation_only",
+  "model_fit_executed": false,
+  "row_level_data_accessed": false,
+  "historical_model_or_validation_decisions_changed": false,
+  "source_of_truth": "EVIDENCE_REGISTRY.md plus persisted action_results",
+  "current_story_through_version": "v0.44",
+  "checks": {
+    "readme_mentions_external_gate_summary": true,
+    "readme_mentions_committee_gate": true,
+    "readme_links_v43_v44": true,
+    "readme_marks_spanish_2024_consumed": true,
+    "interview_mentions_external_gate_summary": true,
+    "interview_mentions_committee_blockers": true,
+    "interview_preserves_no_uk_transfer_boundary": true,
+    "registry_contains_v43_v44": true
+  },
+  "artifacts": {
+    "README.md": {
+      "sha256": "3afef698fd14b0f93b3352900f5a2da6b1629542a9ef487ff5cf5ce9007bef21"
+    },
+    "INTERVIEW_EVIDENCE_PACK.md": {
+      "sha256": "958a99da2ef0261615e72bd7b4678736044dc7c6b3385dde11fa5bb397797dab"
+    },
+    "EVIDENCE_REGISTRY.md": {
+      "sha256": "1776563329f81eddb3c12633d8268940ffc899aaf093bbbaf59723087d4cb546"
+    }
+  },
+  "headline_boundaries": {
+    "benchmark_is_not_pricing_uplift": true,
+    "consumed_validation_not_relabelled_fresh": true,
+    "external_gate_count_scope_explicit": true,
+    "committee_gate_not_human_approval": true,
+    "first_central_or_current_uk_transfer_claimed": false,
+    "commercial_uplift_claimed": false
+  }
+}
