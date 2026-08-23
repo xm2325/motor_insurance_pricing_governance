@@ -1,0 +1,134 @@
+name: Belgian external motor replication v0.41
+
+on:
+  pull_request:
+    paths:
+      - 'download_belgian_motor_v41.py'
+      - 'run_belgian_external_replication_v41.py'
+      - 'tests/test_belgian_external_replication_v41.py'
+      - '.github/workflows/v41-belgian-external-replication.yml'
+      - 'governance/external_validation_prereg_v40.json'
+      - 'action_results/v40/**'
+      - 'external_validation/**'
+  push:
+    branches: [main]
+    paths:
+      - 'download_belgian_motor_v41.py'
+      - 'run_belgian_external_replication_v41.py'
+      - 'tests/test_belgian_external_replication_v41.py'
+      - '.github/workflows/v41-belgian-external-replication.yml'
+      - 'governance/external_validation_prereg_v40.json'
+      - 'action_results/v40/**'
+      - 'external_validation/**'
+  workflow_dispatch:
+
+concurrency:
+  group: v41-belgian-external-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+
+jobs:
+  belgian-external-first-execution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install frozen modelling and R-data dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyreadr==0.5.3
+      - name: Verify v0.40 main lock and v0.41 contracts before Belgian data access
+        run: python -m unittest -v tests/test_belgian_external_replication_v41.py
+      - name: Fetch and audit pinned Belgian source for first row-level execution
+        run: python download_belgian_motor_v41.py
+      - name: Execute frozen Belgian replication once
+        run: python run_belgian_external_replication_v41.py
+      - name: Verify first-execution governance and expose registered metrics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v41/belgian_external_replication_first_execution.json').read_text())
+          assert result['status'] == 'V41_BELGIAN_EXTERNAL_FIRST_EXECUTION_COMPLETE'
+          assert result['preregistration']['sha256'] == '19658e3a6b12e55ffaa564585bf69dd09ad1371b567f0c1b03c7d17103796822'
+          assert result['preregistration']['v40_main_sha'] == '833e861ee797d3751090e4d08a512d9f340b5378'
+          assert result['preregistration']['registered_before_row_level_access'] is True
+          assert result['preregistration']['rules_changed_after_registration'] is False
+          assert result['source']['source_commit'] == '227fb56b8734bdb7c0327a41180e01d2ddaeaf26'
+          assert result['source']['raw_data_persisted_to_repository'] is False
+          assert result['split']['outcome_stratified'] is False
+          assert result['split']['resplit_after_outcome_inspection'] is False
+          assert result['features']['preprocessor_fit_on_train_only'] is True
+          assert result['reproducibility']['registered_minimum_independent_executions_for_positive_support'] == 2
+          assert result['reproducibility']['executions_completed_for_this_new_portfolio'] == 1
+          assert result['reproducibility']['positive_external_support_authorised'] is False
+          assert result['decision']['model_family_decision'] == 'HOLD'
+          assert result['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert result['decision']['model_promotion_authorised'] is False
+          assert result['decision']['pricing_change_authorised'] is False
+          print(json.dumps({
+              'source_sha256': result['source']['file_sha256'],
+              'frequency_decision': result['frequency']['registered_gate']['decision'],
+              'frequency_relative_improvement': result['frequency']['registered_gate']['relative_deviance_improvement'],
+              'frequency_bootstrap_q025': result['frequency']['paired_bootstrap_relative_deviance_improvement']['q025'],
+              'pure_premium_decision': result['pure_premium']['registered_gate']['decision'],
+              'pure_premium_relative_improvement': result['pure_premium']['registered_gate']['relative_deviance_improvement'],
+              'pure_premium_bootstrap_q025': result['pure_premium']['paired_bootstrap_relative_deviance_improvement']['q025'],
+              'reproducibility_status': result['reproducibility']['status'],
+          }, indent=2))
+          PY
+      - name: Persist aggregate v0.41 first-execution evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v41
+          cp results_v41/belgian_source_audit.json action_results/v41/
+          cp results_v41/belgian_external_replication_first_execution.json action_results/v41/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v41/ACTION_V41_STATUS.json').write_text(json.dumps({
+              'workflow': 'Belgian external motor replication v0.41',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'raw_external_data_persisted': False,
+              'positive_external_support_authorised': False,
+              'execution_ordinal': 1,
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v41
+          if git diff --cached --quiet; then
+            echo 'No v0.41 evidence changes'
+          else
+            git commit -m "Persist v0.41 Belgian first external execution ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Assert raw Belgian data are not staged
+        if: always()
+        run: |
+          if git ls-files --error-unmatch data_external_v41/beMTPL97.rda >/dev/null 2>&1; then
+            echo 'Raw Belgian external data must never be tracked' >&2
+            exit 1
+          fi
+      - name: Upload aggregate Belgian first-execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-belgian-external-replication-v41
+          path: results_v41/
+          if-no-files-found: warn
