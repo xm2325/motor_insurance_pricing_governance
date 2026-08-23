@@ -1,0 +1,147 @@
+name: Model risk inventory v0.46
+
+on:
+  pull_request:
+    paths:
+      - 'MODEL_CARD.md'
+      - 'build_model_risk_inventory_v46.py'
+      - 'scripts/migrate_evidence_registry_v46.py'
+      - 'tests/test_model_risk_inventory_v46.py'
+      - 'RESULTS_V46.md'
+      - '.github/workflows/v46-model-risk-inventory.yml'
+      - 'action_results/v21/manifest.json'
+      - 'action_results/v28/release_control_result.json'
+      - 'action_results/v30/release_admission_result.json'
+      - 'action_results/v35/validation_firewall_summary.json'
+      - 'governance/external_validation_use_ledger_v39.json'
+      - 'governance/external_validation_use_ledger_v42.json'
+      - 'action_results/v43/model_family_evidence_synthesis_summary.json'
+      - 'action_results/v44/model_change_committee_decision_v44.json'
+  push:
+    branches: [main]
+    paths:
+      - 'MODEL_CARD.md'
+      - 'build_model_risk_inventory_v46.py'
+      - 'scripts/migrate_evidence_registry_v46.py'
+      - 'tests/test_model_risk_inventory_v46.py'
+      - 'RESULTS_V46.md'
+      - '.github/workflows/v46-model-risk-inventory.yml'
+      - 'action_results/v21/manifest.json'
+      - 'action_results/v28/release_control_result.json'
+      - 'action_results/v30/release_admission_result.json'
+      - 'action_results/v35/validation_firewall_summary.json'
+      - 'governance/external_validation_use_ledger_v39.json'
+      - 'governance/external_validation_use_ledger_v42.json'
+      - 'action_results/v43/model_family_evidence_synthesis_summary.json'
+      - 'action_results/v44/model_change_committee_decision_v44.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile-model-risk-state:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build aggregate model-risk inventory
+        run: python build_model_risk_inventory_v46.py
+      - name: Run model-risk inventory contracts
+        run: python -m unittest -v tests/test_model_risk_inventory_v46.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v46.py
+          python scripts/migrate_evidence_registry_v46.py
+      - name: Verify v0.46 fail-closed reconciliation
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v46/model_risk_inventory_v46.json').read_text())
+          assert result['status'] == 'V46_MODEL_RISK_INVENTORY_COMPLETE'
+          assert result['row_level_data_accessed'] is False
+          assert result['model_fit_executed'] is False
+          assert result['historical_decisions_changed'] is False
+          assert len(result['models']) == 4
+          assert result['evidence_summary']['preregistered_external_target_gates_evaluated'] == 4
+          assert result['evidence_summary']['preregistered_external_target_gates_passed'] == 0
+          assert result['evidence_summary']['current_fresh_independent_validation_dataset_available'] is False
+          assert all(not x['fresh_independent_evidence_available'] for x in result['validation_assets'])
+          assert all(not x['candidate_selection_allowed'] for x in result['validation_assets'])
+          gate = result['committee_readiness']
+          assert gate['status'] == 'EVIDENCE_GAP_HOLD'
+          assert gate['required_gate_pass_count'] == 5
+          assert gate['required_gate_count'] == 8
+          assert gate['human_committee_review_open'] is False
+          decision = result['current_decision']
+          assert decision['model_family_decision'] == 'HOLD'
+          assert decision['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert decision['promotion_review_status'] == 'NOT_OPEN'
+          assert decision['model_promotion_authorised'] is False
+          assert decision['pricing_change_authorised'] is False
+          PY
+      - name: Assert aggregate-only output
+        run: |
+          if find results_v46 action_results/v46 -type f \( -name '*.rda' -o -name '*.csv' -o -name '*.parquet' -o -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' \) 2>/dev/null | grep -q .; then
+            echo 'v0.46 must remain aggregate-only' >&2
+            exit 1
+          fi
+      - name: Persist v0.46 inventory evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v46
+          cp results_v46/model_risk_inventory_v46.json action_results/v46/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v46/ACTION_V46_STATUS.json').write_text(json.dumps({
+              'workflow': 'Model risk inventory v0.46',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'row_level_data_accessed': False,
+              'model_fit_executed': False,
+              'historical_decisions_changed': False,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'committee_readiness': 'EVIDENCE_GAP_HOLD',
+              'evidence_role': 'ROLLING_AGGREGATE_MODEL_RISK_INVENTORY',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v46/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.46 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v46/model_risk_inventory_v46.json "$origin_dir/"
+          cp action_results/v46/ACTION_V46_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v46/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V46_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_AGGREGATE_MODEL_RISK_INVENTORY_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- MODEL_CARD.md EVIDENCE_REGISTRY.md action_results/v46
+          if git diff --cached --quiet; then
+            echo 'No v0.46 model-risk inventory changes'
+          else
+            git commit -m "Persist v0.46 model risk inventory ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.46 inventory artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-model-risk-inventory-v46
+          path: results_v46/
+          if-no-files-found: warn
