@@ -1,0 +1,145 @@
+name: Motor pricing frequency recalibration transport review v0.33
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - chatgpt/v0.33-frequency-recalibration-transport
+    paths:
+      - 'run_frequency_recalibration_transport_v33.py'
+      - 'tests/test_frequency_recalibration_transport_v33.py'
+      - 'tests/test_frequency_recalibration_transport_static_v33.py'
+      - '.github/workflows/v33-transport.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+      - 'scripts/push_evidence_with_rebase.sh'
+      - 'action_results/v32/business_type_recalibration_summary.json'
+  pull_request:
+    paths:
+      - 'run_frequency_recalibration_transport_v33.py'
+      - 'tests/test_frequency_recalibration_transport_v33.py'
+      - 'tests/test_frequency_recalibration_transport_static_v33.py'
+      - '.github/workflows/v33-transport.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'build_bundle_lock_v27.py'
+      - 'verify_bundle_v27.py'
+      - 'run_spanish_oot_2024.py'
+      - 'scripts/push_evidence_with_rebase.sh'
+      - 'action_results/v32/business_type_recalibration_summary.json'
+
+concurrency:
+  group: v33-transport-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  frequency-recalibration-transport-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run v0.33 numeric contracts
+        run: python -m unittest -v tests/test_frequency_recalibration_transport_v33.py
+
+      - name: Discover and verify public source
+        run: |
+          python discover_spanish_motor_2022_2024.py
+          python download_spanish_motor_2022_2024.py
+          python audit_spanish_motor_2022_2024.py
+
+      - name: Build current globally calibrated shadow bundle
+        run: python build_deployment_bundle_v21.py
+
+      - name: Seal and verify content-addressed bundle
+        env:
+          RELEASE_LABEL: v33-frequency-recalibration-transport-review
+        run: |
+          python build_bundle_lock_v27.py
+          python verify_bundle_v27.py deployment_artifacts
+
+      - name: Run fixed-factor 2024 orthogonal cohort transport review
+        run: python run_frequency_recalibration_transport_v33.py
+
+      - name: Verify v0.33 boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('results_v33/frequency_recalibration_transport_summary.json').read_text())
+          assert result['status'] == 'V33_FREQUENCY_RECALIBRATION_TRANSPORT_REVIEW_PASS'
+          assert result['source']['candidate_source'] == 'persisted v0.32 2023-only business_type multipliers'
+          assert result['source']['multipliers_refit_in_v33'] is False
+          assert result['source']['2024_labels_used_for_fit'] is False
+          assert result['decision']['bundle_change_authorised'] is False
+          assert result['decision']['pricing_change_authorised'] is False
+          assert result['decision']['model_promotion_authorised'] is False
+          assert result['decision']['model_family_decision'] == 'HOLD'
+          assert result['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          for field, evidence in result['models'].items():
+              assert evidence['v32_candidate_source']['fit_year'] == 2023
+              assert evidence['v32_candidate_source']['test_2024_labels_used_for_fit'] is False
+              assert evidence['fresh_replay_reconciliation']['max_relative_difference'] <= 0.002
+          print(json.dumps({
+              'status': result['status'],
+              'stable_fields': result['decision']['stable_fields'],
+              'stable_field_count': result['decision']['stable_field_count'],
+              'tested_field_count': result['decision']['tested_field_count'],
+          }, indent=2))
+          PY
+
+      - name: Persist v0.33 aggregate evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v33
+          cp results_v33/frequency_recalibration_transport_summary.json action_results/v33/
+          cp results_v33/frequency_recalibration_transport_cohorts.csv action_results/v33/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v33/ACTION_V33_STATUS.json').write_text(json.dumps({
+              'workflow': 'Motor pricing frequency recalibration transport review v0.33',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v33
+          if git diff --cached --quiet; then
+            echo 'No v0.33 evidence changes'
+          else
+            git commit -m "Persist v0.33 frequency recalibration transport review ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+
+      - name: Upload v0.33 review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-frequency-recalibration-transport-v33
+          path: results_v33/
+          if-no-files-found: warn
