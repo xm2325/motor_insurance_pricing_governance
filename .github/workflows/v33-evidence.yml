@@ -1,0 +1,31 @@
+name: Persisted v0.33 transport evidence contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'action_results/v33/**'
+      - 'tests/test_frequency_recalibration_transport_evidence_v33.py'
+      - 'RESULTS_V33.md'
+      - '.github/workflows/v33-evidence.yml'
+  pull_request:
+    paths:
+      - 'action_results/v33/**'
+      - 'tests/test_frequency_recalibration_transport_evidence_v33.py'
+      - 'RESULTS_V33.md'
+      - '.github/workflows/v33-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  persisted-v33-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify persisted v0.33 transport evidence
+        run: python -m unittest -v tests/test_frequency_recalibration_transport_evidence_v33.py

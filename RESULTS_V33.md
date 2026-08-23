@@ -35,12 +35,14 @@ These are project shadow-review rules, not insurer or regulatory thresholds.
 
 ## Fresh replay reconciliation
 
-Before subgroup interpretation, the fresh v0.33 replay reconciled exactly to the persisted v0.32 aggregate frequency results.
+Before subgroup interpretation, the main-branch fresh v0.33 replay was reconciled against the persisted v0.32 aggregate frequency results using the existing **0.2% fresh-retrain diagnostic tolerance**. This is not the v0.26 same-fit serialization-parity contract.
 
 | Frequency output | Baseline deviance | Candidate deviance | Baseline calibration | Candidate calibration | Max relative reconciliation difference |
 |---|---:|---:|---:|---:|---:|
-| GLM reference | 1.118536263 | 1.118090706 | 0.963088026 | 0.970446680 | 0.0 |
-| XGBoost challenger | 1.118835276 | 1.118119032 | 0.960085035 | 0.969561756 | 0.0 |
+| GLM reference | 1.118536263 | 1.118090706 | 0.963088025 | 0.970446680 | **7.03e-10** |
+| XGBoost challenger | 1.118835276 | 1.118119032 | 0.960085035 | 0.969561756 | **0.0** |
+
+The tiny GLM difference is numerical fresh-retraining variation, not a candidate-performance change: **7.03e-10** is orders of magnitude below the registered **0.002** relative tolerance.
 
 ## Transport results
 
