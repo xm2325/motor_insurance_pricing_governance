@@ -1,0 +1,196 @@
+{
+  "status": "V33_FREQUENCY_RECALIBRATION_TRANSPORT_REVIEW_PASS",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "evaluation_year": 2024,
+    "rows": 168085,
+    "candidate_source": "persisted v0.32 2023-only business_type multipliers",
+    "multipliers_refit_in_v33": false,
+    "2024_labels_used_for_fit": false,
+    "transport_dimensions": [
+      "seen_before_2024",
+      "driver_age_band",
+      "policy_type",
+      "payment_frequency"
+    ]
+  },
+  "guardrails": {
+    "major_cohort_min_rows": 2000,
+    "major_cohort_min_exposure_share": 0.02,
+    "major_cohort_min_claims": 100,
+    "max_abs_log_calibration_deterioration": 0.02,
+    "max_relative_deviance_worsening": 0.005,
+    "fresh_retrain_relative_tolerance": 0.002,
+    "interpretation": "Project transport guardrails for retrospective shadow review; they are not insurer or regulatory thresholds."
+  },
+  "models": {
+    "reference_frequency": {
+      "v32_candidate_source": {
+        "fit_year": 2023,
+        "test_2024_labels_used_for_fit": false,
+        "multipliers": {
+          "NB": {
+            "segment": "NB",
+            "rows": 83270,
+            "exposure": 49941.419178082186,
+            "exposure_share": 0.6060922575602607,
+            "observed": 14693.0,
+            "predicted": 15048.812629999024,
+            "calibration_ratio_pred_over_actual": 1.024216472469817,
+            "raw_multiplier": 0.9763560993981859,
+            "locked_multiplier": 0.9763560993981859,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          },
+          "P": {
+            "segment": "P",
+            "rows": 35565,
+            "exposure": 32457.61917808219,
+            "exposure_share": 0.3939077424397392,
+            "observed": 10465.0,
+            "predicted": 10109.187370000975,
+            "calibration_ratio_pred_over_actual": 0.9659997486861897,
+            "raw_multiplier": 1.0351969566866372,
+            "locked_multiplier": 1.0351969566866372,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          }
+        },
+        "v32_decision": "SUPPORTED_FOR_FURTHER_SHADOW_TESTING"
+      },
+      "fresh_replay_reconciliation": {
+        "checks": {
+          "baseline_deviance": {
+            "observed": 1.1185362628672493,
+            "v32_persisted": 1.1185362628672493,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          },
+          "candidate_deviance": {
+            "observed": 1.1180907056053262,
+            "v32_persisted": 1.1180907056053262,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          },
+          "baseline_calibration": {
+            "observed": 0.963088025952147,
+            "v32_persisted": 0.963088025952147,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          },
+          "candidate_calibration": {
+            "observed": 0.9704466803524903,
+            "v32_persisted": 0.9704466803524903,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          }
+        },
+        "max_relative_difference": 0.0,
+        "relative_tolerance": 0.002
+      },
+      "major_cohort_summary": {
+        "major_cohort_count": 13,
+        "gate_breach_count": 0,
+        "calibration_improved_count": 8,
+        "deviance_improved_count": 10,
+        "max_abs_log_calibration_deterioration": 0.010991523110533225,
+        "max_relative_deviance_worsening": 0.0012227945830625142,
+        "decision": "TRANSPORT_STABLE_FOR_FURTHER_SHADOW_TESTING"
+      },
+      "breaches": []
+    },
+    "challenger_frequency": {
+      "v32_candidate_source": {
+        "fit_year": 2023,
+        "test_2024_labels_used_for_fit": false,
+        "multipliers": {
+          "NB": {
+            "segment": "NB",
+            "rows": 83270,
+            "exposure": 49941.419178082186,
+            "exposure_share": 0.6060922575602607,
+            "observed": 14693.0,
+            "predicted": 15153.553748566788,
+            "calibration_ratio_pred_over_actual": 1.0313451132217237,
+            "raw_multiplier": 0.9696075418209841,
+            "locked_multiplier": 0.9696075418209841,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          },
+          "P": {
+            "segment": "P",
+            "rows": 35565,
+            "exposure": 32457.61917808219,
+            "exposure_share": 0.3939077424397392,
+            "observed": 10465.0,
+            "predicted": 10004.447658763987,
+            "calibration_ratio_pred_over_actual": 0.9559911761838498,
+            "raw_multiplier": 1.046034759433477,
+            "locked_multiplier": 1.046034759433477,
+            "supported": true,
+            "fallback_reason": null,
+            "multiplier_was_clipped": false
+          }
+        },
+        "v32_decision": "SUPPORTED_FOR_FURTHER_SHADOW_TESTING"
+      },
+      "fresh_replay_reconciliation": {
+        "checks": {
+          "baseline_deviance": {
+            "observed": 1.1188352761606644,
+            "v32_persisted": 1.1188352761606644,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          },
+          "candidate_deviance": {
+            "observed": 1.1181190316026728,
+            "v32_persisted": 1.1181190316026728,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          },
+          "baseline_calibration": {
+            "observed": 0.9600850351705676,
+            "v32_persisted": 0.9600850351705676,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          },
+          "candidate_calibration": {
+            "observed": 0.9695617558874555,
+            "v32_persisted": 0.9695617558874555,
+            "absolute_difference": 0.0,
+            "relative_difference": 0.0
+          }
+        },
+        "max_relative_difference": 0.0,
+        "relative_tolerance": 0.002
+      },
+      "major_cohort_summary": {
+        "major_cohort_count": 13,
+        "gate_breach_count": 0,
+        "calibration_improved_count": 9,
+        "deviance_improved_count": 10,
+        "max_abs_log_calibration_deterioration": 0.014693424591201112,
+        "max_relative_deviance_worsening": 0.0013131938559480805,
+        "decision": "TRANSPORT_STABLE_FOR_FURTHER_SHADOW_TESTING"
+      },
+      "breaches": []
+    }
+  },
+  "decision": {
+    "stable_fields": [
+      "reference_frequency",
+      "challenger_frequency"
+    ],
+    "stable_field_count": 2,
+    "tested_field_count": 2,
+    "bundle_change_authorised": false,
+    "pricing_change_authorised": false,
+    "model_promotion_authorised": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY"
+  },
+  "interpretation_boundary": "v0.33 checks transport of fixed v0.32 frequency recalibration across orthogonal 2024 cohorts. It does not create a new temporal test because the public source has calendar year but no intra-year date. It remains retrospective evidence from one Spanish insurer and does not establish transfer to FIRST CENTRAL or the UK market."
+}
