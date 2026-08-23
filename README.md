@@ -91,7 +91,7 @@ The first-use independence is a historical fact. Later v0.22/v0.23/v0.31–v0.34
 |---|---:|---:|---|
 | Frequency Poisson deviance | **1.11854** | 1.11884 | no deviance gain |
 | Frequency calibration ratio | 0.963 | 0.960 | both close in aggregate |
-| Top-10% claim capture | 26.62% | **27.04% | +0.42 pp ranking gain |
+| Top-10% claim capture | 26.62% | **27.04%** | +0.42 pp ranking gain |
 | Pure-premium Tweedie deviance | **93.9318** | 93.9513 | no deviance gain |
 | Pure-premium calibration ratio | **0.953** | 0.934 | GLM closer in aggregate |
 | Top-10% loss capture | 20.44% | **21.13%** | +0.69 pp ranking gain |
