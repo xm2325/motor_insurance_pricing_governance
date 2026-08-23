@@ -1,0 +1,24 @@
+{
+  "status": "V40_BELGIAN_EXTERNAL_VALIDATION_PREREGISTRATION_LOCKED",
+  "preregistration_sha256": "19658e3a6b12e55ffaa564585bf69dd09ad1371b567f0c1b03c7d17103796822",
+  "source_dataset": "beMTPL97",
+  "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+  "registered_before_row_level_access": true,
+  "row_level_external_data_present": false,
+  "known_public_rows": 163212,
+  "split": {
+    "seed": 20260825,
+    "fractions": [
+      0.6,
+      0.2,
+      0.2
+    ]
+  },
+  "bootstrap_draws": 500,
+  "minimum_reproducibility_runs_for_positive_support": 2,
+  "glm_solver": "newton-cholesky",
+  "glm_tolerance": 1e-10,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "execution_allowed_only_after_preregistration_is_on_main": true
+}

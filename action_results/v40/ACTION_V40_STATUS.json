@@ -1,0 +1,8 @@
+{
+  "workflow": "Belgian external validation preregistration v0.40",
+  "run_id": "32637337675",
+  "sha": "833e861ee797d3751090e4d08a512d9f340b5378",
+  "status": "success",
+  "row_level_external_data_accessed": false,
+  "positive_support_minimum_independent_executions": 2
+}
