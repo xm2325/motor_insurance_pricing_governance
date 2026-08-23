@@ -1,0 +1,278 @@
+{
+  "status": "V34_RECALIBRATION_FACTOR_UNCERTAINTY_REVIEW_PASS",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "model_train_year": 2022,
+    "global_calibration_year": 2023,
+    "factor_bootstrap_year": 2023,
+    "evaluation_year": 2024,
+    "factor_segment": "business_type",
+    "calibration_rows": 118835,
+    "evaluation_rows": 168085,
+    "bootstrap_draws": 500,
+    "bootstrap_seed": 20260823,
+    "bootstrap_stratified_by": "business_type",
+    "paired_indices_across_frequency_fields": true,
+    "2024_labels_used_for_bootstrap_factor_fit": false,
+    "factor_draws_are_clipped": false
+  },
+  "registered_robustness_gate": {
+    "factor_interval": "95% percentile interval for every NB/P factor must not cross 1",
+    "factor_draw_guardrails": [
+      0.5,
+      2.0
+    ],
+    "minimum_deviance_improvement_rate": 0.8,
+    "minimum_aggregate_calibration_nonworse_rate": 0.8,
+    "minimum_worst_segment_calibration_improvement_rate": 0.8,
+    "minimum_original_v32_deviance_guardrail_pass_rate": 0.95,
+    "original_v32_max_relative_deviance_worsening": 0.001,
+    "fresh_retrain_relative_tolerance": 0.002,
+    "threshold_boundary": "Project retrospective shadow-review rules; not insurer or regulatory thresholds."
+  },
+  "models": {
+    "reference_frequency": {
+      "v32_point_candidate_decision": "SUPPORTED_FOR_FURTHER_SHADOW_TESTING",
+      "factor_reconciliation": {
+        "segments": {
+          "NB": {
+            "fresh_point_factor": 0.9763560993981858,
+            "v32_persisted_factor": 0.9763560993981859,
+            "relative_difference": 1.1371087099363487e-16
+          },
+          "P": {
+            "fresh_point_factor": 1.0351969566866372,
+            "v32_persisted_factor": 1.0351969566866372,
+            "relative_difference": 0.0
+          }
+        },
+        "max_relative_difference": 1.1371087099363487e-16,
+        "relative_tolerance": 0.002
+      },
+      "fresh_v32_metric_reconciliation": {
+        "relative_differences": {
+          "baseline_deviance": 0.0,
+          "baseline_calibration": 0.0,
+          "candidate_deviance": 0.0,
+          "candidate_calibration": 0.0
+        },
+        "max_relative_difference": 0.0,
+        "relative_tolerance": 0.002
+      },
+      "baseline_2024": {
+        "poisson_deviance": 1.1185362628672493,
+        "aggregate_calibration_ratio_pred_over_actual": 0.963088025952147,
+        "aggregate_abs_log_calibration_error": 0.0376104633114758,
+        "max_segment_abs_log_calibration_error": 0.06573686352109095
+      },
+      "persisted_v32_point_candidate_replay": {
+        "poisson_deviance": 1.1180907056053262,
+        "aggregate_calibration_ratio_pred_over_actual": 0.9704466803524903,
+        "aggregate_abs_log_calibration_error": 0.029998818271335343,
+        "max_segment_abs_log_calibration_error": 0.03114515859221412,
+        "segments": {
+          "NB": {
+            "factor": 0.9763560993981859,
+            "claims": 17798.0,
+            "exposure": 60713.460273972596,
+            "baseline_expected_claims": 17714.735228300935,
+            "candidate_expected_claims": 17295.889789375535,
+            "candidate_calibration_ratio_pred_over_actual": 0.971788391357205,
+            "candidate_abs_log_calibration_error": 0.028617202587748664
+          },
+          "P": {
+            "factor": 1.0351969566866372,
+            "claims": 21478.0,
+            "exposure": 65300.90410958904,
+            "baseline_expected_claims": 20111.510078995598,
+            "candidate_expected_claims": 20819.374028148875,
+            "candidate_calibration_ratio_pred_over_actual": 0.9693348555800761,
+            "candidate_abs_log_calibration_error": 0.03114515859221412
+          }
+        }
+      },
+      "factor_bootstrap": {
+        "NB": {
+          "fresh_point_factor": 0.9763560993981858,
+          "v32_persisted_factor": 0.9763560993981859,
+          "relative_difference": 1.1371087099363487e-16,
+          "q025": 0.955804014821942,
+          "median": 0.9769050155236447,
+          "q975": 0.9967883402726573,
+          "interval_crosses_one": false,
+          "min_draw": 0.9426306148236181,
+          "max_draw": 1.0065119212256863,
+          "all_draws_within_factor_guardrails": true
+        },
+        "P": {
+          "fresh_point_factor": 1.0351969566866372,
+          "v32_persisted_factor": 1.0351969566866372,
+          "relative_difference": 0.0,
+          "q025": 1.0049083172095055,
+          "median": 1.0362356113127205,
+          "q975": 1.0634076395567968,
+          "interval_crosses_one": false,
+          "min_draw": 0.9959271342799011,
+          "max_draw": 1.0916056104131207,
+          "all_draws_within_factor_guardrails": true
+        }
+      },
+      "bootstrap_metric_distributions": {
+        "poisson_deviance": {
+          "q025": 1.117870407866584,
+          "median": 1.1181077266519412,
+          "q975": 1.1185550498747818
+        },
+        "aggregate_abs_log_calibration_error": {
+          "q025": 0.011965574964258513,
+          "median": 0.02993669178122539,
+          "q975": 0.04735749726692334
+        },
+        "max_segment_abs_log_calibration_error": {
+          "q025": 0.01711979963754047,
+          "median": 0.03728162261997712,
+          "q975": 0.06131541463748328
+        }
+      },
+      "robustness_rates": {
+        "deviance_improvement_rate": 0.97,
+        "aggregate_calibration_not_worse_rate": 0.796,
+        "worst_segment_calibration_improvement_rate": 0.994,
+        "original_v32_deviance_guardrail_pass_rate": 1.0
+      },
+      "strong_robustness_gate": {
+        "factor_interval_direction_stable": true,
+        "all_factor_draws_within_guardrails": true,
+        "decision": "FACTOR_UNCERTAINTY_REVIEW_REQUIRED"
+      }
+    },
+    "challenger_frequency": {
+      "v32_point_candidate_decision": "SUPPORTED_FOR_FURTHER_SHADOW_TESTING",
+      "factor_reconciliation": {
+        "segments": {
+          "NB": {
+            "fresh_point_factor": 0.969607541820984,
+            "v32_persisted_factor": 0.9696075418209841,
+            "relative_difference": 1.1450230910333966e-16
+          },
+          "P": {
+            "fresh_point_factor": 1.0460347594334771,
+            "v32_persisted_factor": 1.046034759433477,
+            "relative_difference": 2.1227268302755895e-16
+          }
+        },
+        "max_relative_difference": 2.1227268302755895e-16,
+        "relative_tolerance": 0.002
+      },
+      "fresh_v32_metric_reconciliation": {
+        "relative_differences": {
+          "baseline_deviance": 0.0,
+          "baseline_calibration": 0.0,
+          "candidate_deviance": 0.0,
+          "candidate_calibration": 2.2901543256704707e-16
+        },
+        "max_relative_difference": 2.2901543256704707e-16,
+        "relative_tolerance": 0.002
+      },
+      "baseline_2024": {
+        "poisson_deviance": 1.1188352761606644,
+        "aggregate_calibration_ratio_pred_over_actual": 0.9600850351705676,
+        "aggregate_abs_log_calibration_error": 0.0407334201404067,
+        "max_segment_abs_log_calibration_error": 0.07805071060984149
+      },
+      "persisted_v32_point_candidate_replay": {
+        "poisson_deviance": 1.1181190316026728,
+        "aggregate_calibration_ratio_pred_over_actual": 0.9695617558874557,
+        "aggregate_abs_log_calibration_error": 0.03091110763036974,
+        "max_segment_abs_log_calibration_error": 0.033044114703298176,
+        "segments": {
+          "NB": {
+            "factor": 0.9696075418209841,
+            "claims": 17798.0,
+            "exposure": 60713.460273972596,
+            "baseline_expected_claims": 17842.92129906069,
+            "candidate_expected_claims": 17300.631059687516,
+            "candidate_calibration_ratio_pred_over_actual": 0.9720547847897244,
+            "candidate_abs_log_calibration_error": 0.028343113157638135
+          },
+          "P": {
+            "factor": 1.046034759433477,
+            "claims": 21478.0,
+            "exposure": 65300.90410958904,
+            "baseline_expected_claims": 19865.378542298527,
+            "candidate_expected_claims": 20779.876464548193,
+            "candidate_calibration_ratio_pred_over_actual": 0.9674958778539992,
+            "candidate_abs_log_calibration_error": 0.033044114703298176
+          }
+        }
+      },
+      "factor_bootstrap": {
+        "NB": {
+          "fresh_point_factor": 0.969607541820984,
+          "v32_persisted_factor": 0.9696075418209841,
+          "relative_difference": 1.1450230910333966e-16,
+          "q025": 0.9490492396405257,
+          "median": 0.9703417794647125,
+          "q975": 0.9898801073101873,
+          "interval_crosses_one": false,
+          "min_draw": 0.9346874461036981,
+          "max_draw": 1.0010706265662228,
+          "all_draws_within_factor_guardrails": true
+        },
+        "P": {
+          "fresh_point_factor": 1.0460347594334771,
+          "v32_persisted_factor": 1.046034759433477,
+          "relative_difference": 2.1227268302755895e-16,
+          "q025": 1.0154647063057047,
+          "median": 1.0472309729099212,
+          "q975": 1.0748192518146553,
+          "interval_crosses_one": false,
+          "min_draw": 1.0059206803589462,
+          "max_draw": 1.1044209913845133,
+          "all_draws_within_factor_guardrails": true
+        }
+      },
+      "bootstrap_metric_distributions": {
+        "poisson_deviance": {
+          "q025": 1.117889343861985,
+          "median": 1.1181313533835935,
+          "q975": 1.1185990633158323
+        },
+        "aggregate_abs_log_calibration_error": {
+          "q025": 0.0128012041624607,
+          "median": 0.030495541969466366,
+          "q975": 0.048861045981282394
+        },
+        "max_segment_abs_log_calibration_error": {
+          "q025": 0.01730637078550795,
+          "median": 0.03728436515671575,
+          "q975": 0.06326145630667776
+        }
+      },
+      "robustness_rates": {
+        "deviance_improvement_rate": 0.998,
+        "aggregate_calibration_not_worse_rate": 0.848,
+        "worst_segment_calibration_improvement_rate": 1.0,
+        "original_v32_deviance_guardrail_pass_rate": 1.0
+      },
+      "strong_robustness_gate": {
+        "factor_interval_direction_stable": true,
+        "all_factor_draws_within_guardrails": true,
+        "decision": "ROBUST_TO_2023_FACTOR_ESTIMATION_FOR_FURTHER_SHADOW_TESTING"
+      }
+    }
+  },
+  "decision": {
+    "robust_fields": [
+      "challenger_frequency"
+    ],
+    "robust_field_count": 1,
+    "tested_field_count": 2,
+    "bundle_change_authorised": false,
+    "pricing_change_authorised": false,
+    "model_promotion_authorised": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY"
+  },
+  "interpretation_boundary": "This is a conditional row-bootstrap sensitivity analysis of the incremental 2023 business_type frequency factors given the rebuilt globally calibrated prediction functions. It does not bootstrap model fitting, global calibration, claim development or a new calendar period. 2024 outcomes are used only after each 2023 factor draw is fixed. It is retrospective evidence from one Spanish insurer and does not establish transfer to FIRST CENTRAL or the UK market."
+}
