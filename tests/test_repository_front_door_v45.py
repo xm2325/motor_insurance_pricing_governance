@@ -66,8 +66,8 @@ class RepositoryFrontDoorV45Tests(unittest.TestCase):
             "project demonstration rule",
             "not FIRST CENTRAL policy",
             "No observed commercial uplift",
-            "cannot override failed evidence gates",
-            "cannot authorise model promotion or customer pricing",
+            "failed evidence gates cannot be overridden",
+            "never authorise model promotion or customer pricing",
         ]:
             self.assertIn(marker.lower(), self.interview.lower())
 
