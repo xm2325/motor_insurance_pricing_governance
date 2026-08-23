@@ -5,6 +5,8 @@ on:
     paths:
       - 'run_frozen_model_disagreement_attribution_v47.py'
       - 'tests/test_disagreement_attribution_v47.py'
+      - 'scripts/migrate_evidence_registry_v47.py'
+      - 'RESULTS_V47.md'
       - '.github/workflows/v47-disagreement-attribution.yml'
       - 'build_deployment_bundle_v21.py'
       - 'deployment/**'
@@ -12,7 +14,21 @@ on:
       - 'discover_spanish_motor_2022_2024.py'
       - 'requirements.txt'
       - 'action_results/v35/validation_firewall_summary.json'
+  push:
+    branches: [main]
+    paths:
+      - 'run_frozen_model_disagreement_attribution_v47.py'
+      - 'tests/test_disagreement_attribution_v47.py'
+      - 'scripts/migrate_evidence_registry_v47.py'
+      - 'RESULTS_V47.md'
+      - '.github/workflows/v47-disagreement-attribution.yml'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+      - 'action_results/v35/validation_firewall_summary.json'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   frozen-disagreement-diagnostic:
@@ -56,6 +72,10 @@ jobs:
         run: python run_frozen_model_disagreement_attribution_v47.py
       - name: Run v0.47 diagnostic contracts
         run: python -m unittest -v tests/test_disagreement_attribution_v47.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v47.py
+          python scripts/migrate_evidence_registry_v47.py
       - name: Assert aggregate persistence boundary
         run: |
           python - <<'PY'
@@ -67,13 +87,86 @@ jobs:
           assert s['model_or_calibration_parameter_change'] is False
           assert s['promotion_evidence_created'] is False
           assert s['source']['diagnostic_2024_outcome_labels_read'] is False
+          assert s['source']['diagnostic_sample_rows'] == 20000
+          assert s['source']['diagnostic_sample_seed'] == 20260823
           assert s['method_boundary']['effects_additive'] is False
           assert s['method_boundary']['causal_interpretation_claimed'] is False
+          assert s['method_boundary']['shap_values_claimed'] is False
           assert s['persisted_row_level_data'] is False
+          f = s['top_features_by_disagreement_reduction']['frequency']
+          p = s['top_features_by_disagreement_reduction']['pure_premium']
+          assert f[0]['feature'] == 'vehicle_brand'
+          assert f[1]['feature'] == 'policy_type'
+          assert p[0]['feature'] == 'business_type'
           PY
           test ! -e results_v47/raw_rows.csv
           test ! -e results_v47/predictions.csv
+          if find results_v47 -type f \( -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' -o -name '*.rda' -o -name '*.parquet' \) | grep -q .; then
+            echo 'v0.47 results must contain aggregate diagnostics only' >&2
+            exit 1
+          fi
+      - name: Persist v0.47 aggregate diagnostics
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v47
+          cp results_v47/disagreement_attribution_summary_v47.json action_results/v47/
+          cp results_v47/diagnostic_sample_manifest_v47.json action_results/v47/
+          cp results_v47/feature_disagreement_attribution_v47.csv action_results/v47/
+          cp results_v47/segment_disagreement_v47.csv action_results/v47/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          s = json.loads(Path('results_v47/disagreement_attribution_summary_v47.json').read_text())
+          Path('action_results/v47/ACTION_V47_STATUS.json').write_text(json.dumps({
+              'workflow': 'Frozen-model disagreement attribution v0.47',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'analysis_role': s['analysis_role'],
+              'diagnostic_2024_outcome_labels_read': False,
+              'diagnostic_sample_rows': s['source']['diagnostic_sample_rows'],
+              'diagnostic_sample_seed': s['source']['diagnostic_sample_seed'],
+              'candidate_selection_allowed': False,
+              'model_or_calibration_parameter_change': False,
+              'promotion_evidence_created': False,
+              'persisted_row_level_data': False,
+              'frozen_tweedie_glm_convergence_limitation_registered': True,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'committee_readiness': 'EVIDENCE_GAP_HOLD',
+              'evidence_role': 'ROLLING_POST_HOC_DISAGREEMENT_DIAGNOSTIC',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v47/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.47 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v47/disagreement_attribution_summary_v47.json "$origin_dir/"
+          cp action_results/v47/diagnostic_sample_manifest_v47.json "$origin_dir/"
+          cp action_results/v47/feature_disagreement_attribution_v47.csv "$origin_dir/"
+          cp action_results/v47/segment_disagreement_v47.csv "$origin_dir/"
+          cp action_results/v47/ACTION_V47_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v47/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V47_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_POST_HOC_DISAGREEMENT_DIAGNOSTIC_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md action_results/v47
+          if git diff --cached --quiet; then
+            echo 'No v0.47 evidence changes'
+          else
+            git commit -m "Persist v0.47 disagreement attribution ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
       - name: Upload v0.47 aggregate diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: motor-pricing-disagreement-attribution-v47
