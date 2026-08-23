@@ -1,0 +1,8 @@
+{
+  "seed": 20260823,
+  "sample_size": 20000,
+  "source_population_rows": 168085,
+  "sample_index_sha256": "6b6f15352ed02adc9ab478894e647a04128f09d4d133716c80a4adaad038e5fc",
+  "outcome_stratified": false,
+  "2024_outcome_labels_used": false
+}

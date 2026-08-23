@@ -1,0 +1,19 @@
+{
+  "workflow": "Frozen-model disagreement attribution v0.47",
+  "run_id": "32643271669",
+  "sha": "ff5b9dace51f040c4aa25c09d8c3a56c59a6ad47",
+  "status": "success",
+  "analysis_role": "POST_HOC_DIAGNOSTIC_ON_CONSUMED_RETROSPECTIVE_VALIDATION",
+  "diagnostic_2024_outcome_labels_read": false,
+  "diagnostic_sample_rows": 20000,
+  "diagnostic_sample_seed": 20260823,
+  "candidate_selection_allowed": false,
+  "model_or_calibration_parameter_change": false,
+  "promotion_evidence_created": false,
+  "persisted_row_level_data": false,
+  "frozen_tweedie_glm_convergence_limitation_registered": true,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "committee_readiness": "EVIDENCE_GAP_HOLD",
+  "evidence_role": "ROLLING_POST_HOC_DISAGREEMENT_DIAGNOSTIC"
+}

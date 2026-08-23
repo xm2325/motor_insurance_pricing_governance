@@ -1,0 +1,372 @@
+{
+  "status": "V47_FROZEN_MODEL_DISAGREEMENT_ATTRIBUTION_COMPLETE",
+  "analysis_role": "POST_HOC_DIAGNOSTIC_ON_CONSUMED_RETROSPECTIVE_VALIDATION",
+  "candidate_selection_allowed": false,
+  "model_or_calibration_parameter_change": false,
+  "promotion_evidence_created": false,
+  "customer_pricing_authorised": false,
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "source_file_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+    "training_year": 2022,
+    "calibration_year": 2023,
+    "diagnostic_year": 2024,
+    "diagnostic_2024_outcome_labels_read": false,
+    "diagnostic_rows_with_positive_exposure": 168085,
+    "diagnostic_sample_rows": 20000,
+    "diagnostic_sample_seed": 20260823,
+    "outcome_stratified_sample": false
+  },
+  "frozen_model_definition": {
+    "source": "build_deployment_bundle_v21.py::model_definitions",
+    "source_sha256": "7519716d4d4e39095079cc2aca3a61df192357de0a56808190c7ae9a1be950c1",
+    "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25",
+    "locked_calibration_scales": {
+      "poisson_glm_frequency": 1.012399917638075,
+      "xgb_poisson_frequency": 1.0277575870212368,
+      "tweedie_glm_pure_premium": 0.9141249647626554,
+      "xgb_tweedie_pure_premium": 1.2075552522048616
+    }
+  },
+  "reference_values": {
+    "driver_age": 47.0,
+    "vehicle_age": 23.0,
+    "age_driving_licence": 21.0,
+    "vehicle_value": 24596.775,
+    "seats": 5.0,
+    "power_to_weight_ratio": 12.0,
+    "policy_type": "CC",
+    "business_type": "NB",
+    "payment_frequency": "A",
+    "bonus_score": "G",
+    "fuel_type": "D",
+    "vehicle_brand": "RENAULT",
+    "municipality_type": "I",
+    "circulation_area": "U"
+  },
+  "targets": {
+    "frequency": {
+      "baseline": {
+        "exposure_weighted_mean_log_challenger_over_reference": -0.00211657842259984,
+        "exposure_weighted_mean_absolute_log_disagreement": 0.09926441568172852,
+        "exposure_weighted_q05_log_ratio": -0.19860946895187984,
+        "exposure_weighted_median_log_ratio": -0.010206550258070424,
+        "exposure_weighted_q95_log_ratio": 0.22424975389229532,
+        "challenger_above_reference_exposure_share": 0.46245900497343245
+      },
+      "features": {
+        "driver_age": {
+          "reference_value": 47.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.15897398609186505,
+          "absolute_disagreement_reduction": -0.05970957041013654,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.6015203937892842,
+          "weighted_sign_flip_rate": 0.23437334586884775,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "vehicle_age": {
+          "reference_value": 23.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.13636144694066132,
+          "absolute_disagreement_reduction": -0.03709703125893281,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.37371933340016844,
+          "weighted_sign_flip_rate": 0.40383773968731795,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "age_driving_licence": {
+          "reference_value": 21.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.11184353346152122,
+          "absolute_disagreement_reduction": -0.012579117779792703,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.12672333477613093,
+          "weighted_sign_flip_rate": 0.12153104413923564,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "vehicle_value": {
+          "reference_value": 24596.775,
+          "counterfactual_mean_absolute_log_disagreement": 0.0933058356355027,
+          "absolute_disagreement_reduction": 0.00595858004622582,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.060027352252098216,
+          "weighted_sign_flip_rate": 0.12172869424223857,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "seats": {
+          "reference_value": 5.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.09872870674427069,
+          "absolute_disagreement_reduction": 0.0005357089374578294,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.005396787295615308,
+          "weighted_sign_flip_rate": 0.010735454022033325,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "power_to_weight_ratio": {
+          "reference_value": 12.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.09691648509419949,
+          "absolute_disagreement_reduction": 0.0023479305875290235,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.02365329581002313,
+          "weighted_sign_flip_rate": 0.0830362639486395,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "policy_type": {
+          "reference_value": "CC",
+          "counterfactual_mean_absolute_log_disagreement": 0.08875851745287791,
+          "absolute_disagreement_reduction": 0.010505898228850605,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.10583750638834832,
+          "weighted_sign_flip_rate": 0.13384001970284468,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "business_type": {
+          "reference_value": "NB",
+          "counterfactual_mean_absolute_log_disagreement": 0.09775740069265527,
+          "absolute_disagreement_reduction": 0.001507014989073241,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.015181825014768464,
+          "weighted_sign_flip_rate": 0.05772242355959973,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "payment_frequency": {
+          "reference_value": "A",
+          "counterfactual_mean_absolute_log_disagreement": 0.09598577079993016,
+          "absolute_disagreement_reduction": 0.0032786448817983538,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.033029407963380074,
+          "weighted_sign_flip_rate": 0.0443460277357398,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "bonus_score": {
+          "reference_value": "G",
+          "counterfactual_mean_absolute_log_disagreement": 0.09725051716368374,
+          "absolute_disagreement_reduction": 0.002013898518044774,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.020288222161121024,
+          "weighted_sign_flip_rate": 0.007164039163609123,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "fuel_type": {
+          "reference_value": "D",
+          "counterfactual_mean_absolute_log_disagreement": 0.10092212572874137,
+          "absolute_disagreement_reduction": -0.0016577100470128586,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.01669994262926983,
+          "weighted_sign_flip_rate": 0.06018107382331909,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "vehicle_brand": {
+          "reference_value": "RENAULT",
+          "counterfactual_mean_absolute_log_disagreement": 0.08858866269323984,
+          "absolute_disagreement_reduction": 0.010675752988488676,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.10754864082128224,
+          "weighted_sign_flip_rate": 0.21228114730673853,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "municipality_type": {
+          "reference_value": "I",
+          "counterfactual_mean_absolute_log_disagreement": 0.09753389293782938,
+          "absolute_disagreement_reduction": 0.001730522743899135,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.017433465275690636,
+          "weighted_sign_flip_rate": 0.02457754347433776,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "circulation_area": {
+          "reference_value": "U",
+          "counterfactual_mean_absolute_log_disagreement": 0.09759943179966817,
+          "absolute_disagreement_reduction": 0.0016649838820603502,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.016773219996567428,
+          "weighted_sign_flip_rate": 0.06297541843404438,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        }
+      }
+    },
+    "pure_premium": {
+      "baseline": {
+        "exposure_weighted_mean_log_challenger_over_reference": -0.06764749191757846,
+        "exposure_weighted_mean_absolute_log_disagreement": 0.31707691256990944,
+        "exposure_weighted_q05_log_ratio": -0.7610505410173357,
+        "exposure_weighted_median_log_ratio": -0.042465488933417145,
+        "exposure_weighted_q95_log_ratio": 0.5337783275378837,
+        "challenger_above_reference_exposure_share": 0.45613785847850374
+      },
+      "features": {
+        "driver_age": {
+          "reference_value": 47.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.3924148787091649,
+          "absolute_disagreement_reduction": -0.07533796613925547,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.23760155076773332,
+          "weighted_sign_flip_rate": 0.3644289420453696,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "vehicle_age": {
+          "reference_value": 23.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.4550526372079819,
+          "absolute_disagreement_reduction": -0.13797572463807245,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.4351490732005012,
+          "weighted_sign_flip_rate": 0.21272124332702352,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "age_driving_licence": {
+          "reference_value": 21.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.3767966803909929,
+          "absolute_disagreement_reduction": -0.05971976782108346,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.18834473736058088,
+          "weighted_sign_flip_rate": 0.12072929048366862,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "vehicle_value": {
+          "reference_value": 24596.775,
+          "counterfactual_mean_absolute_log_disagreement": 0.306558148678262,
+          "absolute_disagreement_reduction": 0.010518763891647465,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.03317417154845128,
+          "weighted_sign_flip_rate": 0.12039359613666271,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "seats": {
+          "reference_value": 5.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.3132201578940259,
+          "absolute_disagreement_reduction": 0.0038567546758835336,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.012163467357571145,
+          "weighted_sign_flip_rate": 0.012728044977191617,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "power_to_weight_ratio": {
+          "reference_value": 12.0,
+          "counterfactual_mean_absolute_log_disagreement": 0.30634306674100065,
+          "absolute_disagreement_reduction": 0.010733845828908795,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.03385249888398035,
+          "weighted_sign_flip_rate": 0.16819804357480836,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "policy_type": {
+          "reference_value": "CC",
+          "counterfactual_mean_absolute_log_disagreement": 0.31245486707632025,
+          "absolute_disagreement_reduction": 0.004622045493589189,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.014577048376456975,
+          "weighted_sign_flip_rate": 0.10161189966980914,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "business_type": {
+          "reference_value": "NB",
+          "counterfactual_mean_absolute_log_disagreement": 0.2973344390320407,
+          "absolute_disagreement_reduction": 0.019742473537868732,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.0622639894461439,
+          "weighted_sign_flip_rate": 0.12367886630387541,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "payment_frequency": {
+          "reference_value": "A",
+          "counterfactual_mean_absolute_log_disagreement": 0.31003323349465006,
+          "absolute_disagreement_reduction": 0.007043679075259379,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.022214418004043047,
+          "weighted_sign_flip_rate": 0.049571596601442135,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "bonus_score": {
+          "reference_value": "G",
+          "counterfactual_mean_absolute_log_disagreement": 0.31563775556004114,
+          "absolute_disagreement_reduction": 0.001439157009868297,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.004538826236839272,
+          "weighted_sign_flip_rate": 0.005566565574398442,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "fuel_type": {
+          "reference_value": "D",
+          "counterfactual_mean_absolute_log_disagreement": 0.3118146335299008,
+          "absolute_disagreement_reduction": 0.005262279040008644,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.016596222655752054,
+          "weighted_sign_flip_rate": 0.04339050559115756,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "vehicle_brand": {
+          "reference_value": "RENAULT",
+          "counterfactual_mean_absolute_log_disagreement": 0.34666176786486647,
+          "absolute_disagreement_reduction": -0.029584855294957024,
+          "fraction_of_baseline_abs_disagreement_reduced": -0.09330498097503118,
+          "weighted_sign_flip_rate": 0.25547583119547596,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "municipality_type": {
+          "reference_value": "I",
+          "counterfactual_mean_absolute_log_disagreement": 0.313471012277105,
+          "absolute_disagreement_reduction": 0.0036059002928044426,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.011372320562789036,
+          "weighted_sign_flip_rate": 0.030667031615422998,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        },
+        "circulation_area": {
+          "reference_value": "U",
+          "counterfactual_mean_absolute_log_disagreement": 0.3079473156148331,
+          "absolute_disagreement_reduction": 0.009129596955076369,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.02879300445144667,
+          "weighted_sign_flip_rate": 0.06307689466639094,
+          "interpretation": "Positive reduction means one-factor substitution to the 2022 training reference makes GLM and XGBoost scores more similar on this diagnostic sample. Effects are non-additive and non-causal."
+        }
+      }
+    }
+  },
+  "top_features_by_disagreement_reduction": {
+    "frequency": [
+      {
+        "feature": "vehicle_brand",
+        "absolute_disagreement_reduction": 0.010675752988488676,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.10754864082128224,
+        "weighted_sign_flip_rate": 0.21228114730673853
+      },
+      {
+        "feature": "policy_type",
+        "absolute_disagreement_reduction": 0.010505898228850605,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.10583750638834832,
+        "weighted_sign_flip_rate": 0.13384001970284468
+      },
+      {
+        "feature": "vehicle_value",
+        "absolute_disagreement_reduction": 0.00595858004622582,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.060027352252098216,
+        "weighted_sign_flip_rate": 0.12172869424223857
+      },
+      {
+        "feature": "payment_frequency",
+        "absolute_disagreement_reduction": 0.0032786448817983538,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.033029407963380074,
+        "weighted_sign_flip_rate": 0.0443460277357398
+      },
+      {
+        "feature": "power_to_weight_ratio",
+        "absolute_disagreement_reduction": 0.0023479305875290235,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.02365329581002313,
+        "weighted_sign_flip_rate": 0.0830362639486395
+      }
+    ],
+    "pure_premium": [
+      {
+        "feature": "business_type",
+        "absolute_disagreement_reduction": 0.019742473537868732,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.0622639894461439,
+        "weighted_sign_flip_rate": 0.12367886630387541
+      },
+      {
+        "feature": "power_to_weight_ratio",
+        "absolute_disagreement_reduction": 0.010733845828908795,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.03385249888398035,
+        "weighted_sign_flip_rate": 0.16819804357480836
+      },
+      {
+        "feature": "vehicle_value",
+        "absolute_disagreement_reduction": 0.010518763891647465,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.03317417154845128,
+        "weighted_sign_flip_rate": 0.12039359613666271
+      },
+      {
+        "feature": "circulation_area",
+        "absolute_disagreement_reduction": 0.009129596955076369,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.02879300445144667,
+        "weighted_sign_flip_rate": 0.06307689466639094
+      },
+      {
+        "feature": "payment_frequency",
+        "absolute_disagreement_reduction": 0.007043679075259379,
+        "fraction_of_baseline_abs_disagreement_reduced": 0.022214418004043047,
+        "weighted_sign_flip_rate": 0.049571596601442135
+      }
+    ]
+  },
+  "method_boundary": {
+    "one_factor_at_a_time_reference_substitution": true,
+    "effects_additive": false,
+    "causal_interpretation_claimed": false,
+    "shap_values_claimed": false,
+    "feature_importance_for_model_performance_claimed": false,
+    "interpretation": "The diagnostic asks how GLM-vs-XGBoost score disagreement changes when one observed rating factor is replaced by its 2022 training reference while all other factors remain fixed. It is a model sensitivity diagnostic, not causal attribution and not a promotion gate."
+  },
+  "persisted_row_level_data": false
+}
