@@ -184,12 +184,16 @@ def main() -> None:
         baseline_max_segment_error = max(row["baseline_abs_log_calibration_error"] for row in per_segment)
         candidate_max_segment_error = max(row["candidate_abs_log_calibration_error"] for row in per_segment)
         relative_deviance_change = candidate_2024_deviance / baseline_2024_deviance - 1.0
-        segment_calibration_improved = candidate_max_segment_error < baseline_max_segment_error
-        aggregate_calibration_not_worse = (
+        segment_calibration_improved = bool(
+            candidate_max_segment_error < baseline_max_segment_error
+        )
+        aggregate_calibration_not_worse = bool(
             abs(np.log(max(candidate_2024_ratio, 1e-12)))
             <= abs(np.log(max(baseline_2024_ratio, 1e-12))) + 1e-12
         )
-        deviance_guardrail_pass = relative_deviance_change <= MAX_RELATIVE_DEVIANCE_WORSENING
+        deviance_guardrail_pass = bool(
+            relative_deviance_change <= MAX_RELATIVE_DEVIANCE_WORSENING
+        )
         all_segments_supported = all(bool(metadata["supported"]) for metadata in fitted.values())
         candidate_supported = bool(
             all_segments_supported
