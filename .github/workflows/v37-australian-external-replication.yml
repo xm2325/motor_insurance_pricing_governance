@@ -1,0 +1,124 @@
+name: Australian external motor replication v0.37
+
+on:
+  pull_request:
+    paths:
+      - 'download_australian_motor_v37.py'
+      - 'external_validation/**'
+      - 'run_australian_external_replication_v37.py'
+      - 'tests/test_australian_external_replication_v37.py'
+      - 'RESULTS_V37.md'
+      - '.github/workflows/v37-australian-external-replication.yml'
+      - 'governance/external_validation_prereg_v36.json'
+      - 'action_results/v36/**'
+  push:
+    branches: [main]
+    paths:
+      - 'download_australian_motor_v37.py'
+      - 'external_validation/**'
+      - 'run_australian_external_replication_v37.py'
+      - 'tests/test_australian_external_replication_v37.py'
+      - 'RESULTS_V37.md'
+      - '.github/workflows/v37-australian-external-replication.yml'
+      - 'governance/external_validation_prereg_v36.json'
+      - 'action_results/v36/**'
+  workflow_dispatch:
+
+concurrency:
+  group: v37-australian-external-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  australian-external-replication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install modelling and R-data dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyreadr==0.5.3
+      - name: Verify v0.36 lock and v0.37 numeric contracts before data access
+        run: python -m unittest -v tests/test_australian_external_replication_v37.py
+      - name: Fetch and audit pinned Australian source for first row-level execution
+        run: python download_australian_motor_v37.py
+      - name: Execute frozen external replication once
+        run: python run_australian_external_replication_v37.py
+      - name: Verify preregistration and governance boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v37/australian_external_replication_summary.json').read_text())
+          assert result['status'] == 'V37_AUSTRALIAN_EXTERNAL_REPLICATION_COMPLETE'
+          assert result['preregistration']['sha256'] == 'b20d38b51f767761fe4b4f85d58988f7032dbcc7d7afc96041f3858c0165e3c1'
+          assert result['preregistration']['v36_main_sha'] == '49339232a6b913e111b6e4e66dfa4517d9396bc9'
+          assert result['preregistration']['registered_before_row_level_access'] is True
+          assert result['preregistration']['rules_changed_after_registration'] is False
+          assert result['source']['source_commit'] == '227fb56b8734bdb7c0327a41180e01d2ddaeaf26'
+          assert result['source']['raw_data_persisted_to_repository'] is False
+          assert result['split']['outcome_stratified'] is False
+          assert result['split']['resplit_after_outcome_inspection'] is False
+          assert result['features']['preprocessor_fit_on_train_only'] is True
+          assert result['decision']['model_family_decision'] == 'HOLD'
+          assert result['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert result['decision']['model_promotion_authorised'] is False
+          assert result['decision']['pricing_change_authorised'] is False
+          print(json.dumps({
+              'frequency_decision': result['frequency']['registered_gate']['decision'],
+              'frequency_relative_improvement': result['frequency']['registered_gate']['relative_deviance_improvement'],
+              'frequency_bootstrap_q025': result['frequency']['paired_bootstrap_relative_deviance_improvement']['q025'],
+              'pure_premium_decision': result['pure_premium']['registered_gate']['decision'],
+              'pure_premium_relative_improvement': result['pure_premium']['registered_gate']['relative_deviance_improvement'],
+              'pure_premium_bootstrap_q025': result['pure_premium']['paired_bootstrap_relative_deviance_improvement']['q025'],
+          }, indent=2))
+          PY
+      - name: Persist aggregate v0.37 evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v37
+          cp results_v37/australian_source_audit.json action_results/v37/
+          cp results_v37/australian_external_replication_summary.json action_results/v37/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v37/ACTION_V37_STATUS.json').write_text(json.dumps({
+              'workflow': 'Australian external motor replication v0.37',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'raw_external_data_persisted': False,
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v37
+          if git diff --cached --quiet; then
+            echo 'No v0.37 evidence changes'
+          else
+            git commit -m "Persist v0.37 Australian external replication ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Assert raw Australian data are not staged
+        if: always()
+        run: |
+          if git ls-files --error-unmatch data_external_v37/ausprivauto0405.rda >/dev/null 2>&1; then
+            echo 'Raw external data must never be tracked' >&2
+            exit 1
+          fi
+      - name: Upload aggregate external replication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-australian-external-replication-v37
+          path: results_v37/
+          if-no-files-found: warn
