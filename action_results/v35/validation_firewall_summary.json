@@ -1,0 +1,49 @@
+{
+  "status": "V35_VALIDATION_FIREWALL_PASS",
+  "dataset": "Mendeley sw4jmdb2sm v1",
+  "2024": {
+    "initial_role": "LOCKED_OOT_FIRST_USE",
+    "current_role": "CONSUMED_RETROSPECTIVE_VALIDATION",
+    "independent_holdout_available": false,
+    "candidate_selection_allowed": false,
+    "promotion_evidence_class": "REUSED_HISTORICAL_VALIDATION",
+    "material_reuse_event_count": 7,
+    "post_first_use_reuse_event_count": 6,
+    "label_using_event_count": 5,
+    "registered_event_ids": [
+      "initial_locked_oot",
+      "v0.22",
+      "v0.23",
+      "v0.31",
+      "v0.32",
+      "v0.33",
+      "v0.34"
+    ]
+  },
+  "firewall": {
+    "status": "BLOCK_NEW_PROMOTION_FROM_2024_REUSE",
+    "requires_new_independent_period_or_external_validation": true,
+    "allowed_future_2024_purposes": [
+      "regression_reproduction",
+      "monitoring_replay",
+      "post_hoc_diagnostics",
+      "governance_contract_testing"
+    ],
+    "forbidden_future_2024_purposes": [
+      "fit_new_model_parameters",
+      "fit_new_calibration_parameters",
+      "select_new_candidate_policy",
+      "independent_confirmation",
+      "authorise_model_family_promotion",
+      "authorise_customer_pricing"
+    ],
+    "next_promotion_evidence_requirement": "A genuinely new independent calendar period or external validation dataset, with analysis rules fixed before outcomes are inspected."
+  },
+  "decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  },
+  "interpretation": "2024 was independent at the first locked OOT evaluation, but repeated later monitoring, outcome, recalibration, cohort and uncertainty analyses consume that independence for future candidate selection. Future 2024 use is restricted to reproduction, monitoring, post-hoc diagnostics and governance testing."
+}
