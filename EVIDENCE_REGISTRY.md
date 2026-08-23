@@ -10,7 +10,7 @@ This file maps the project's headline claims to persisted result files. The goal
 | XGBoost frequency deviance reduction vs Poisson GLM (+ geography) | 5.43% | `results/fremtpl2_full_frequency_benchmark.csv` |
 | Top-10% exposure claim capture, Poisson GLM -> XGBoost | 20.59% -> 31.17% (+10.58 pp) | `results/fremtpl2_full_frequency_benchmark.csv` |
 | Spanish longitudinal source size | 354,140 policy-years, 47 variables | `action_results/spanish_oot_2024/schema_data_audit.json` |
-| Locked temporal design | 2022 train -> 2023 calibration -> 2024 untouched OOT | `action_results/spanish_oot_2024/oot_2024_summary.json` |
+| Original temporal design | 2022 train -> 2023 calibration -> 2024 untouched at its first OOT evaluation; later v0.32-v0.34 analyses reuse 2024 retrospectively | `action_results/spanish_oot_2024/oot_2024_summary.json`, `RESULTS_V32.md`, `RESULTS_V33.md`, `RESULTS_V34.md` |
 | Usable 2024 OOT cohort | 168,085 policy-years | `action_results/spanish_oot_2024/oot_2024_summary.json` |
 | 2024 XGBoost top-10% claim-capture gain | 26.62% -> 27.04% (+0.42 pp) | `action_results/spanish_oot_2024/oot_2024_summary.json` |
 | 2024 locked frequency deviance | GLM 1.11854; XGBoost 1.11884 | `action_results/spanish_oot_2024/oot_2024_summary.json` |
@@ -76,6 +76,16 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.31 fresh-bundle historical OOT reconciliation | **8/8 metrics exact; max relative difference 0.0** | `action_results/v31/outcome_review_summary.json` |
 | v0.31 business-type calibration | NB exposure **48.18%**, P **51.82%**; neither model is uniformly closer to 1.0 across both targets/groups | `action_results/v31/business_type_calibration.csv`, `RESULTS_V31.md` |
 | v0.31 governance result | `HOLD` / `HOLD_SHADOW_ONLY`; **no automatic serving or pricing change** | `action_results/v31/outcome_review_summary.json`, `RESULTS_V31.md` |
+| v0.32 2023-only frequency recalibration | GLM and XGBoost frequency candidates both supported on reused 2024 evaluation; relative deviance changes **-0.0398% / -0.0640%** | `action_results/v32/business_type_recalibration_summary.json`, `RESULTS_V32.md` |
+| v0.32 pure-premium recalibration | both pure-premium candidates retained global calibration: GLM aggregate calibration worsened; XGBoost worst-segment calibration worsened | `action_results/v32/business_type_recalibration_summary.json`, `RESULTS_V32.md` |
+| v0.32 drift decomposition | large `business_type` PSI does not by itself explain calibration drift; within-segment/time component dominates all four registered outputs | `action_results/v32/business_type_mix_decomposition.csv`, `RESULTS_V32.md` |
+| v0.33 frequency transport review | both fixed v0.32 frequency candidates: **13 major cohorts, 0 gate breaches** | `action_results/v33/frequency_recalibration_transport_summary.json`, `RESULTS_V33.md` |
+| v0.33 worst retained trade-offs | largest major-cohort calibration deterioration at `payment_frequency=Q`; largest deviance worsening at `policy_type=TPG`, both inside registered project guardrails | `action_results/v33/frequency_recalibration_transport_cohorts.csv`, `RESULTS_V33.md` |
+| v0.34 conditional 2023 factor bootstrap | **500** stratified paired draws; no 2024 labels used to fit factors; factor draws not clipped | `action_results/v34/frequency_recalibration_uncertainty_summary.json`, `RESULTS_V34.md` |
+| v0.34 GLM frequency robustness | **398/500 = 79.6%** aggregate-calibration non-worse, narrowly below fixed 80% rule -> `FACTOR_UNCERTAINTY_REVIEW_REQUIRED` | `action_results/v34/frequency_recalibration_uncertainty_summary.json`, `RESULTS_V34.md` |
+| v0.34 XGBoost frequency robustness | **499/500 = 99.8%** deviance improvement; **424/500 = 84.8%** aggregate-calibration non-worse; strong gate pass | `action_results/v34/frequency_recalibration_uncertainty_summary.json`, `RESULTS_V34.md` |
+| v0.34 factor-direction intervals | all four NB/P 95% factor intervals remain on the point-estimate side of 1; raw extrema are retained rather than clipped | `action_results/v34/frequency_recalibration_factor_bootstrap_summary.csv` |
+| v0.34 governance result | only `challenger_frequency` passes conditional factor-uncertainty gate; model family still `HOLD`, serving `HOLD_SHADOW_ONLY` | `action_results/v34/frequency_recalibration_uncertainty_summary.json` |
 
 ## Interpretation rules
 
@@ -114,9 +124,16 @@ This file maps the project's headline claims to persisted result files. The goal
 - v0.31's exact 8-metric reconciliation is a fresh-training regression diagnostic against the same 2024 historical outcomes. It is not the same contract as v0.26 same-fit serialization parity.
 - v0.31 `business_type` results support segment review rather than automatic global model replacement: XGBoost is closer to calibration 1.0 for NB, while GLM is closer for P on the registered frequency/pure-premium calibration checks.
 - v0.31 does not promote XGBoost, change serving, or change pricing. The model-family decision remains `HOLD` and serving remains `HOLD_SHADOW_ONLY`.
+- v0.32 fits incremental `business_type` multipliers from **2023 only** and evaluates them on 2024. The later use of 2024 means those candidate results are retrospective development evidence, not a new untouched holdout.
+- v0.32's large `business_type` PSI is not interpreted causally: the mix-only counterfactual does not explain most of the calibration change, and the within-segment/time component dominates.
+- v0.33 reuses the already-fixed v0.32 frequency multipliers across orthogonal 2024 cohorts. It is a slice/transport stability check within the same 2024 year, **not a new independent temporal validation sample**.
+- v0.34 is a conditional row-bootstrap sensitivity analysis of the incremental 2023 factors. It does not bootstrap model fitting, global calibration, claim development, or a new calendar period.
+- The v0.34 GLM result is deliberately retained as a failure at **79.6% vs the pre-registered 80% aggregate-calibration rule**. The threshold is not relaxed or rounded after observing the result.
+- The v0.34 XGBoost pass supports **further shadow testing only**. It does not authorise a serving-bundle change, pricing change, or model-family promotion.
+- After v0.32-v0.34, 2024 must no longer be described as an untouched model-selection holdout for future candidate tuning; it has been repeatedly interrogated for recalibration, transport and uncertainty evidence.
 - Synthetic quote-conversion / proposition experiments are not reported as observed commercial impact.
 - No result in this repository establishes transport to FIRST CENTRAL or the UK motor market.
 
 ## Automated protection
 
-`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py`, `tests/test_artifact_attestation_evidence_v29.py`, `tests/test_release_admission_evidence_v30.py` and `tests/test_outcome_review_evidence_v31.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control, attestation/admission and delayed-outcome headline evidence from persisted result files. `tests/test_evidence_push_static_v31.py` also exercises the concurrent evidence-write path with a detached-HEAD Git race simulation. CI fails if the stored evidence no longer supports the registered claims or if the protected evidence-persistence contract regresses.
+`tests/test_evidence_registry.py`, `tests/test_runtime_and_model_io_evidence.py`, `tests/test_bundle_integrity_evidence_v27.py`, `tests/test_release_control_evidence_v28.py`, `tests/test_artifact_attestation_evidence_v29.py`, `tests/test_release_admission_evidence_v30.py`, `tests/test_outcome_review_evidence_v31.py`, `tests/test_business_type_recalibration_evidence_v32.py`, `tests/test_frequency_recalibration_transport_evidence_v33.py` and `tests/test_frequency_recalibration_uncertainty_evidence_v34.py` recompute / verify the main modelling, deployment, monitoring, review-lifecycle, runtime, model-IO, content-addressed-integrity, shadow-release-control, attestation/admission, delayed-outcome, recalibration, cohort-transport and factor-uncertainty headline evidence from persisted result files. `tests/test_evidence_push_static_v31.py` also exercises the concurrent evidence-write path with a detached-HEAD Git race simulation. CI fails if the stored evidence no longer supports the registered claims or if the protected evidence-persistence contract regresses.
