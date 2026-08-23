@@ -1,0 +1,14 @@
+{
+  "workflow": "Model-family evidence synthesis v0.43",
+  "run_id": "32641485745",
+  "sha": "f84960e0fc5de627055517f96ac72d0814e1c1d8",
+  "status": "success",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "pooled_meta_analysis_used": false,
+  "evidence_weighting_score_used": false,
+  "promotion_review_status": "NOT_OPEN",
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "evidence_role": "ROLLING_AGGREGATE_MODEL_REVIEW"
+}

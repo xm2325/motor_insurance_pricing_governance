@@ -1,0 +1,144 @@
+{
+  "status": "V43_MODEL_FAMILY_EVIDENCE_SYNTHESIS_COMPLETE",
+  "evidence_basis": [
+    {
+      "id": "fremtpl2_cross_sectional_frequency",
+      "portfolio": "freMTPL2",
+      "context": "cross-sectional benchmark",
+      "independent_at_first_use": false,
+      "current_independent_evidence": false,
+      "target": "frequency",
+      "reference_deviance": 0.6068847029712385,
+      "challenger_deviance": 0.5739465404128151,
+      "relative_deviance_improvement": 0.054274168383486865,
+      "registered_decision": "DEVELOPMENT_BENCHMARK_ONLY",
+      "gate_passed": null,
+      "evidence_class": "CROSS_SECTIONAL_DEVELOPMENT_BENCHMARK"
+    },
+    {
+      "id": "spanish_2024_frequency",
+      "portfolio": "Spanish insurer 2024",
+      "context": "locked OOT first use; now consumed retrospective validation",
+      "independent_at_first_use": true,
+      "current_independent_evidence": false,
+      "target": "frequency",
+      "reference_deviance": 1.1185362628672493,
+      "challenger_deviance": 1.1188352761606644,
+      "relative_deviance_improvement": -0.0002673255247430206,
+      "registered_decision": "HOLD",
+      "gate_passed": false,
+      "evidence_class": "LOCKED_OOT_FIRST_USE_NOW_CONSUMED_RETROSPECTIVE_VALIDATION"
+    },
+    {
+      "id": "spanish_2024_pure_premium",
+      "portfolio": "Spanish insurer 2024",
+      "context": "locked OOT first use; now consumed retrospective validation",
+      "independent_at_first_use": true,
+      "current_independent_evidence": false,
+      "target": "pure_premium",
+      "reference_deviance": 93.93180592411453,
+      "challenger_deviance": 93.95131588528709,
+      "relative_deviance_improvement": -0.00020770346083116105,
+      "registered_decision": "HOLD",
+      "gate_passed": false,
+      "evidence_class": "LOCKED_OOT_FIRST_USE_NOW_CONSUMED_RETROSPECTIVE_VALIDATION"
+    },
+    {
+      "id": "australian_external_frequency",
+      "portfolio": "Australian ausprivauto0405",
+      "context": "preregistered external first use; now consumed",
+      "independent_at_first_use": true,
+      "current_independent_evidence": false,
+      "target": "frequency",
+      "reference_deviance": 0.8147417525935061,
+      "challenger_deviance": 0.8178777253238009,
+      "relative_deviance_improvement": -0.0038490389381815593,
+      "registered_decision": "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+      "gate_passed": false,
+      "bootstrap_q025": -0.007798906428535362,
+      "evidence_class": "PREREGISTERED_EXTERNAL_MODEL_FAMILY_REPLICATION_NOW_CONSUMED"
+    },
+    {
+      "id": "australian_external_pure_premium",
+      "portfolio": "Australian ausprivauto0405",
+      "context": "preregistered external first use; now consumed",
+      "independent_at_first_use": true,
+      "current_independent_evidence": false,
+      "target": "pure_premium",
+      "reference_deviance": 129.8409094852542,
+      "challenger_deviance": 114.95606738904532,
+      "relative_deviance_improvement": 0.11463907758516845,
+      "registered_decision": "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+      "gate_passed": false,
+      "bootstrap_q025": -0.10688474539068529,
+      "evidence_class": "PREREGISTERED_EXTERNAL_MODEL_FAMILY_REPLICATION_NOW_CONSUMED"
+    },
+    {
+      "id": "belgian_external_frequency",
+      "portfolio": "Belgian beMTPL97",
+      "context": "preregistered external first use; observed two-run reproducibility; now consumed",
+      "independent_at_first_use": true,
+      "current_independent_evidence": false,
+      "target": "frequency",
+      "reference_deviance": 0.604356714368424,
+      "challenger_deviance": 0.6025982649080157,
+      "relative_deviance_improvement": 0.0029096217823043613,
+      "registered_decision": "NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+      "gate_passed": false,
+      "bootstrap_q025": 0.000987214124322794,
+      "numerically_reproduced_within_registered_tolerance": true,
+      "evidence_class": "PREREGISTERED_EXTERNAL_MODEL_FAMILY_REPLICATION_NOW_CONSUMED"
+    },
+    {
+      "id": "belgian_external_pure_premium",
+      "portfolio": "Belgian beMTPL97",
+      "context": "preregistered external first use; observed two-run reproducibility; now consumed",
+      "independent_at_first_use": true,
+      "current_independent_evidence": false,
+      "target": "pure_premium",
+      "reference_deviance": 79.84331051378416,
+      "challenger_deviance": 79.58630762159916,
+      "relative_deviance_improvement": 0.0032188406333756303,
+      "registered_decision": "NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+      "gate_passed": false,
+      "bootstrap_q025": -0.007917598068074487,
+      "numerically_reproduced_within_registered_tolerance": true,
+      "evidence_class": "PREREGISTERED_EXTERNAL_MODEL_FAMILY_REPLICATION_NOW_CONSUMED"
+    }
+  ],
+  "portfolio_level_summary": {
+    "external_portfolios_evaluated": 2,
+    "external_target_gates_evaluated": 4,
+    "external_target_gates_passed": 0,
+    "external_frequency_gates_passed": 0,
+    "external_pure_premium_gates_passed": 0,
+    "current_consumed_validation_datasets": [
+      "Spanish 2024",
+      "Australian ausprivauto0405",
+      "Belgian beMTPL97"
+    ],
+    "current_fresh_independent_validation_dataset_available": false
+  },
+  "decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false,
+    "reason": "No preregistered independent external portfolio has passed its registered XGBoost model-family support gate, while the original Spanish locked OOT did not support a global challenger switch and is now consumed retrospective validation."
+  },
+  "reopen_requirements": [
+    "A genuinely new independent external dataset or new independent period whose row-level outcomes have not been inspected in this project.",
+    "Protocol merged before row-level outcome access with source, split, features, models, metrics, gates, solver/tolerance and reproducibility rules fixed prospectively.",
+    "Any positive external-support result must satisfy its registered model-performance gates.",
+    "Any positive external-support result must satisfy the prospective two-independent-Actions execution and registered numerical reproducibility requirement inherited from v0.38-v0.42.",
+    "A separate authorised governance decision would still be required before any serving-bundle or customer-pricing change."
+  ],
+  "synthesis_boundaries": {
+    "pooled_meta_analysis_claimed": false,
+    "evidence_weighting_score_used": false,
+    "benchmark_used_as_promotion_evidence": false,
+    "consumed_validation_relabelled_independent": false,
+    "first_central_or_current_uk_transport_claimed": false
+  }
+}
