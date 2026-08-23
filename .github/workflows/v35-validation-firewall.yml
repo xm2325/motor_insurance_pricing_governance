@@ -1,0 +1,89 @@
+name: Validation reuse firewall v0.35
+
+on:
+  pull_request:
+    paths:
+      - 'governance/validation_firewall.py'
+      - 'governance/validation_use_ledger_v35.json'
+      - 'run_validation_firewall_v35.py'
+      - 'tests/test_validation_firewall_v35.py'
+      - 'RESULTS_V35.md'
+      - '.github/workflows/v35-validation-firewall.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/validation_firewall.py'
+      - 'governance/validation_use_ledger_v35.json'
+      - 'run_validation_firewall_v35.py'
+      - 'tests/test_validation_firewall_v35.py'
+      - 'RESULTS_V35.md'
+      - '.github/workflows/v35-validation-firewall.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validation-firewall:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify fail-closed validation-use contracts
+        run: python -m unittest -v tests/test_validation_firewall_v35.py
+      - name: Build validation-firewall evidence
+        run: python run_validation_firewall_v35.py
+      - name: Verify governance boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v35/validation_firewall_summary.json').read_text())
+          assert result['status'] == 'V35_VALIDATION_FIREWALL_PASS'
+          assert result['2024']['initial_role'] == 'LOCKED_OOT_FIRST_USE'
+          assert result['2024']['current_role'] == 'CONSUMED_RETROSPECTIVE_VALIDATION'
+          assert result['2024']['independent_holdout_available'] is False
+          assert result['2024']['candidate_selection_allowed'] is False
+          assert result['2024']['post_first_use_reuse_event_count'] >= 6
+          assert result['firewall']['status'] == 'BLOCK_NEW_PROMOTION_FROM_2024_REUSE'
+          assert result['firewall']['requires_new_independent_period_or_external_validation'] is True
+          assert result['decision']['model_family_decision'] == 'HOLD'
+          assert result['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert result['decision']['model_promotion_authorised'] is False
+          assert result['decision']['pricing_change_authorised'] is False
+          PY
+      - name: Persist v0.35 validation-firewall evidence
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p action_results/v35
+          cp results_v35/validation_firewall_summary.json action_results/v35/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v35/ACTION_V35_STATUS.json').write_text(json.dumps({
+              'workflow': 'Validation reuse firewall v0.35',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+          }, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v35
+          if git diff --cached --quiet; then
+            echo 'No v0.35 evidence changes'
+          else
+            git commit -m "Persist v0.35 validation firewall ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.35 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-validation-firewall-v35
+          path: results_v35/
+          if-no-files-found: warn

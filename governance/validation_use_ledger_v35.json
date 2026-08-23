@@ -1,0 +1,108 @@
+{
+  "schema_version": "0.35",
+  "dataset": "Mendeley sw4jmdb2sm v1",
+  "ledger_scope": "Material uses relevant to the independence of the 2024 validation period; not an exhaustive inventory of every diagnostic read.",
+  "periods": {
+    "2022": {
+      "role": "MODEL_TRAINING",
+      "candidate_selection_allowed": true
+    },
+    "2023": {
+      "role": "CALIBRATION_AND_DEVELOPMENT",
+      "candidate_selection_allowed": true
+    },
+    "2024": {
+      "initial_role": "LOCKED_OOT_FIRST_USE",
+      "current_role": "CONSUMED_RETROSPECTIVE_VALIDATION",
+      "independent_holdout_available": false,
+      "candidate_selection_allowed": false,
+      "promotion_evidence_class": "REUSED_HISTORICAL_VALIDATION",
+      "material_reuse_events": [
+        {
+          "id": "initial_locked_oot",
+          "year": 2024,
+          "purpose": "first locked out-of-time model-family evaluation",
+          "uses_2024_labels": true,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": true,
+          "source": "action_results/spanish_oot_2024/oot_2024_summary.json"
+        },
+        {
+          "id": "v0.22",
+          "year": 2024,
+          "purpose": "real temporal feature-drift and shadow-monitoring replay",
+          "uses_2024_labels": false,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": false,
+          "source": "action_results/v22/monitoring_replay_summary.json"
+        },
+        {
+          "id": "v0.23",
+          "year": 2024,
+          "purpose": "review-lifecycle replay driven by 2024 monitoring evidence",
+          "uses_2024_labels": false,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": false,
+          "source": "action_results/v23/review_lifecycle_summary.json"
+        },
+        {
+          "id": "v0.31",
+          "year": 2024,
+          "purpose": "mature realised outcome review and business_type calibration diagnostics",
+          "uses_2024_labels": true,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": false,
+          "source": "action_results/v31/outcome_review_summary.json"
+        },
+        {
+          "id": "v0.32",
+          "year": 2024,
+          "purpose": "evaluate 2023-only business_type recalibration candidates and drift decomposition",
+          "uses_2024_labels": true,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": false,
+          "source": "action_results/v32/business_type_recalibration_summary.json"
+        },
+        {
+          "id": "v0.33",
+          "year": 2024,
+          "purpose": "evaluate fixed v0.32 frequency factors across orthogonal 2024 cohorts",
+          "uses_2024_labels": true,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": false,
+          "source": "action_results/v33/frequency_recalibration_transport_summary.json"
+        },
+        {
+          "id": "v0.34",
+          "year": 2024,
+          "purpose": "evaluate 500 fixed 2023 factor-bootstrap draws on 2024 outcomes",
+          "uses_2024_labels": true,
+          "fit_parameters_from_2024_labels": false,
+          "independent_at_time_of_use": false,
+          "source": "action_results/v34/frequency_recalibration_uncertainty_summary.json"
+        }
+      ]
+    }
+  },
+  "promotion_firewall": {
+    "status": "BLOCK_NEW_PROMOTION_FROM_2024_REUSE",
+    "requires_new_independent_period_or_external_validation": true,
+    "allowed_future_2024_purposes": [
+      "regression_reproduction",
+      "monitoring_replay",
+      "post_hoc_diagnostics",
+      "governance_contract_testing"
+    ],
+    "forbidden_future_2024_purposes": [
+      "fit_new_model_parameters",
+      "fit_new_calibration_parameters",
+      "select_new_candidate_policy",
+      "independent_confirmation",
+      "authorise_model_family_promotion",
+      "authorise_customer_pricing"
+    ],
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "next_promotion_evidence_requirement": "A genuinely new independent calendar period or external validation dataset, with analysis rules fixed before outcomes are inspected."
+  }
+}

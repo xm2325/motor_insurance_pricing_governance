@@ -10,7 +10,7 @@ A reproducible insurance data-science case study asking one practical question:
 |---|---|
 | Cross-sectional frequency benchmark | XGBoost reduced Poisson deviance by **5.43%** and increased top-10% claim capture from **20.59% to 31.17%** |
 | Real longitudinal source | **354,140 Spanish motor policy-years**, 47 variables, 2022–2024 |
-| Locked temporal design | **2022 train → 2023 calibration → 2024 untouched OOT** |
+| Original temporal design | **2022 train → 2023 calibration → 2024 untouched at first locked OOT evaluation**; after v0.32–v0.34 reuse, 2024 is now consumed retrospective validation rather than a fresh candidate-selection holdout |
 | 2024 frequency result | XGBoost top-10% claim capture **26.62% → 27.04%**, but deviance **1.11884 vs GLM 1.11854** |
 | 2024 uncertainty | 250-bootstrap GLM-minus-XGB deviance CI **[-0.00155, 0.00083]** |
 | Rolling-origin result | With 2022+2023 training, XGBoost frequency deviance improved by only **~0.32%** |
@@ -25,24 +25,32 @@ A reproducible insurance data-science case study asking one practical question:
 | v0.28 release/rollback control | A/B shadow releases registered; unauthorised rollback rejected; operator-authorised rollback returns to last-known-good with **100/100 parity comparisons at error 0.0** |
 | v0.29–v0.30 build provenance/admission | GitHub/Sigstore attestation verifies the sealed archive; admission is restricted to **`ADMIT_TO_SHADOW_REGISTRY_ONLY`** and rejects tampered/wrong-identity cases |
 | v0.31 delayed-outcome review | **60.0001% mature exposure** is below the **95%** gate so metrics are withheld; at full maturity, all **8 OOT regression checks match exactly** and segment review still retains HOLD |
+| v0.32 2023-only segment recalibration | both frequency candidates improve reused-2024 deviance/calibration evidence; both pure-premium candidates are rejected under pre-set guardrails |
+| v0.33 orthogonal cohort transport | both fixed frequency candidates: **13 major cohorts, 0 gate breaches**; Q/TPG trade-offs are retained rather than hidden |
+| v0.34 factor uncertainty | **500** 2023-only bootstrap draws: XGBoost strong pass; GLM **398/500 = 79.6%** aggregate-calibration non-worse narrowly misses the fixed **80%** rule |
+| v0.35 validation firewall | 2024 is machine-registered as **`CONSUMED_RETROSPECTIVE_VALIDATION`**; future promotion requires a genuinely new independent period or external validation dataset |
 | Model-family decision | **HOLD / NO PROMOTION**; serving status is **HOLD_SHADOW_ONLY** |
 
-The project separates model evidence from operational controls. A challenger can rank risk differently, be technically deployable, pass bundle integrity and provenance checks, and still fail the evidence required for customer-pricing promotion. Likewise, monitoring drift can open a review without proving predictive deterioration, and later claims outcomes can be held back until enough exposure has mature labels.
+The project separates model evidence from operational controls. A challenger can rank risk differently, be technically deployable, pass bundle integrity and provenance checks, and still fail the evidence required for customer-pricing promotion. Likewise, monitoring drift can open a review without proving predictive deterioration, later claims outcomes can be held back until enough exposure has mature labels, and repeated interrogation of a historical holdout is explicitly prevented from being relabelled as fresh independent evidence.
 
 The current evidence chain covers:
 
 1. predictive/ranking uplift;
 2. model-family change evidence;
-3. locked temporal and rolling-origin validation;
+3. first-use locked temporal and rolling-origin validation;
 4. transport and segment calibration;
 5. shadow deployment and monitoring;
 6. review lifecycle and recovery;
 7. runtime/model-IO compatibility;
 8. content-addressed release integrity and rollback;
 9. build provenance and shadow-only admission;
-10. delayed-outcome maturity and realised claims/loss review.
+10. delayed-outcome maturity and realised claims/loss review;
+11. 2023-only segment recalibration with explicit 2024 evaluation boundaries;
+12. orthogonal cohort transport checks;
+13. conditional factor-estimation uncertainty;
+14. fail-closed validation-reuse governance.
 
-**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment](DEPLOYMENT_V21.md) | [v0.22 monitoring](RESULTS_V22.md) | [v0.23 review lifecycle](RESULTS_V23.md) | [v0.25 runtime](RESULTS_V25.md) | [v0.26 model IO](RESULTS_V26.md) | [v0.27 integrity](RESULTS_V27.md) | [v0.28 release control](RESULTS_V28.md) | [v0.29 attestation](RESULTS_V29.md) | [v0.30 admission](RESULTS_V30.md) | [v0.31 outcome review](RESULTS_V31.md)
+**Start here:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md) | [Evidence Registry](EVIDENCE_REGISTRY.md) | [Model Card](MODEL_CARD.md) | [v0.20 approval results](RESULTS_V20.md) | [v0.21 deployment](DEPLOYMENT_V21.md) | [v0.22 monitoring](RESULTS_V22.md) | [v0.23 review lifecycle](RESULTS_V23.md) | [v0.25 runtime](RESULTS_V25.md) | [v0.26 model IO](RESULTS_V26.md) | [v0.27 integrity](RESULTS_V27.md) | [v0.28 release control](RESULTS_V28.md) | [v0.29 attestation](RESULTS_V29.md) | [v0.30 admission](RESULTS_V30.md) | [v0.31 outcome review](RESULTS_V31.md) | [v0.32 recalibration](RESULTS_V32.md) | [v0.33 transport](RESULTS_V33.md) | [v0.34 uncertainty](RESULTS_V34.md) | [v0.35 validation firewall](RESULTS_V35.md)
 
 ---
 
@@ -67,13 +75,15 @@ That justified building a challenger. It did not justify deployment.
 
 The main temporal track uses public Mendeley dataset `sw4jmdb2sm` (version 1): **354,140 policy-year rows and 47 variables** from one Spanish motor insurer.
 
-GitHub Actions downloads the 94.7 MB source, records SHA-256, verifies schema/year coverage and runs the locked design:
+GitHub Actions downloads the 94.7 MB source, records SHA-256, verifies schema/year coverage and runs the original locked design:
 
 - **2022:** model training;
 - **2023:** aggregate calibration only;
-- **2024:** untouched OOT evaluation.
+- **2024:** untouched at the **first** locked OOT evaluation.
 
 The predictive feature set intentionally excludes customer ID, year, policy status, current premiums, current claim counts, current incurred losses and exposure as a predictor.
+
+The first-use independence is a historical fact. Later v0.22/v0.23/v0.31–v0.34 analyses repeatedly reuse 2024 for monitoring, realised-outcome review, recalibration evaluation, cohort transport and uncertainty analysis. v0.35 therefore prevents 2024 from being described as a fresh independent holdout for any future candidate-selection or promotion claim.
 
 ### Locked 2024 results
 
@@ -90,7 +100,7 @@ The 250-resample bootstrap intervals cross zero for both frequency and pure-prem
 
 ## Evidence track 3 — rolling-origin and transport
 
-Rolling-origin evaluation is a stability diagnostic, not a replacement for the locked 2024 test.
+Rolling-origin evaluation is a stability diagnostic, not a replacement for the first locked 2024 test.
 
 - **2022 → 2023:** no stable XGBoost frequency or pure-premium advantage.
 - **2022+2023 → 2024:** XGBoost frequency deviance improves by only **~0.32%** with a positive bootstrap interval; pure premium still does not improve.
@@ -280,9 +290,52 @@ Decision remains:
 
 See [RESULTS_V31.md](RESULTS_V31.md) and `action_results/v31/`.
 
+## Evidence track 14 — v0.32 2023-only business-type recalibration
+
+v0.32 asks whether the large `business_type` drift can be addressed without leaking 2024 outcomes into factor fitting. Incremental NB/P multipliers are fitted from **2023 only** on top of the existing global calibration, then evaluated on 2024.
+
+Both frequency outputs improve under the registered candidate gate. The GLM frequency candidate changes Poisson deviance by about **-0.0398%** and the XGBoost frequency candidate by about **-0.0640%**. Neither pure-premium candidate passes all calibration/deviance rules, so global pure-premium calibration is retained.
+
+The mix decomposition also shows why PSI alone is insufficient: the within-segment/time component dominates the registered calibration changes rather than portfolio mix explaining the full deterioration.
+
+See [RESULTS_V32.md](RESULTS_V32.md).
+
+## Evidence track 15 — v0.33 orthogonal cohort transport
+
+v0.33 does not refit the v0.32 factors. It applies the fixed 2023-only frequency multipliers across 2024 cohorts defined by `seen_before_2024`, driver age, policy type and payment frequency.
+
+For both frequency outputs, **13 major cohorts** meet the support rules and **0 breach** the pre-specified calibration/deviance guardrails. The analysis still retains small adverse trade-offs: quarterly payment (`Q`) has the largest calibration deterioration and `policy_type=TPG` the largest deviance worsening.
+
+This is a slice/transport stability analysis inside the already-used 2024 year, not a second independent temporal validation period.
+
+See [RESULTS_V33.md](RESULTS_V33.md).
+
+## Evidence track 16 — v0.34 factor-estimation uncertainty
+
+v0.34 performs **500 deterministic, business-type-stratified 2023 row-bootstrap draws** of the incremental frequency factors. The same draw indices are paired across GLM/XGBoost, factor draws are not clipped, and 2024 outcomes are used only after each 2023 factor draw is fixed.
+
+The pre-registered strong gate produces a useful non-all-green result:
+
+- **XGBoost frequency:** 499/500 (**99.8%**) draws improve deviance, 424/500 (**84.8%**) do not worsen aggregate calibration, 500/500 improve worst-segment calibration and 500/500 pass the original v0.32 deviance guardrail → `ROBUST_TO_2023_FACTOR_ESTIMATION_FOR_FURTHER_SHADOW_TESTING`.
+- **GLM frequency:** 485/500 (**97.0%**) improve deviance and 497/500 improve worst-segment calibration, but only 398/500 (**79.6%**) do not worsen aggregate calibration → `FACTOR_UNCERTAINTY_REVIEW_REQUIRED` because the registered rule was **80%**.
+
+The 79.6% result is not rounded or threshold-adjusted after inspection.
+
+See [RESULTS_V34.md](RESULTS_V34.md).
+
+## Evidence track 17 — v0.35 validation-use firewall
+
+v0.35 stops repeated 2024 analysis from silently turning into pseudo-independent confirmation. A machine-readable ledger preserves the historical fact that 2024 was independent at first locked OOT use, while setting its current role to `CONSUMED_RETROSPECTIVE_VALIDATION`.
+
+The fail-closed validator permits 2024 for regression reproduction, monitoring replay, post-hoc diagnostics and governance testing. It rejects new model/calibration fitting, new candidate selection, independent-confirmation claims, model-family promotion and customer-pricing authorisation. Unknown 2024 purposes also fail closed.
+
+A future promotion claim therefore requires a genuinely new independent calendar period or external validation dataset with analysis rules fixed before outcomes are inspected.
+
+See [RESULTS_V35.md](RESULTS_V35.md) and `governance/validation_use_ledger_v35.json`.
+
 ## Auditable claims and CI
 
-`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Lightweight CI verifies modelling evidence, temporal/leakage contracts, deployment/monitoring/review controls, runtime and model-IO compatibility, bundle/release integrity, attestation/admission evidence, the v0.31 persisted outcome review and the concurrent evidence-write contract. Heavy workflows rebuild public data/models when the corresponding source paths change.
+`EVIDENCE_REGISTRY.md` maps headline CV/README/interview claims to persisted result files. Lightweight CI verifies modelling evidence, temporal/leakage contracts, deployment/monitoring/review controls, runtime and model-IO compatibility, bundle/release integrity, attestation/admission evidence, delayed-outcome review, v0.32 recalibration, v0.33 cohort transport, v0.34 factor uncertainty, concurrent evidence writes and the v0.35 validation-use firewall. Heavy workflows rebuild public data/models only when the corresponding source paths change.
 
 ## Repository map
 
@@ -302,16 +355,23 @@ RESULTS_V28.md                         shadow release registry and rollback repl
 RESULTS_V29.md                         GitHub/Sigstore artifact attestation
 RESULTS_V30.md                         attestation-aware shadow release admission
 RESULTS_V31.md                         delayed-outcome maturity and segment calibration review
+RESULTS_V32.md                         2023-only business-type recalibration review
+RESULTS_V33.md                         fixed-factor orthogonal cohort transport
+RESULTS_V34.md                         conditional factor-estimation uncertainty
+RESULTS_V35.md                         validation-use firewall and holdout-reuse policy
+governance/validation_firewall.py      fail-closed validation-use classifier
+governance/validation_use_ledger_v35.json machine-readable 2024 reuse history
 deployment/                            FastAPI, bundle, monitoring, review and outcome-monitoring code
 build_deployment_bundle_v21.py         reproducible model bundle + aggregate monitoring baseline
 build_bundle_lock_v27.py               content-addressed bundle lock
 verify_bundle_v27.py                   fail-closed bundle integrity verifier
 verify_release_admission_v30.py        attested shadow release admission policy
 run_outcome_review_v31.py              real-2024 delayed-outcome replay and segment review
+run_validation_firewall_v35.py         aggregate validation-reuse evidence runner
 scripts/push_evidence_with_rebase.sh   bounded race-safe evidence persistence helper
 Dockerfile                             CPU-only containerised shadow service
 requirements-runtime.txt               serving-only dependency boundary
-action_results/v21/ ... v31/           persisted non-binary workflow evidence
+action_results/v21/ ... v35/           persisted non-binary workflow evidence
 .github/workflows/                     data, governance, deployment, release and evidence workflows
-tests/                                 leakage, evidence, model, serving, release and persistence contracts
+tests/                                 leakage, evidence, model, serving, release, validation and persistence contracts
 ```
