@@ -1,0 +1,24 @@
+{
+  "status": "V37_PINNED_AUSTRALIAN_SOURCE_VERIFIED",
+  "source_repository": "dutangc/CASdatasets",
+  "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+  "source_path": "data/ausprivauto0405.rda",
+  "download_url": "https://raw.githubusercontent.com/dutangc/CASdatasets/227fb56b8734bdb7c0327a41180e01d2ddaeaf26/data/ausprivauto0405.rda",
+  "file_name": "ausprivauto0405.rda",
+  "file_bytes": 268505,
+  "file_sha256": "c8aeabd0b75e16a2b9a7452cfb3e8e2b3ec36a27171d35c2862bc8278777461c",
+  "rows": 67856,
+  "columns": [
+    "Exposure",
+    "VehValue",
+    "VehAge",
+    "VehBody",
+    "Gender",
+    "DrivAge",
+    "ClaimOcc",
+    "ClaimNb",
+    "ClaimAmount"
+  ],
+  "policies_with_at_least_one_claim": 4624,
+  "raw_data_persisted_to_repository": false
+}
