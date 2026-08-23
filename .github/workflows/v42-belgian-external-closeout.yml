@@ -6,6 +6,7 @@ on:
       - 'governance/belgian_external_reproducibility_observations_v42.json'
       - 'governance/external_validation_use_ledger_v42.json'
       - 'build_belgian_external_closeout_v42.py'
+      - 'scripts/migrate_evidence_registry_v42.py'
       - 'tests/test_belgian_external_closeout_v42.py'
       - 'RESULTS_V42.md'
       - 'EVIDENCE_REGISTRY.md'
@@ -17,9 +18,9 @@ on:
       - 'governance/belgian_external_reproducibility_observations_v42.json'
       - 'governance/external_validation_use_ledger_v42.json'
       - 'build_belgian_external_closeout_v42.py'
+      - 'scripts/migrate_evidence_registry_v42.py'
       - 'tests/test_belgian_external_closeout_v42.py'
       - 'RESULTS_V42.md'
-      - 'EVIDENCE_REGISTRY.md'
       - '.github/workflows/v42-belgian-external-closeout.yml'
       - 'action_results/v41/origin/32637884887/**'
   workflow_dispatch:
@@ -41,6 +42,11 @@ jobs:
         run: python -m unittest -v tests/test_belgian_external_closeout_v42.py
       - name: Build aggregate-only reproducibility and consumption closeout
         run: python build_belgian_external_closeout_v42.py
+      - name: Apply and verify idempotent evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v42.py
+          python scripts/migrate_evidence_registry_v42.py
+          git diff -- EVIDENCE_REGISTRY.md
       - name: Verify registered negative decisions and consumed-data boundary
         run: |
           python - <<'PY'
@@ -116,7 +122,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- action_results/v42
+          git add -- action_results/v42 EVIDENCE_REGISTRY.md
           if git diff --cached --quiet; then
             echo 'No v0.42 closeout evidence changes'
           else
