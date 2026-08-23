@@ -56,7 +56,7 @@ class BelgianExternalReplicationV41Tests(unittest.TestCase):
         self.assertIn('OneHotEncoder(handle_unknown="ignore", sparse_output=False)', text)
         self.assertIn("ConvergenceWarning", text)
         self.assertIn('"lbfgs" in message.lower()', text)
-        self.assertIn("positive_external_support_authorised\": False", text)
+        self.assertIn('"positive_external_support_authorised": False', text)
         self.assertNotIn("np.clip", text)
 
     def test_first_execution_cannot_satisfy_two_run_positive_support_rule(self) -> None:
