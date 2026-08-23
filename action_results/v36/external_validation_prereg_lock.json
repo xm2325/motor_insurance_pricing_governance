@@ -1,0 +1,22 @@
+{
+  "status": "V36_EXTERNAL_VALIDATION_PREREGISTRATION_LOCKED",
+  "preregistration_sha256": "b20d38b51f767761fe4b4f85d58988f7032dbcc7d7afc96041f3858c0165e3c1",
+  "source_dataset": "ausprivauto0405",
+  "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+  "registered_before_row_level_access": true,
+  "row_level_external_data_present": false,
+  "primary_target": "frequency",
+  "secondary_target": "pure_premium",
+  "split": {
+    "seed": 20260823,
+    "fractions": [
+      0.6,
+      0.2,
+      0.2
+    ]
+  },
+  "bootstrap_draws": 500,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "execution_allowed_only_after_preregistration_is_on_main": true
+}
