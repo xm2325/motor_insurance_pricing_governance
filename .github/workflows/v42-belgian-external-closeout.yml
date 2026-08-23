@@ -126,6 +126,7 @@ jobs:
       - name: Assert closeout contains no row-level Belgian data
         if: always()
         run: |
+          mkdir -p action_results/v42 results_v42
           if find action_results/v42 results_v42 -type f \( -name '*.rda' -o -name '*.csv' -o -name '*.parquet' \) | grep -q .; then
             echo 'v0.42 closeout must remain aggregate-only' >&2
             exit 1
