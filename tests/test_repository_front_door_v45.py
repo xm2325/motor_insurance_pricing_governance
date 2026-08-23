@@ -64,12 +64,13 @@ class RepositoryFrontDoorV45Tests(unittest.TestCase):
     def test_interview_pack_preserves_scientific_boundaries(self):
         for marker in [
             "project demonstration rule",
-            "not FIRST CENTRAL/insurer policy",
+            "project proves the model works for UK motor insurance or FIRST CENTRAL",
             "No observed commercial uplift",
             "failed evidence gates cannot be overridden",
             "never authorise model promotion or customer pricing",
         ]:
             self.assertIn(marker.lower(), self.interview.lower())
+        self.assertIn("it does not", self.interview.lower())
 
     def test_current_pack_does_not_call_consumed_data_fresh(self):
         self.assertIn("CONSUMED_RETROSPECTIVE_VALIDATION", self.interview)
