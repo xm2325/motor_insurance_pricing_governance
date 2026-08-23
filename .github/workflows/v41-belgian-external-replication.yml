@@ -107,7 +107,26 @@ jobs:
               'raw_external_data_persisted': False,
               'positive_external_support_authorised': False,
               'execution_ordinal': 1,
+              'evidence_role': 'ROLLING_LATEST_FIRST_EXECUTION_REGRESSION',
           }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v41/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.41 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v41/belgian_source_audit.json "$origin_dir/"
+          cp action_results/v41/belgian_external_replication_first_execution.json "$origin_dir/"
+          cp action_results/v41/ACTION_V41_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          origin = Path('action_results/v41/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V41_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_EXECUTION_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
