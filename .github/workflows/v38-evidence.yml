@@ -1,0 +1,39 @@
+name: Persisted v0.38 external reproducibility evidence contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'action_results/v38/**'
+      - 'action_results/v37/**'
+      - 'governance/external_reproducibility_audit_v38.json'
+      - 'tests/test_external_reproducibility_persisted_v38.py'
+      - 'RESULTS_V37.md'
+      - 'RESULTS_V38.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - '.github/workflows/v38-evidence.yml'
+  pull_request:
+    paths:
+      - 'action_results/v38/**'
+      - 'action_results/v37/**'
+      - 'governance/external_reproducibility_audit_v38.json'
+      - 'tests/test_external_reproducibility_persisted_v38.py'
+      - 'RESULTS_V37.md'
+      - 'RESULTS_V38.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - '.github/workflows/v38-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  persisted-v38-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify persisted v0.38 external reproducibility evidence
+        run: python -m unittest -v tests/test_external_reproducibility_persisted_v38.py
