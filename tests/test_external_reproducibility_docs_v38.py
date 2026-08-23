@@ -15,7 +15,7 @@ class ExternalReproducibilityDocsV38Tests(unittest.TestCase):
         self.assertIn("129.8409", text)
         self.assertIn("+11.4639%", text)
         self.assertIn("32633520755", text)
-        self.assertIn("not be described as having exact pure-premium point-metric reproducibility", text)
+        self.assertIn("must **not** be described as having exact pure-premium point-metric reproducibility", text)
 
     def test_v38_keeps_both_observed_point_results(self) -> None:
         text = V38.read_text(encoding="utf-8")
