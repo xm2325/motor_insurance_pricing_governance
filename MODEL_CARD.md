@@ -56,6 +56,8 @@ Different datasets have deliberately different evidence roles.
 | Australian `ausprivauto0405` | `INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE` | `CONSUMED_EXTERNAL_VALIDATION_DATASET` | **No** |
 | Belgian `beMTPL97` | `INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE` | `CONSUMED_EXTERNAL_VALIDATION_DATASET` | **No** |
 
+The Australian and Belgian studies are external replications of the **GLM-vs-XGBoost model-family question**, not direct validation of the fitted Spanish model artifacts and not evidence of transfer to a UK insurer.
+
 The distinction matters: rerunning, resplitting or retuning on an already inspected validation portfolio cannot make it independent again.
 
 ## Development benchmark
