@@ -8,6 +8,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STATUS = ROOT / "action_results" / "v38" / "ACTION_V38_STATUS.json"
+V38_ORIGIN_DIR = ROOT / "action_results" / "v38" / "origin_main_32634180356"
+V38_ORIGIN_STATUS = V38_ORIGIN_DIR / "ACTION_V38_STATUS.json"
+V38_ORIGIN_MANIFEST = V38_ORIGIN_DIR / "ORIGIN_MANIFEST.json"
 PERSISTED = ROOT / "action_results" / "v38" / "external_reproducibility_audit_v38.json"
 REGISTERED = ROOT / "governance" / "external_reproducibility_audit_v38.json"
 V37_STATUS = ROOT / "action_results" / "v37" / "ACTION_V37_STATUS.json"
@@ -26,16 +29,26 @@ class PersistedExternalReproducibilityV38Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.status = json.loads(STATUS.read_text(encoding="utf-8"))
+        cls.v38_origin_status = json.loads(V38_ORIGIN_STATUS.read_text(encoding="utf-8"))
+        cls.v38_origin_manifest = json.loads(V38_ORIGIN_MANIFEST.read_text(encoding="utf-8"))
         cls.audit = json.loads(PERSISTED.read_text(encoding="utf-8"))
         cls.v37_status = json.loads(V37_STATUS.read_text(encoding="utf-8"))
         cls.v37 = json.loads(V37_SUMMARY.read_text(encoding="utf-8"))
         cls.origin = json.loads(ORIGIN_SUMMARY.read_text(encoding="utf-8"))
         cls.origin_manifest = json.loads(ORIGIN_MANIFEST.read_text(encoding="utf-8"))
 
-    def test_main_v38_workflow_is_locked(self) -> None:
+    def test_origin_v38_workflow_status_is_immutably_locked(self) -> None:
+        self.assertEqual(self.v38_origin_status["workflow"], "External validation numerical reproducibility audit v0.38")
+        self.assertEqual(self.v38_origin_status["run_id"], "32634180356")
+        self.assertEqual(self.v38_origin_status["sha"], "1ab61c36ed4ad8002d7f3e4391446e88af5c44c1")
+        self.assertEqual(self.v38_origin_status["status"], "success")
+        self.assertTrue(self.v38_origin_status["v37_decision_reproduced"])
+        self.assertFalse(self.v38_origin_status["pure_premium_point_metric_exactly_reproduced"])
+        self.assertEqual(self.v38_origin_manifest["evidence_role"], "IMMUTABLE_ORIGIN_MAIN_STATUS")
+        self.assertEqual(self.v38_origin_manifest["workflow_run_id"], "32634180356")
+
+    def test_rolling_v38_status_may_advance_but_conclusion_cannot(self) -> None:
         self.assertEqual(self.status["workflow"], "External validation numerical reproducibility audit v0.38")
-        self.assertEqual(self.status["run_id"], "32634180356")
-        self.assertEqual(self.status["sha"], "1ab61c36ed4ad8002d7f3e4391446e88af5c44c1")
         self.assertEqual(self.status["status"], "success")
         self.assertTrue(self.status["v37_decision_reproduced"])
         self.assertFalse(self.status["pure_premium_point_metric_exactly_reproduced"])
@@ -48,15 +61,9 @@ class PersistedExternalReproducibilityV38Tests(unittest.TestCase):
         auth = self.audit["authoritative_v37_evidence"]
         self.assertEqual(auth["workflow_run_id"], "32633520755")
         self.assertEqual(auth["source_sha"], "1e975b5258f3442da5c72dd9794fad2bf5303ae6")
-        self.assertEqual(
-            auth["summary_sha256"],
-            "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
-        )
+        self.assertEqual(auth["summary_sha256"], "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017")
         self.assertEqual(digest(ORIGIN_SUMMARY), auth["summary_sha256"])
-        self.assertEqual(
-            digest(ORIGIN_SOURCE),
-            "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e",
-        )
+        self.assertEqual(digest(ORIGIN_SOURCE), "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e")
         self.assertEqual(self.origin_manifest["evidence_role"], "IMMUTABLE_ORIGIN_MAIN_SNAPSHOT")
         self.assertEqual(self.origin_manifest["workflow_run_id"], "32633520755")
         self.assertEqual(self.origin_manifest["artifact_id"], "9491692169")
@@ -67,26 +74,13 @@ class PersistedExternalReproducibilityV38Tests(unittest.TestCase):
         self.assertEqual(self.v37_status["workflow"], "Australian external motor replication v0.37")
         self.assertEqual(self.v37_status["status"], "success")
         self.assertFalse(self.v37_status["raw_external_data_persisted"])
-        self.assertNotEqual(self.v37_status["run_id"], "32633520755")
-        self.assertEqual(
-            self.v37["source"]["file_sha256"],
-            "c8aeabd0b75e16a2b9a7452cfb3e8e2b3ec36a27171d35c2862bc8278777461c",
-        )
-        self.assertEqual(
-            self.v37["frequency"]["registered_gate"]["decision"],
-            "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
-        )
-        self.assertEqual(
-            self.v37["pure_premium"]["registered_gate"]["decision"],
-            "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
-        )
-        self.assertIn(
-            digest(V37_SUMMARY),
-            {
-                "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
-                "6f3fd009e70fdb3eaebcfe46126b14bf853848ac164ac8ce23059daa8974d7df",
-            },
-        )
+        self.assertEqual(self.v37["source"]["file_sha256"], "c8aeabd0b75e16a2b9a7452cfb3e8e2b3ec36a27171d35c2862bc8278777461c")
+        self.assertEqual(self.v37["frequency"]["registered_gate"]["decision"], "NO_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT")
+        self.assertEqual(self.v37["pure_premium"]["registered_gate"]["decision"], "NO_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT")
+        self.assertIn(digest(V37_SUMMARY), {
+            "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
+            "6f3fd009e70fdb3eaebcfe46126b14bf853848ac164ac8ce23059daa8974d7df",
+        })
 
     def test_decision_reproducibility_and_metric_variation_are_both_retained(self) -> None:
         rec = self.audit["reconciliation"]
