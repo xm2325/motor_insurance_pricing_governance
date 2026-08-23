@@ -1,0 +1,10 @@
+{
+  "workflow": "Belgian external motor replication v0.41",
+  "run_id": "32637884887",
+  "sha": "241df6c2b6e6f20472a0bc236b27474c9b20583b",
+  "status": "success",
+  "raw_external_data_persisted": false,
+  "positive_external_support_authorised": false,
+  "execution_ordinal": 1,
+  "evidence_role": "IMMUTABLE_EXECUTION_SNAPSHOT"
+}

@@ -1,0 +1,33 @@
+{
+  "status": "V41_PINNED_BELGIAN_SOURCE_VERIFIED",
+  "source_repository": "dutangc/CASdatasets",
+  "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+  "source_path": "data/beMTPL97.rda",
+  "download_url": "https://raw.githubusercontent.com/dutangc/CASdatasets/227fb56b8734bdb7c0327a41180e01d2ddaeaf26/data/beMTPL97.rda",
+  "file_name": "beMTPL97.rda",
+  "file_bytes": 1529104,
+  "file_sha256": "955a821a7a693bf18076c425e4d5a5a99889f3c89e1fbd99eca6239c11e963a6",
+  "rows": 163212,
+  "columns": [
+    "id",
+    "expo",
+    "claim",
+    "nclaims",
+    "amount",
+    "average",
+    "coverage",
+    "ageph",
+    "sex",
+    "bm",
+    "power",
+    "agec",
+    "fuel",
+    "use",
+    "fleet",
+    "postcode",
+    "long",
+    "lat"
+  ],
+  "unique_policy_ids": 163212,
+  "raw_data_persisted_to_repository": false
+}

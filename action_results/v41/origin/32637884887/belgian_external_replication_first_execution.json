@@ -1,0 +1,235 @@
+{
+  "status": "V41_BELGIAN_EXTERNAL_FIRST_EXECUTION_COMPLETE",
+  "evidence_class": "SECOND_EXTERNAL_PORTFOLIO_MODEL_FAMILY_REPLICATION",
+  "preregistration": {
+    "sha256": "19658e3a6b12e55ffaa564585bf69dd09ad1371b567f0c1b03c7d17103796822",
+    "v40_main_sha": "833e861ee797d3751090e4d08a512d9f340b5378",
+    "registered_before_row_level_access": true,
+    "rules_changed_after_registration": false
+  },
+  "source": {
+    "status": "V41_PINNED_BELGIAN_SOURCE_VERIFIED",
+    "source_repository": "dutangc/CASdatasets",
+    "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+    "source_path": "data/beMTPL97.rda",
+    "download_url": "https://raw.githubusercontent.com/dutangc/CASdatasets/227fb56b8734bdb7c0327a41180e01d2ddaeaf26/data/beMTPL97.rda",
+    "file_name": "beMTPL97.rda",
+    "file_bytes": 1529104,
+    "file_sha256": "955a821a7a693bf18076c425e4d5a5a99889f3c89e1fbd99eca6239c11e963a6",
+    "rows": 163212,
+    "columns": [
+      "id",
+      "expo",
+      "claim",
+      "nclaims",
+      "amount",
+      "average",
+      "coverage",
+      "ageph",
+      "sex",
+      "bm",
+      "power",
+      "agec",
+      "fuel",
+      "use",
+      "fleet",
+      "postcode",
+      "long",
+      "lat"
+    ],
+    "unique_policy_ids": 163212,
+    "raw_data_persisted_to_repository": false
+  },
+  "runtime": {
+    "versions": {
+      "python_version": "3.12.14",
+      "numpy_version": "2.5.2",
+      "scipy_version": "1.18.0",
+      "scikit_learn_version": "1.9.0",
+      "xgboost_version": "3.4.1",
+      "pyreadr_version": "0.5.3"
+    },
+    "registered_python_major_minor": "3.12",
+    "thread_environment": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "glm_fit": {
+      "frequency": {
+        "n_iter": 5,
+        "warnings": []
+      },
+      "pure_premium": {
+        "n_iter": 4,
+        "warnings": []
+      }
+    }
+  },
+  "split": {
+    "method": "fixed random permutation of source row indices without outcome stratification",
+    "seed": 20260825,
+    "train": {
+      "rows": 97927,
+      "exposure": 87175.72602739726,
+      "claims": 12153,
+      "claim_amount": 16025532.066266896,
+      "claiming_policies": 10977
+    },
+    "calibration": {
+      "rows": 32642,
+      "exposure": 29001.202739726028,
+      "claims": 3969,
+      "claim_amount": 5012321.745963674,
+      "claiming_policies": 3595
+    },
+    "locked_test": {
+      "rows": 32643,
+      "exposure": 29039.89589041096,
+      "claims": 4093,
+      "claim_amount": 5427116.105890198,
+      "claiming_policies": 3704
+    },
+    "outcome_stratified": false,
+    "resplit_after_outcome_inspection": false
+  },
+  "features": {
+    "used": [
+      "ageph",
+      "bm",
+      "power",
+      "agec",
+      "coverage",
+      "fuel",
+      "use",
+      "fleet"
+    ],
+    "excluded": [
+      "id",
+      "expo",
+      "claim",
+      "nclaims",
+      "amount",
+      "average",
+      "sex",
+      "postcode",
+      "long",
+      "lat"
+    ],
+    "preprocessor_fit_on_train_only": true,
+    "encoded_feature_count": 13
+  },
+  "frequency": {
+    "calibration_scales": {
+      "reference": 0.9809032872120628,
+      "challenger": 0.9814338776666937,
+      "guardrails": [
+        0.5,
+        2.0
+      ],
+      "both_valid": true,
+      "clipped": false
+    },
+    "locked_test": {
+      "reference_deviance": 0.604356714368424,
+      "challenger_deviance": 0.6025982649080157,
+      "relative_deviance_improvement": 0.0029096217823043613,
+      "reference_calibration": {
+        "predicted_total": 3971.5487089958942,
+        "observed_total": 4093.0,
+        "calibration_ratio_pred_over_actual": 0.9703270728062288,
+        "abs_log_calibration_error": 0.030122075859931912
+      },
+      "challenger_calibration": {
+        "predicted_total": 3970.1999299641725,
+        "observed_total": 4093.0,
+        "calibration_ratio_pred_over_actual": 0.9699975396931768,
+        "abs_log_calibration_error": 0.030461743886712002
+      },
+      "reference_top_10_percent_exposure_claim_capture": 0.18977284973677028,
+      "challenger_top_10_percent_exposure_claim_capture": 0.195699975568043
+    },
+    "paired_bootstrap_relative_deviance_improvement": {
+      "draws": 500,
+      "seed": 20260826,
+      "q025": 0.000987214124322794,
+      "median": 0.002993690284559758,
+      "q975": 0.004876311098911042,
+      "positive_draw_rate": 0.998
+    },
+    "registered_gate": {
+      "decision": "NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+      "passed": false,
+      "relative_deviance_improvement": 0.0029096217823043613,
+      "checks": {
+        "calibration_scales_valid": true,
+        "point_relative_deviance_improvement": false,
+        "bootstrap_ci_lower_bound_positive": true,
+        "aggregate_calibration_noninferior": true
+      }
+    }
+  },
+  "pure_premium": {
+    "calibration_scales": {
+      "reference": 0.9394974339493479,
+      "challenger": 0.9959583115046144,
+      "guardrails": [
+        0.5,
+        2.0
+      ],
+      "both_valid": true,
+      "clipped": false
+    },
+    "locked_test": {
+      "reference_deviance": 79.84331051378416,
+      "challenger_deviance": 79.58630762159916,
+      "relative_deviance_improvement": 0.0032188406333756303,
+      "reference_calibration": {
+        "predicted_total": 5017224.208798066,
+        "observed_total": 5427116.105890198,
+        "calibration_ratio_pred_over_actual": 0.9244733502850132,
+        "abs_log_calibration_error": 0.07853105465479271
+      },
+      "challenger_calibration": {
+        "predicted_total": 4983030.77002779,
+        "observed_total": 5427116.105890198,
+        "calibration_ratio_pred_over_actual": 0.9181728698635304,
+        "abs_log_calibration_error": 0.08536959469183104
+      },
+      "reference_top_10_percent_exposure_loss_capture": 0.2045398934937543,
+      "challenger_top_10_percent_exposure_loss_capture": 0.19118990461766386
+    },
+    "paired_bootstrap_relative_deviance_improvement": {
+      "draws": 500,
+      "seed": 20260826,
+      "q025": -0.007917598068074487,
+      "median": 0.0033588403884878826,
+      "q975": 0.01308226242515245,
+      "positive_draw_rate": 0.754
+    },
+    "registered_gate": {
+      "decision": "NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+      "passed": false,
+      "relative_deviance_improvement": 0.0032188406333756303,
+      "checks": {
+        "calibration_scales_valid": true,
+        "point_relative_deviance_improvement": false,
+        "bootstrap_ci_lower_bound_positive": false,
+        "aggregate_calibration_noninferior": true
+      }
+    }
+  },
+  "reproducibility": {
+    "registered_minimum_independent_executions_for_positive_support": 2,
+    "executions_completed_for_this_new_portfolio": 1,
+    "any_first_execution_registered_gate_positive": false,
+    "positive_external_support_authorised": false,
+    "status": "NO_POSITIVE_GATE_TO_REPRODUCE"
+  },
+  "decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  }
+}
