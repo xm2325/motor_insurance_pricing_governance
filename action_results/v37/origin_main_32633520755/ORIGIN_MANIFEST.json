@@ -1,0 +1,13 @@
+{
+  "evidence_role": "IMMUTABLE_ORIGIN_MAIN_SNAPSHOT",
+  "workflow": "Australian external motor replication v0.37",
+  "workflow_run_id": "32633520755",
+  "source_sha": "1e975b5258f3442da5c72dd9794fad2bf5303ae6",
+  "artifact_id": "9491692169",
+  "summary_sha256": "da7c30aef7e5e810755b9fb15a4749757c25af79ff4d553ed775d71be0f71017",
+  "source_audit_sha256": "ee933f9c051a2f4c25198beb0b7ab8fb275e0ccc0b09efd9a372db0fb94c895e",
+  "rolling_latest_summary_path": "action_results/v37/australian_external_replication_summary.json",
+  "rolling_latest_status_path": "action_results/v37/ACTION_V37_STATUS.json",
+  "lineage_boundary": "The origin snapshot is immutable historical evidence for the first post-merge v0.37 execution. The top-level v0.37 files are rolling regression evidence and may be replaced by later successful reruns of the frozen protocol.",
+  "raw_external_data_persisted": false
+}
