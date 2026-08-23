@@ -185,8 +185,15 @@ def main() -> None:
         "xgboost_version": xgboost.__version__,
         "pyreadr_version": getattr(pyreadr, "__version__", "unknown"),
     }
+    registered_python = runtime["python_version"]
+    actual_python_major_minor = ".".join(actual_versions["python_version"].split(".")[:2])
+    if actual_python_major_minor != registered_python:
+        raise RuntimeError(
+            f"runtime version mismatch python_version: {actual_versions['python_version']} "
+            f"does not satisfy registered major.minor {registered_python}"
+        )
     for key, expected in runtime.items():
-        if key.endswith("_version") and actual_versions[key] != expected:
+        if key.endswith("_version") and key != "python_version" and actual_versions[key] != expected:
             raise RuntimeError(f"runtime version mismatch {key}: {actual_versions[key]} != {expected}")
     for key, expected in runtime["thread_environment"].items():
         if os.environ.get(key) != expected:
@@ -263,7 +270,7 @@ def main() -> None:
         "evidence_class": prereg["independence_statement"]["evidence_class"],
         "preregistration": {"sha256": lock["preregistration_sha256"], "v40_main_sha": v40_status["sha"], "registered_before_row_level_access": True, "rules_changed_after_registration": False},
         "source": audit,
-        "runtime": {"versions": actual_versions, "thread_environment": runtime["thread_environment"], "glm_fit": glm_fit},
+        "runtime": {"versions": actual_versions, "registered_python_major_minor": registered_python, "thread_environment": runtime["thread_environment"], "glm_fit": glm_fit},
         "split": {"method": split_spec["method"], "seed": split_spec["seed"], "train": _split_summary(frame, train), "calibration": _split_summary(frame, calibration), "locked_test": _split_summary(frame, test), "outcome_stratified": False, "resplit_after_outcome_inspection": False},
         "features": {"used": model_features, "excluded": prereg["features"]["excluded_from_predictors"], "preprocessor_fit_on_train_only": True, "encoded_feature_count": int(X_train.shape[1])},
         "frequency": frequency,
