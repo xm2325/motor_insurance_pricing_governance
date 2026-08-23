@@ -1,0 +1,15 @@
+{
+  "workflow": "Model change committee gate v0.44",
+  "run_id": "32641748785",
+  "sha": "7c19ec42bf2607a5083080deb1556891e20056d0",
+  "status": "success",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "machine_gate_status": "EVIDENCE_GAP_HOLD",
+  "required_gate_pass_count": 5,
+  "required_gate_count": 8,
+  "human_committee_review_open": false,
+  "model_promotion_authorised": false,
+  "pricing_change_authorised": false,
+  "evidence_role": "IMMUTABLE_AGGREGATE_COMMITTEE_GATE_SNAPSHOT"
+}

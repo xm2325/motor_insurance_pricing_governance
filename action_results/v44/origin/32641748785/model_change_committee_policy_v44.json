@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.44",
+  "status": "V44_MODEL_CHANGE_COMMITTEE_GATE_POLICY",
+  "purpose": "Evaluate whether a challenger model-family change has enough evidence and operational controls to advance to a human approval review. This policy cannot approve promotion or customer pricing automatically.",
+  "candidate_change_request": {
+    "request_id": "MCR-XGB-MOTOR-001",
+    "change_type": "MODEL_FAMILY_CHALLENGER_PROMOTION_REVIEW",
+    "reference_family": "GLM",
+    "challenger_family": "XGBoost",
+    "requested_scope": "shadow model-family review only",
+    "customer_pricing_change_requested": false
+  },
+  "source_contracts": {
+    "evidence_synthesis": "action_results/v43/model_family_evidence_synthesis_summary.json",
+    "shadow_manifest": "action_results/v21/manifest.json",
+    "release_control": "action_results/v28/release_control_result.json",
+    "attested_shadow_admission": "action_results/v30/release_admission_result.json"
+  },
+  "gates": [
+    {
+      "id": "G1_DEVELOPMENT_SIGNAL",
+      "description": "A material challenger development signal exists, but development evidence alone cannot authorise review.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G2_LOCKED_TEMPORAL_SUPPORT",
+      "description": "The original locked temporal evaluation supports a global model-family change under its registered rule.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+      "description": "At least one genuinely independent preregistered external target gate supports the challenger.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G4_FRESH_INDEPENDENT_EVIDENCE",
+      "description": "Fresh independent validation remains available for the proposed decision and has not been consumed by candidate selection.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G5_REPRODUCIBILITY_CONTROL",
+      "description": "Any evidence relied on for promotion is subject to registered numerical reproducibility controls.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G6_SHADOW_DEPLOYMENT_BOUNDARY",
+      "description": "The candidate can be evaluated in shadow mode without customer-pricing authority.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G7_RELEASE_AND_ROLLBACK_CONTROL",
+      "description": "Release selection and rollback controls are demonstrated without automatic pricing changes.",
+      "required_for_human_review": true
+    },
+    {
+      "id": "G8_ATTESTED_SHADOW_ADMISSION",
+      "description": "A sealed release can enter only the attested shadow registry, not production/customer pricing.",
+      "required_for_human_review": true
+    }
+  ],
+  "decision_policy": {
+    "all_required_gates_must_pass_to_advance_to_human_review": true,
+    "automatic_model_promotion_allowed": false,
+    "automatic_customer_pricing_change_allowed": false,
+    "human_signoff_can_override_failed_evidence_gate": false,
+    "benchmark_can_override_validation_failure": false,
+    "consumed_validation_can_be_relabelled_fresh": false,
+    "passing_all_machine_gates_result": "READY_FOR_HUMAN_COMMITTEE_REVIEW",
+    "one_or_more_required_gate_failures_result": "EVIDENCE_GAP_HOLD"
+  },
+  "interpretation_boundaries": [
+    "This is a project demonstration of model-change governance, not FIRST CENTRAL policy or an insurer approval workflow.",
+    "A READY_FOR_HUMAN_COMMITTEE_REVIEW result would still not approve model promotion or customer pricing.",
+    "The current persisted evidence is expected to remain EVIDENCE_GAP_HOLD because the external/temporal evidence requirements are not satisfied.",
+    "Operational deployability cannot compensate for insufficient validation evidence."
+  ]
+}
