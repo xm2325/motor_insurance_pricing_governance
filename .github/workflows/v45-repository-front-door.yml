@@ -1,0 +1,136 @@
+name: Repository front-door sync v0.45
+
+on:
+  pull_request:
+    paths:
+      - 'INTERVIEW_EVIDENCE_PACK.md'
+      - 'scripts/refresh_repository_front_door_v45.py'
+      - 'build_repository_front_door_summary_v45.py'
+      - 'scripts/migrate_evidence_registry_v45.py'
+      - 'tests/test_repository_front_door_v45.py'
+      - 'RESULTS_V45.md'
+      - '.github/workflows/v45-repository-front-door.yml'
+      - 'action_results/v43/**'
+      - 'action_results/v44/**'
+  push:
+    branches: [main]
+    paths:
+      - 'INTERVIEW_EVIDENCE_PACK.md'
+      - 'scripts/refresh_repository_front_door_v45.py'
+      - 'build_repository_front_door_summary_v45.py'
+      - 'scripts/migrate_evidence_registry_v45.py'
+      - 'tests/test_repository_front_door_v45.py'
+      - 'RESULTS_V45.md'
+      - '.github/workflows/v45-repository-front-door.yml'
+      - 'action_results/v43/**'
+      - 'action_results/v44/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repository-front-door:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refresh README front door idempotently
+        run: |
+          cp README.md /tmp/README.before-v45.md
+          python scripts/refresh_repository_front_door_v45.py
+          python scripts/refresh_repository_front_door_v45.py
+      - name: Run front-door and interview-evidence contracts
+        run: python -m unittest -v tests/test_repository_front_door_v45.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v45.py
+          python scripts/migrate_evidence_registry_v45.py
+      - name: Build documentation audit summary
+        run: python build_repository_front_door_summary_v45.py
+      - name: Verify historical README body is unchanged
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          before = Path('/tmp/README.before-v45.md').read_text(encoding='utf-8')
+          after = Path('README.md').read_text(encoding='utf-8')
+          before_tail = before.split('\n---\n', 1)[1]
+          after_tail = after.split('\n---\n', 1)[1]
+          assert before_tail == after_tail
+          PY
+      - name: Verify v0.45 documentation-only boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v45/repository_front_door_summary_v45.json').read_text())
+          assert result['status'] == 'V45_REPOSITORY_FRONT_DOOR_SYNC_PASS'
+          assert result['scope'] == 'documentation_and_evidence_navigation_only'
+          assert result['model_fit_executed'] is False
+          assert result['row_level_data_accessed'] is False
+          assert result['historical_model_or_validation_decisions_changed'] is False
+          assert all(result['checks'].values())
+          b = result['headline_boundaries']
+          assert b['benchmark_is_not_pricing_uplift'] is True
+          assert b['consumed_validation_not_relabelled_fresh'] is True
+          assert b['external_gate_count_scope_explicit'] is True
+          assert b['committee_gate_not_human_approval'] is True
+          assert b['first_central_or_current_uk_transfer_claimed'] is False
+          assert b['commercial_uplift_claimed'] is False
+          PY
+      - name: Persist v0.45 front-door evidence and refreshed docs
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v45
+          cp results_v45/repository_front_door_summary_v45.json action_results/v45/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v45/ACTION_V45_STATUS.json').write_text(json.dumps({
+              'workflow': 'Repository front-door sync v0.45',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'row_level_data_accessed': False,
+              'model_fit_executed': False,
+              'historical_decisions_changed': False,
+              'front_door_current_through': 'v0.44',
+              'evidence_role': 'ROLLING_DOCUMENTATION_SYNC',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v45/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.45 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v45/repository_front_door_summary_v45.json "$origin_dir/"
+          cp action_results/v45/ACTION_V45_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v45/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V45_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_DOCUMENTATION_SYNC_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- README.md INTERVIEW_EVIDENCE_PACK.md EVIDENCE_REGISTRY.md action_results/v45
+          if git diff --cached --quiet; then
+            echo 'No v0.45 documentation sync changes'
+          else
+            git commit -m "Persist v0.45 repository front-door sync ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.45 documentation audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-repository-front-door-v45
+          path: results_v45/
+          if-no-files-found: warn
