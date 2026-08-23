@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.43",
+  "status": "V43_MODEL_FAMILY_EVIDENCE_SYNTHESIS_POLICY",
+  "purpose": "Synthesize already-persisted model-family evidence into a review dossier without fitting models, reusing row-level validation data, changing historical gates, or inventing a pooled promotion score.",
+  "source_contracts": {
+    "cross_sectional_benchmark": "results/fremtpl2_full_frequency_benchmark.csv",
+    "spanish_first_use_oot": "action_results/spanish_oot_2024/oot_2024_summary.json",
+    "spanish_validation_firewall": "action_results/v35/validation_firewall_summary.json",
+    "australian_external_origin": "action_results/v37/origin_main_32633520755/australian_external_replication_summary.json",
+    "australian_validation_firewall": "governance/external_validation_use_ledger_v39.json",
+    "belgian_external_closeout": "action_results/v42/belgian_external_closeout_summary.json",
+    "belgian_validation_firewall": "action_results/v42/external_validation_use_ledger_v42.json"
+  },
+  "synthesis_rules": {
+    "row_level_data_access_allowed": false,
+    "model_fit_allowed": false,
+    "recalibration_allowed": false,
+    "hyperparameter_search_allowed": false,
+    "resplitting_or_reseeding_allowed": false,
+    "historical_gate_changes_allowed": false,
+    "pooled_meta_analysis_claim_allowed": false,
+    "evidence_weighting_score_allowed": false,
+    "benchmark_can_authorise_promotion": false,
+    "consumed_validation_can_be_relabelled_independent": false,
+    "external_registered_gate_failure_remains_failure": true,
+    "numerical_reproducibility_can_convert_negative_gate_to_positive": false
+  },
+  "review_logic": {
+    "current_model_family_decision": "HOLD",
+    "current_serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "reason": "No preregistered independent external portfolio has passed its registered XGBoost model-family support gate, while the original Spanish locked OOT did not support a global challenger switch and is now consumed retrospective validation.",
+    "reopen_requirements": [
+      "A genuinely new independent external dataset or new independent period whose row-level outcomes have not been inspected in this project.",
+      "Protocol merged before row-level outcome access with source, split, features, models, metrics, gates, solver/tolerance and reproducibility rules fixed prospectively.",
+      "Any positive external-support result must satisfy its registered model-performance gates.",
+      "Any positive external-support result must satisfy the prospective two-independent-Actions execution and registered numerical reproducibility requirement inherited from v0.38-v0.42.",
+      "A separate authorised governance decision would still be required before any serving-bundle or customer-pricing change."
+    ]
+  },
+  "interpretation_boundaries": [
+    "This synthesis is a project model-risk review dossier, not an insurer model-approval policy.",
+    "No source establishes transport to FIRST CENTRAL or the current UK motor market.",
+    "The datasets differ in geography, period, features and portfolio context; no pooled causal or meta-analytic effect is claimed.",
+    "Cross-sectional benchmark performance is development evidence and cannot override failed independent validation gates.",
+    "HOLD means evidence does not support promotion under the registered project contracts; it does not mean XGBoost is universally inferior to GLM."
+  ]
+}
