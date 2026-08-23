@@ -58,6 +58,7 @@ on:
       - 'tests/test_evidence_push_static_v31.py'
       - 'tests/test_business_type_recalibration_v32.py'
       - 'tests/test_business_type_recalibration_static_v32.py'
+      - 'tests/test_business_type_recalibration_evidence_v32.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
@@ -124,6 +125,7 @@ on:
       - 'tests/test_evidence_push_static_v31.py'
       - 'tests/test_business_type_recalibration_v32.py'
       - 'tests/test_business_type_recalibration_static_v32.py'
+      - 'tests/test_business_type_recalibration_evidence_v32.py'
       - '.github/workflows/v21-deployment.yml'
       - '.github/workflows/v22-monitoring.yml'
       - '.github/workflows/v25-runtime.yml'
@@ -172,7 +174,8 @@ jobs:
             tests/test_outcome_monitoring_static_v31.py \
             tests/test_outcome_review_evidence_v31.py \
             tests/test_evidence_push_static_v31.py \
-            tests/test_business_type_recalibration_static_v32.py
+            tests/test_business_type_recalibration_static_v32.py \
+            tests/test_business_type_recalibration_evidence_v32.py
       - name: Persist CI status
         if: always() && github.event_name != 'pull_request'
         env:
