@@ -1,0 +1,13 @@
+{
+  "workflow": "Model risk inventory v0.46",
+  "run_id": "32642701251",
+  "sha": "19e6f783b701bd08016846690ea9d60983d3b496",
+  "status": "success",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_decisions_changed": false,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "committee_readiness": "EVIDENCE_GAP_HOLD",
+  "evidence_role": "ROLLING_AGGREGATE_MODEL_RISK_INVENTORY"
+}

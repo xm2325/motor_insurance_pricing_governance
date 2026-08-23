@@ -1,0 +1,114 @@
+{
+  "status": "V46_MODEL_RISK_INVENTORY_COMPLETE",
+  "inventory_version": "0.46",
+  "scope": "aggregate_model_risk_inventory_from_persisted_evidence",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_decisions_changed": false,
+  "risk_question": "Whether the XGBoost challenger family has enough stable temporal and external evidence to advance beyond shadow-only comparison against GLM references.",
+  "models": [
+    {
+      "model_id": "poisson_glm_frequency",
+      "target": "frequency",
+      "role": "reference",
+      "artifact": "poisson_glm_frequency.joblib",
+      "artifact_sha256": "8934b110a58d7acc870335e63b10bf1ab67674241b43a3875e5c4be2bf7f3b08",
+      "serving_boundary": "SHADOW_COMPARISON_ONLY",
+      "customer_pricing_authorised": false
+    },
+    {
+      "model_id": "xgb_poisson_frequency",
+      "target": "frequency",
+      "role": "challenger",
+      "artifact": "xgb_poisson_frequency.joblib",
+      "artifact_sha256": "ccaa994f17d863c1adfff61e15fa3198b97673e5b6ce855cd87c58b6175d097b",
+      "serving_boundary": "SHADOW_COMPARISON_ONLY",
+      "customer_pricing_authorised": false
+    },
+    {
+      "model_id": "tweedie_glm_pure_premium",
+      "target": "pure_premium",
+      "role": "reference",
+      "artifact": "tweedie_glm_pure_premium.joblib",
+      "artifact_sha256": "e2b111b163d760fa311997009b1135c7390cf6dc13bc5781ece8a922b23b3b03",
+      "serving_boundary": "SHADOW_COMPARISON_ONLY",
+      "customer_pricing_authorised": false
+    },
+    {
+      "model_id": "xgb_tweedie_pure_premium",
+      "target": "pure_premium",
+      "role": "challenger",
+      "artifact": "xgb_tweedie_pure_premium.joblib",
+      "artifact_sha256": "70e2bacb3b216eebec6f5b288c6d77cdb59325b1a7b6e4deeb0e427386d06174",
+      "serving_boundary": "SHADOW_COMPARISON_ONLY",
+      "customer_pricing_authorised": false
+    }
+  ],
+  "validation_assets": [
+    {
+      "dataset": "Spanish 2024",
+      "initial_role": "LOCKED_OOT_FIRST_USE",
+      "current_role": "CONSUMED_RETROSPECTIVE_VALIDATION",
+      "fresh_independent_evidence_available": false,
+      "candidate_selection_allowed": false
+    },
+    {
+      "dataset": "Australian ausprivauto0405",
+      "initial_role": "INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE",
+      "current_role": "CONSUMED_EXTERNAL_VALIDATION_DATASET",
+      "fresh_independent_evidence_available": false,
+      "candidate_selection_allowed": false
+    },
+    {
+      "dataset": "Belgian beMTPL97",
+      "initial_role": "INDEPENDENT_EXTERNAL_VALIDATION_FIRST_USE",
+      "current_role": "CONSUMED_EXTERNAL_VALIDATION_DATASET",
+      "fresh_independent_evidence_available": false,
+      "candidate_selection_allowed": false
+    }
+  ],
+  "evidence_summary": {
+    "development_benchmark_signal_present": true,
+    "external_portfolios_evaluated": 2,
+    "preregistered_external_target_gates_evaluated": 4,
+    "preregistered_external_target_gates_passed": 0,
+    "current_fresh_independent_validation_dataset_available": false,
+    "pooled_meta_analysis_used": false,
+    "subjective_evidence_weighting_used": false
+  },
+  "operational_controls": {
+    "shadow_serving_boundary": true,
+    "manual_rollback_control": true,
+    "automatic_review_serving_switch": false,
+    "attested_shadow_admission": true,
+    "raw_source_data_members_in_release_archive": 0
+  },
+  "committee_readiness": {
+    "request_id": "MCR-XGB-MOTOR-001",
+    "status": "EVIDENCE_GAP_HOLD",
+    "required_gate_count": 8,
+    "required_gate_pass_count": 5,
+    "required_gate_fail_count": 3,
+    "blocker_ids": [
+      "G2_LOCKED_TEMPORAL_SUPPORT",
+      "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+      "G4_FRESH_INDEPENDENT_EVIDENCE"
+    ],
+    "human_committee_review_open": false,
+    "human_signoff_can_override_failed_evidence_gate": false
+  },
+  "current_decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  },
+  "interpretation_boundaries": {
+    "benchmark_is_not_pricing_uplift": true,
+    "consumed_validation_not_relabelled_fresh": true,
+    "operational_readiness_not_model_approval": true,
+    "first_central_or_current_uk_transport_claimed": false,
+    "insurer_or_regulatory_policy_claimed": false
+  }
+}
