@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "run_frequency_recalibration_uncertainty_v34.py"
 MODULE = ROOT / "deployment" / "calibration_uncertainty.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "v34-recalibration-uncertainty.yml"
+RESULTS = ROOT / "RESULTS_V34.md"
 
 
 class FrequencyRecalibrationUncertaintyStaticV34Tests(unittest.TestCase):
@@ -81,6 +82,15 @@ class FrequencyRecalibrationUncertaintyStaticV34Tests(unittest.TestCase):
             "github.event_name == 'push'",
         ]:
             self.assertIn(token, workflow)
+
+    def test_results_retain_pre_registered_glm_failure_and_xgb_pass(self) -> None:
+        results = RESULTS.read_text(encoding="utf-8")
+        self.assertIn("398/500 = 79.6%", results)
+        self.assertIn("pre-registered aggregate-calibration requirement is **80%**", results)
+        self.assertIn("FACTOR_UNCERTAINTY_REVIEW_REQUIRED", results)
+        self.assertIn("424/500 = 84.8%", results)
+        self.assertIn("ROBUST_TO_2023_FACTOR_ESTIMATION_FOR_FURTHER_SHADOW_TESTING", results)
+        self.assertIn("does **not** resample or refit", results)
 
 
 if __name__ == "__main__":
