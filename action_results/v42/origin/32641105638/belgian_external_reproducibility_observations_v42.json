@@ -1,0 +1,98 @@
+{
+  "schema_version": "0.42",
+  "purpose": "Audit the already-observed v0.41 Belgian external executions without retraining, downloading row-level data, changing the v0.40 protocol, or converting the negative registered result into positive support.",
+  "registered_tolerance_source": "governance/external_validation_prereg_v40.json",
+  "registered_relative_tolerance": 1e-8,
+  "registered_absolute_tolerance": 1e-10,
+  "source_file_sha256": "955a821a7a693bf18076c425e4d5a5a99889f3c89e1fbd99eca6239c11e963a6",
+  "execution_events": [
+    {
+      "run_id": 32637645586,
+      "role": "SOURCE_ACCESSED_ABORTED_BEFORE_MODEL_FIT",
+      "row_level_source_accessed": true,
+      "source_audit_passed": true,
+      "model_fit_completed": false,
+      "locked_test_metrics_generated": false,
+      "counted_as_completed_model_execution": false,
+      "abort_reason": "Implementation compared registered Python major.minor 3.12 with exact patch string 3.12.14 before any model fit. The v0.40 protocol, split, features, models, solvers and gates were not changed."
+    },
+    {
+      "run_id": 32637809066,
+      "role": "FIRST_COMPLETED_MODEL_EXECUTION_PR",
+      "head_sha": "4d1e742905b0af841c491b4f4a50953811cb0581",
+      "azure_region": "eastus2",
+      "runner_image": "ubuntu-24.04",
+      "model_fit_completed": true,
+      "locked_test_metrics_generated": true,
+      "counted_as_completed_model_execution": true,
+      "artifact_id": 9492785964,
+      "artifact_zip_sha256": "18eacc7a39a460b01021e9295b4241779738e566206668782b147372f56abcb5",
+      "source_file_sha256": "955a821a7a693bf18076c425e4d5a5a99889f3c89e1fbd99eca6239c11e963a6",
+      "metrics": {
+        "frequency": {
+          "reference_calibration_scale": 0.9809032872120627,
+          "challenger_calibration_scale": 0.9814338776666937,
+          "reference_deviance": 0.604356714368424,
+          "challenger_deviance": 0.6025982649080157,
+          "relative_deviance_improvement": 0.0029096217823043613,
+          "reference_calibration_ratio": 0.9703270728062287,
+          "reference_abs_log_calibration_error": 0.030122075859932027,
+          "challenger_calibration_ratio": 0.9699975396931768,
+          "challenger_abs_log_calibration_error": 0.030461743886712002,
+          "reference_top10_capture": 0.18977284973677028,
+          "challenger_top10_capture": 0.195699975568043,
+          "bootstrap_q025": 0.000987214124322794,
+          "bootstrap_median": 0.002993690284559758,
+          "bootstrap_q975": 0.004876311098911042,
+          "bootstrap_positive_draw_rate": 0.998,
+          "registered_decision": "NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT"
+        },
+        "pure_premium": {
+          "reference_calibration_scale": 0.9394974339493493,
+          "challenger_calibration_scale": 0.9959583115046144,
+          "reference_deviance": 79.84331051378417,
+          "challenger_deviance": 79.58630762159916,
+          "relative_deviance_improvement": 0.0032188406333758524,
+          "reference_calibration_ratio": 0.9244733502850135,
+          "reference_abs_log_calibration_error": 0.07853105465479235,
+          "challenger_calibration_ratio": 0.9181728698635304,
+          "challenger_abs_log_calibration_error": 0.08536959469183104,
+          "reference_top10_capture": 0.2045398934937543,
+          "challenger_top10_capture": 0.19118990461766386,
+          "bootstrap_q025": -0.007917598068074592,
+          "bootstrap_median": 0.0033588403884878826,
+          "bootstrap_q975": 0.01308226242515245,
+          "bootstrap_positive_draw_rate": 0.754,
+          "registered_decision": "NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT"
+        }
+      }
+    },
+    {
+      "run_id": 32637884887,
+      "role": "MAIN_COMPLETED_MODEL_EXECUTION_IMMUTABLE_ORIGIN",
+      "head_sha": "241df6c2b6e6f20472a0bc236b27474c9b20583b",
+      "persisted_commit": "17cbdc9fafd0d50ad7b5d117af775ff327a5f78f",
+      "azure_region": "centralus",
+      "runner_image": "ubuntu-24.04",
+      "model_fit_completed": true,
+      "locked_test_metrics_generated": true,
+      "counted_as_completed_model_execution": true,
+      "artifact_id": 9492802553,
+      "artifact_zip_sha256": "34b59e5e492d434bcb3e85856acb7b53a6298aeb8b138f3df18158e821151bf8",
+      "immutable_origin_path": "action_results/v41/origin/32637884887/belgian_external_replication_first_execution.json",
+      "source_file_sha256": "955a821a7a693bf18076c425e4d5a5a99889f3c89e1fbd99eca6239c11e963a6"
+    }
+  ],
+  "interpretation_boundary": {
+    "two_completed_runs_are_used_for_numerical_reproducibility_audit": true,
+    "aborted_pre_fit_run_is_not_counted_as_completed_execution": true,
+    "no_registered_gate_was_positive": true,
+    "positive_support_reproduction_rule_was_not_needed_to_establish_the_negative_result": true,
+    "observed_tolerance_pass_does_not_claim_universal_bitwise_determinism": true,
+    "observed_tolerance_pass_does_not_establish_hardware_or_region_as_the_cause_of_v0_38_instability": true,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  }
+}

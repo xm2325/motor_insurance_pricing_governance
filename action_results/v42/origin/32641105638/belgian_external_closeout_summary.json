@@ -1,0 +1,274 @@
+{
+  "status": "V42_BELGIAN_EXTERNAL_CLOSEOUT_PASS",
+  "reproducibility": {
+    "status": "V42_BELGIAN_POINT_METRICS_REPRODUCED_WITHIN_REGISTERED_TOLERANCE",
+    "completed_model_execution_run_ids": [
+      32637809066,
+      32637884887
+    ],
+    "observed_regions": [
+      "eastus2",
+      "centralus"
+    ],
+    "aborted_pre_fit_run_id": 32637645586,
+    "aborted_run_counted_as_completed_execution": false,
+    "registered_relative_tolerance": 1e-08,
+    "registered_absolute_tolerance": 1e-10,
+    "max_absolute_difference": 1.4210854715202004e-14,
+    "max_relative_difference": 6.898278921381566e-14,
+    "all_registered_numeric_metrics_within_tolerance": true,
+    "registered_decisions_match": true,
+    "universal_bitwise_determinism_claimed": false,
+    "hardware_or_region_cause_claimed": false,
+    "comparisons": {
+      "frequency": {
+        "reference_calibration_scale": {
+          "pr": 0.9809032872120627,
+          "main": 0.9809032872120628,
+          "absolute_difference": 1.1102230246251565e-16,
+          "relative_difference": 1.1318373983439775e-16,
+          "within_registered_tolerance": true
+        },
+        "challenger_calibration_scale": {
+          "pr": 0.9814338776666937,
+          "main": 0.9814338776666937,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "reference_deviance": {
+          "pr": 0.604356714368424,
+          "main": 0.604356714368424,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "challenger_deviance": {
+          "pr": 0.6025982649080157,
+          "main": 0.6025982649080157,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "relative_deviance_improvement": {
+          "pr": 0.0029096217823043613,
+          "main": 0.0029096217823043613,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "reference_calibration_ratio": {
+          "pr": 0.9703270728062287,
+          "main": 0.9703270728062288,
+          "absolute_difference": 1.1102230246251565e-16,
+          "relative_difference": 1.144174016926419e-16,
+          "within_registered_tolerance": true
+        },
+        "reference_abs_log_calibration_error": {
+          "pr": 0.030122075859932027,
+          "main": 0.030122075859931912,
+          "absolute_difference": 1.1449174941446927e-16,
+          "relative_difference": 3.8009249411248124e-15,
+          "within_registered_tolerance": true
+        },
+        "challenger_calibration_ratio": {
+          "pr": 0.9699975396931768,
+          "main": 0.9699975396931768,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "challenger_abs_log_calibration_error": {
+          "pr": 0.030461743886712002,
+          "main": 0.030461743886712002,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "reference_top10_capture": {
+          "pr": 0.18977284973677028,
+          "main": 0.18977284973677028,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "challenger_top10_capture": {
+          "pr": 0.195699975568043,
+          "main": 0.195699975568043,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_q025": {
+          "pr": 0.000987214124322794,
+          "main": 0.000987214124322794,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_median": {
+          "pr": 0.002993690284559758,
+          "main": 0.002993690284559758,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_q975": {
+          "pr": 0.004876311098911042,
+          "main": 0.004876311098911042,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_positive_draw_rate": {
+          "pr": 0.998,
+          "main": 0.998,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "registered_decision": {
+          "pr": "NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+          "main": "NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+          "matches": true
+        }
+      },
+      "pure_premium": {
+        "reference_calibration_scale": {
+          "pr": 0.9394974339493493,
+          "main": 0.9394974339493479,
+          "absolute_difference": 1.3322676295501878e-15,
+          "relative_difference": 1.4180641494141791e-15,
+          "within_registered_tolerance": true
+        },
+        "challenger_calibration_scale": {
+          "pr": 0.9959583115046144,
+          "main": 0.9959583115046144,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "reference_deviance": {
+          "pr": 79.84331051378417,
+          "main": 79.84331051378416,
+          "absolute_difference": 1.4210854715202004e-14,
+          "relative_difference": 1.7798428727161353e-16,
+          "within_registered_tolerance": true
+        },
+        "challenger_deviance": {
+          "pr": 79.58630762159916,
+          "main": 79.58630762159916,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "relative_deviance_improvement": {
+          "pr": 0.0032188406333758524,
+          "main": 0.0032188406333756303,
+          "absolute_difference": 2.220446049250313e-16,
+          "relative_difference": 6.898278921381566e-14,
+          "within_registered_tolerance": true
+        },
+        "reference_calibration_ratio": {
+          "pr": 0.9244733502850135,
+          "main": 0.9244733502850132,
+          "absolute_difference": 3.3306690738754696e-16,
+          "relative_difference": 3.602774566566608e-16,
+          "within_registered_tolerance": true
+        },
+        "reference_abs_log_calibration_error": {
+          "pr": 0.07853105465479235,
+          "main": 0.07853105465479271,
+          "absolute_difference": 3.608224830031759e-16,
+          "relative_difference": 4.594647106030621e-15,
+          "within_registered_tolerance": true
+        },
+        "challenger_calibration_ratio": {
+          "pr": 0.9181728698635304,
+          "main": 0.9181728698635304,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "challenger_abs_log_calibration_error": {
+          "pr": 0.08536959469183104,
+          "main": 0.08536959469183104,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "reference_top10_capture": {
+          "pr": 0.2045398934937543,
+          "main": 0.2045398934937543,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "challenger_top10_capture": {
+          "pr": 0.19118990461766386,
+          "main": 0.19118990461766386,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_q025": {
+          "pr": -0.007917598068074592,
+          "main": -0.007917598068074487,
+          "absolute_difference": 1.0581813203458523e-16,
+          "relative_difference": 1.3364928495330676e-14,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_median": {
+          "pr": 0.0033588403884878826,
+          "main": 0.0033588403884878826,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_q975": {
+          "pr": 0.01308226242515245,
+          "main": 0.01308226242515245,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "bootstrap_positive_draw_rate": {
+          "pr": 0.754,
+          "main": 0.754,
+          "absolute_difference": 0.0,
+          "relative_difference": 0.0,
+          "within_registered_tolerance": true
+        },
+        "registered_decision": {
+          "pr": "NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+          "main": "NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+          "matches": true
+        }
+      }
+    }
+  },
+  "registered_results": {
+    "frequency_decision": "NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT",
+    "frequency_relative_deviance_improvement": 0.0029096217823043613,
+    "frequency_bootstrap_q025": 0.000987214124322794,
+    "pure_premium_decision": "NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT",
+    "pure_premium_relative_deviance_improvement": 0.0032188406333756303,
+    "pure_premium_bootstrap_q025": -0.007917598068074487,
+    "positive_gate_present": false,
+    "positive_support_reproduction_required_for_observed_result": false
+  },
+  "external_validation_use": {
+    "dataset_id": "beMTPL97",
+    "current_role": "CONSUMED_EXTERNAL_VALIDATION_DATASET",
+    "independent_external_validation_available": false,
+    "candidate_selection_allowed": false,
+    "fresh_independent_confirmation_allowed": false
+  },
+  "decision": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false
+  },
+  "interpretation": "The Belgian negative registered decisions reproduce across the two completed observed GitHub Actions executions and all registered aggregate numerical metrics are within the preregistered v0.40 tolerance. This is an observed reproducibility result, not a universal determinism claim and not positive XGBoost support. The Belgian locked test is now consumed for future candidate selection."
+}

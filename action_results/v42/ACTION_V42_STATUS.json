@@ -1,0 +1,10 @@
+{
+  "workflow": "Belgian external validation closeout v0.42",
+  "run_id": "32641105638",
+  "sha": "ef6c0956783135f245810f6e88a42de3c4eb2190",
+  "status": "success",
+  "row_level_external_data_accessed": false,
+  "model_fit_executed": false,
+  "belgian_external_validation_consumed": true,
+  "evidence_role": "ROLLING_AGGREGATE_CLOSEOUT"
+}
