@@ -1,0 +1,139 @@
+name: Belgian external validation closeout v0.42
+
+on:
+  pull_request:
+    paths:
+      - 'governance/belgian_external_reproducibility_observations_v42.json'
+      - 'governance/external_validation_use_ledger_v42.json'
+      - 'build_belgian_external_closeout_v42.py'
+      - 'tests/test_belgian_external_closeout_v42.py'
+      - 'RESULTS_V42.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - '.github/workflows/v42-belgian-external-closeout.yml'
+      - 'action_results/v41/origin/32637884887/**'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/belgian_external_reproducibility_observations_v42.json'
+      - 'governance/external_validation_use_ledger_v42.json'
+      - 'build_belgian_external_closeout_v42.py'
+      - 'tests/test_belgian_external_closeout_v42.py'
+      - 'RESULTS_V42.md'
+      - 'EVIDENCE_REGISTRY.md'
+      - '.github/workflows/v42-belgian-external-closeout.yml'
+      - 'action_results/v41/origin/32637884887/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate-only-belgian-closeout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify persisted Belgian closeout contracts without row-level data
+        run: python -m unittest -v tests/test_belgian_external_closeout_v42.py
+      - name: Build aggregate-only reproducibility and consumption closeout
+        run: python build_belgian_external_closeout_v42.py
+      - name: Verify registered negative decisions and consumed-data boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('results_v42/belgian_external_closeout_summary.json').read_text())
+          assert result['status'] == 'V42_BELGIAN_EXTERNAL_CLOSEOUT_PASS'
+          rep = result['reproducibility']
+          assert rep['completed_model_execution_run_ids'] == [32637809066, 32637884887]
+          assert rep['observed_regions'] == ['eastus2', 'centralus']
+          assert rep['aborted_pre_fit_run_id'] == 32637645586
+          assert rep['aborted_run_counted_as_completed_execution'] is False
+          assert rep['all_registered_numeric_metrics_within_tolerance'] is True
+          assert rep['registered_decisions_match'] is True
+          assert rep['max_absolute_difference'] <= 1e-10
+          assert rep['max_relative_difference'] <= 1e-8
+          assert rep['universal_bitwise_determinism_claimed'] is False
+          assert rep['hardware_or_region_cause_claimed'] is False
+          registered = result['registered_results']
+          assert registered['frequency_decision'] == 'NO_SECOND_EXTERNAL_FREQUENCY_REPLICATION_SUPPORT'
+          assert registered['pure_premium_decision'] == 'NO_SECOND_EXTERNAL_PURE_PREMIUM_REPLICATION_SUPPORT'
+          assert registered['positive_gate_present'] is False
+          use = result['external_validation_use']
+          assert use['current_role'] == 'CONSUMED_EXTERNAL_VALIDATION_DATASET'
+          assert use['independent_external_validation_available'] is False
+          assert use['candidate_selection_allowed'] is False
+          assert use['fresh_independent_confirmation_allowed'] is False
+          assert result['decision'] == {
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'model_promotion_authorised': False,
+              'pricing_change_authorised': False,
+          }
+          PY
+      - name: Persist v0.42 aggregate closeout evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v42
+          cp results_v42/belgian_external_closeout_summary.json action_results/v42/
+          cp governance/belgian_external_reproducibility_observations_v42.json action_results/v42/
+          cp governance/external_validation_use_ledger_v42.json action_results/v42/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v42/ACTION_V42_STATUS.json').write_text(json.dumps({
+              'workflow': 'Belgian external validation closeout v0.42',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'row_level_external_data_accessed': False,
+              'model_fit_executed': False,
+              'belgian_external_validation_consumed': True,
+              'evidence_role': 'ROLLING_AGGREGATE_CLOSEOUT',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v42/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.42 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v42/belgian_external_closeout_summary.json "$origin_dir/"
+          cp action_results/v42/belgian_external_reproducibility_observations_v42.json "$origin_dir/"
+          cp action_results/v42/external_validation_use_ledger_v42.json "$origin_dir/"
+          cp action_results/v42/ACTION_V42_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v42/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V42_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_AGGREGATE_CLOSEOUT_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v42
+          if git diff --cached --quiet; then
+            echo 'No v0.42 closeout evidence changes'
+          else
+            git commit -m "Persist v0.42 Belgian external closeout ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Assert closeout contains no row-level Belgian data
+        if: always()
+        run: |
+          if find action_results/v42 results_v42 -type f \( -name '*.rda' -o -name '*.csv' -o -name '*.parquet' \) | grep -q .; then
+            echo 'v0.42 closeout must remain aggregate-only' >&2
+            exit 1
+          fi
+      - name: Upload v0.42 aggregate closeout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-belgian-external-closeout-v42
+          path: results_v42/
+          if-no-files-found: warn
