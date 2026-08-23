@@ -48,6 +48,14 @@ class BusinessTypeRecalibrationStaticV32Tests(unittest.TestCase):
         self.assertIn('"model_family_decision": "HOLD"', source)
         self.assertIn('"serving_status": "HOLD_SHADOW_ONLY"', source)
         self.assertIn("MAX_RELATIVE_DEVIANCE_WORSENING = 0.001", source)
+        self.assertIn("BASELINE_RECONCILIATION_RELATIVE_TOLERANCE = 0.002", source)
+
+    def test_gate_flags_are_cast_to_python_bool_before_json_persistence(self) -> None:
+        source = RUNNER.read_text(encoding="utf-8")
+        self.assertIn("segment_calibration_improved = bool(", source)
+        self.assertIn("aggregate_calibration_not_worse = bool(", source)
+        self.assertIn("deviance_guardrail_pass = bool(", source)
+        self.assertIn("candidate_supported = bool(", source)
 
     def test_workflow_rebuilds_and_verifies_bundle_before_replay(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
