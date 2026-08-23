@@ -36,102 +36,102 @@
       "factor_reconciliation": {
         "segments": {
           "NB": {
-            "fresh_point_factor": 0.9763560993981858,
+            "fresh_point_factor": 0.9763560971779778,
             "v32_persisted_factor": 0.9763560993981859,
-            "relative_difference": 1.1371087099363487e-16
+            "relative_difference": 2.273973737476158e-09
           },
           "P": {
-            "fresh_point_factor": 1.0351969566866372,
+            "fresh_point_factor": 1.035196960190882,
             "v32_persisted_factor": 1.0351969566866372,
-            "relative_difference": 0.0
+            "relative_difference": 3.3850994726940687e-09
           }
         },
-        "max_relative_difference": 1.1371087099363487e-16,
+        "max_relative_difference": 3.3850994726940687e-09,
         "relative_tolerance": 0.002
       },
       "fresh_v32_metric_reconciliation": {
         "relative_differences": {
-          "baseline_deviance": 0.0,
-          "baseline_calibration": 0.0,
-          "candidate_deviance": 0.0,
-          "candidate_calibration": 0.0
+          "baseline_deviance": 6.582868146020813e-11,
+          "baseline_calibration": 6.194467877262827e-10,
+          "candidate_deviance": 1.805544867224313e-11,
+          "candidate_calibration": 7.030965963032869e-10
         },
-        "max_relative_difference": 0.0,
+        "max_relative_difference": 7.030965963032869e-10,
         "relative_tolerance": 0.002
       },
       "baseline_2024": {
-        "poisson_deviance": 1.1185362628672493,
-        "aggregate_calibration_ratio_pred_over_actual": 0.963088025952147,
-        "aggregate_abs_log_calibration_error": 0.0376104633114758,
-        "max_segment_abs_log_calibration_error": 0.06573686352109095
+        "poisson_deviance": 1.118536262940881,
+        "aggregate_calibration_ratio_pred_over_actual": 0.9630880253555653,
+        "aggregate_abs_log_calibration_error": 0.03761046393092259,
+        "max_segment_abs_log_calibration_error": 0.06573686683480076
       },
       "persisted_v32_point_candidate_replay": {
-        "poisson_deviance": 1.1180907056053262,
-        "aggregate_calibration_ratio_pred_over_actual": 0.9704466803524903,
-        "aggregate_abs_log_calibration_error": 0.029998818271335343,
-        "max_segment_abs_log_calibration_error": 0.03114515859221412,
+        "poisson_deviance": 1.1180907056255138,
+        "aggregate_calibration_ratio_pred_over_actual": 0.9704466796701725,
+        "aggregate_abs_log_calibration_error": 0.029998818974431938,
+        "max_segment_abs_log_calibration_error": 0.031145161905923997,
         "segments": {
           "NB": {
             "factor": 0.9763560993981859,
             "claims": 17798.0,
             "exposure": 60713.460273972596,
-            "baseline_expected_claims": 17714.735228300935,
-            "candidate_expected_claims": 17295.889789375535,
-            "candidate_calibration_ratio_pred_over_actual": 0.971788391357205,
-            "candidate_abs_log_calibration_error": 0.028617202587748664
+            "baseline_expected_claims": 17714.735271513295,
+            "candidate_expected_claims": 17295.889831566183,
+            "candidate_calibration_ratio_pred_over_actual": 0.9717883937277325,
+            "candidate_abs_log_calibration_error": 0.028617200148403257
           },
           "P": {
             "factor": 1.0351969566866372,
             "claims": 21478.0,
             "exposure": 65300.90410958904,
-            "baseline_expected_claims": 20111.510078995598,
-            "candidate_expected_claims": 20819.374028148875,
-            "candidate_calibration_ratio_pred_over_actual": 0.9693348555800761,
-            "candidate_abs_log_calibration_error": 0.03114515859221412
+            "baseline_expected_claims": 20111.51001235189,
+            "candidate_expected_claims": 20819.37395915951,
+            "candidate_calibration_ratio_pred_over_actual": 0.9693348523679817,
+            "candidate_abs_log_calibration_error": 0.031145161905923997
           }
         }
       },
       "factor_bootstrap": {
         "NB": {
-          "fresh_point_factor": 0.9763560993981858,
+          "fresh_point_factor": 0.9763560971779778,
           "v32_persisted_factor": 0.9763560993981859,
-          "relative_difference": 1.1371087099363487e-16,
-          "q025": 0.955804014821942,
-          "median": 0.9769050155236447,
-          "q975": 0.9967883402726573,
+          "relative_difference": 2.273973737476158e-09,
+          "q025": 0.9558040125937721,
+          "median": 0.9769050132994317,
+          "q975": 0.9967883380164237,
           "interval_crosses_one": false,
-          "min_draw": 0.9426306148236181,
-          "max_draw": 1.0065119212256863,
+          "min_draw": 0.9426306126260621,
+          "max_draw": 1.0065119190084681,
           "all_draws_within_factor_guardrails": true
         },
         "P": {
-          "fresh_point_factor": 1.0351969566866372,
+          "fresh_point_factor": 1.035196960190882,
           "v32_persisted_factor": 1.0351969566866372,
-          "relative_difference": 0.0,
-          "q025": 1.0049083172095055,
-          "median": 1.0362356113127205,
-          "q975": 1.0634076395567968,
+          "relative_difference": 3.3850994726940687e-09,
+          "q025": 1.0049083206418696,
+          "median": 1.0362356148314258,
+          "q975": 1.0634076432628412,
           "interval_crosses_one": false,
-          "min_draw": 0.9959271342799011,
-          "max_draw": 1.0916056104131207,
+          "min_draw": 0.9959271376107106,
+          "max_draw": 1.0916056141136734,
           "all_draws_within_factor_guardrails": true
         }
       },
       "bootstrap_metric_distributions": {
         "poisson_deviance": {
-          "q025": 1.117870407866584,
-          "median": 1.1181077266519412,
-          "q975": 1.1185550498747818
+          "q025": 1.117870407870284,
+          "median": 1.118107726653521,
+          "q975": 1.1185550498781274
         },
         "aggregate_abs_log_calibration_error": {
-          "q025": 0.011965574964258513,
-          "median": 0.02993669178122539,
-          "q975": 0.04735749726692334
+          "q025": 0.011965574916435661,
+          "median": 0.0299366917540522,
+          "q975": 0.04735749713284692
         },
         "max_segment_abs_log_calibration_error": {
-          "q025": 0.01711979963754047,
-          "median": 0.03728162261997712,
-          "q975": 0.06131541463748328
+          "q025": 0.017119799561659287,
+          "median": 0.03728162244249254,
+          "q975": 0.061315414633719346
         }
       },
       "robustness_rates": {
