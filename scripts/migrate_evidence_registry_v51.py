@@ -8,6 +8,7 @@ BLOCK = r'''
 | v0.51 driver-age response example | at driver age 30 the GLM/XGB relativities are about **0.880 / 1.013**; at 68 they are about **1.172 / 0.896** around the same 2022 reference profile | `action_results/v51/numeric_rating_factor_relativities_v51.csv`, `RESULTS_V51.md` |
 | v0.51 vehicle-age response example | at vehicle age 7 the GLM/XGB relativities are about **1.309 / 1.338**; at 44 they are about **0.702 / 0.918** around the same 2022 reference profile | `action_results/v51/numeric_rating_factor_relativities_v51.csv`, `RESULTS_V51.md` |
 | v0.51 categorical rating structure | `vehicle_brand=BMW` is about **4.14%** of 2022 exposure with GLM/XGB relativities **1.328 / 1.174**; the absolute largest categorical gap is `policy_type=TP`, but that level is only **1.22%** exposure and is retained as a diagnostic rather than a headline | `action_results/v51/categorical_rating_factor_relativities_v51.csv`, `RESULTS_V51.md` |
+| v0.51 repeat-run numerical audit | two successful hosted executions preserve identical grid keys and factor rankings; XGBoost relativities are exact across runs, while maximum GLM absolute relativity drift is **8.03e-08 numeric / 3.86e-08 categorical** | `action_results/v51/v51_repeat_run_audit.json`, `governance/v51_repeat_run_audit.json`, `RESULTS_V51.md` |
 | v0.51 interpretation boundary | reference-profile development sensitivity only; no 2023/2024 rows, incurred loss, actual premium, customer ID or policy status read; not a population-average PDP, validation result, causal effect, customer premium or promotion gate | `action_results/v51/rating_factor_relativity_summary_v51.json`, `tests/test_rating_factor_relativity_v51.py` |
 '''.strip()
 
@@ -16,6 +17,7 @@ RULES = r'''
 - One-factor reference-profile sweeps hold every other feature at the common 2022 reference profile. They are not population-average PDPs, causal effects, actuarial rating recommendations or realised premium impacts.
 - Small-exposure extreme categories are retained in the machine evidence but should not be promoted over larger supported groups merely because their model-family gap is numerically largest.
 - `glm_direction_changes_over_quantile_grid` / `xgb_direction_changes_over_quantile_grid` are descriptive grid diagnostics only; they are not complexity scores or correctness gates.
+- The v0.51 repeat-run audit establishes only **numerical stability of the development diagnostic at reported precision**. It is not validation reproducibility or performance support.
 '''.strip()
 
 
