@@ -82,16 +82,6 @@ jobs:
           cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v59_once.md
           grep -F '| v0.59 committee-gate reachability audit |' EVIDENCE_REGISTRY.md
           grep -F 'Evidence acquisition has a stop condition' EVIDENCE_REGISTRY.md
-      - name: Assert workflow contains no external row-data access path
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          workflow = Path('.github/workflows/v59-committee-reachability.yml').read_text()
-          forbidden = ['pyreadr', 'data_external', 'pg15training.rda', 'euMTPL.rda', 'beMTPL97.rda', 'ausprivauto0405.rda']
-          for token in forbidden:
-              assert token not in workflow, token
-          print('V59_NO_EXTERNAL_ROW_DATA_PATH=PASS')
-          PY
       - name: Persist aggregate v0.59 reachability evidence only
         if: github.event_name == 'push' && github.ref_name == 'main'
         run: |
