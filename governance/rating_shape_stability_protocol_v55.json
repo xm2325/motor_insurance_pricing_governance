@@ -1,0 +1,111 @@
+{
+  "status": "V55_DEVELOPMENT_RATING_SHAPE_STABILITY_PROTOCOL_LOCKED",
+  "analysis_role": "DEVELOPMENT_ONLY_FIXED_FOLD_RESPONSE_SHAPE_STABILITY_AUDIT",
+  "purpose": "Measure how much the already-observed v0.51 GLM/XGBoost frequency response-shape differences move under deterministic development-sample perturbations. This is interpretability stability, not predictive validation or candidate selection.",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "years_allowed": [2022],
+    "required_fields": "frozen rating feature contract + year + total_exposure + total_claims",
+    "forbidden_fields": [
+      "total_incurred",
+      "total_premium",
+      "insured_id",
+      "policy_status"
+    ],
+    "2023_rows_allowed": false,
+    "2024_rows_allowed": false
+  },
+  "lineage": {
+    "full_fit_response_shape_source": "action_results/v51/rating_factor_relativity_summary_v51.json",
+    "numeric_grid_source": "action_results/v51/numeric_rating_factor_relativities_v51.csv",
+    "categorical_grid_source": "action_results/v51/categorical_rating_factor_relativities_v51.csv",
+    "reference_profile_source": "action_results/v51/rating_factor_relativity_summary_v51.json",
+    "frozen_model_definition_source": "build_deployment_bundle_v21.py::model_definitions"
+  },
+  "fold_design": {
+    "fold_count": 5,
+    "seed": 20260824,
+    "assignment": "deterministic NumPy Generator permutation of eligible 2022 source-row ordinals, then round-robin fold labels 0..4 over the permutation",
+    "outcome_stratification": false,
+    "per_fold_fit_rows": "all eligible 2022 rows except the assigned fold",
+    "held_out_fold_role": "sample-perturbation exclusion only; no held-out performance metric is computed"
+  },
+  "models": {
+    "target": "frequency",
+    "names": [
+      "poisson_glm_frequency",
+      "xgb_poisson_frequency"
+    ],
+    "definition": "exact frozen v0.21 frequency specifications",
+    "calibration_applied": false,
+    "relativity_normalisation": "each fold-fitted model is divided by its own prediction at the frozen v0.51 2022 reference profile"
+  },
+  "evaluation_grid": {
+    "numeric": "exact feature/quantile/value points persisted by v0.51",
+    "categorical": "exact displayed feature/level points persisted by v0.51",
+    "grid_reestimated_per_fold": false,
+    "reference_profile_reestimated_per_fold": false
+  },
+  "registered_outputs": {
+    "fold_point_output": [
+      "fold_id",
+      "feature",
+      "point_type",
+      "point_key",
+      "value_or_level",
+      "glm_frequency_relativity",
+      "xgb_frequency_relativity",
+      "log_xgb_over_glm_relativity"
+    ],
+    "point_summary": [
+      "v51_full_fit_log_gap",
+      "fold_mean_log_gap",
+      "fold_min_log_gap",
+      "fold_max_log_gap",
+      "fold_log_gap_range",
+      "fold_std_log_gap",
+      "fraction_folds_same_sign_as_v51_full_fit",
+      "v51_full_fit_gap_inside_fold_min_max"
+    ],
+    "feature_summary": [
+      "v51_max_absolute_log_gap",
+      "max_fold_log_gap_range_over_registered_points",
+      "minimum_same_sign_fraction_over_nonzero_v51_points",
+      "registered_point_count"
+    ]
+  },
+  "preselected_review_points": [
+    {
+      "feature": "driver_age",
+      "point_type": "numeric",
+      "quantile": 0.95,
+      "reason": "v0.51 high-age point has a large displayed GLM/XGBoost response-shape difference"
+    },
+    {
+      "feature": "vehicle_age",
+      "point_type": "numeric",
+      "quantile": 0.95,
+      "reason": "v0.51 older-vehicle point has a large displayed GLM/XGBoost response-shape difference"
+    },
+    {
+      "feature": "vehicle_value",
+      "point_type": "numeric",
+      "quantile": 0.95,
+      "reason": "v0.51 vehicle-value response is a deliberately smaller-gap counterexample"
+    }
+  ],
+  "interpretation_rules": {
+    "confidence_interval_claimed": false,
+    "bootstrap_claimed": false,
+    "predictive_validation_evidence_created": false,
+    "candidate_selection_allowed": false,
+    "model_promotion_evidence_created": false,
+    "customer_pricing_authorised": false,
+    "causal_interpretation_claimed": false,
+    "population_average_pdp_claimed": false,
+    "stability_acceptance_threshold_created": false,
+    "composite_score_created": false,
+    "first_central_or_current_uk_transport_claimed": false,
+    "note": "Five fixed development folds are a deterministic sample-perturbation diagnostic. Their range or standard deviation is not a sampling confidence interval and cannot clear any existing validation blocker."
+  }
+}
