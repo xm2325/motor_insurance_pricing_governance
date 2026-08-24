@@ -24,12 +24,12 @@
       "pure_premium_abs_change_gt_10pct_exposure_share": 0.7825559917141867,
       "pure_premium_abs_change_gt_20pct_exposure_share": 0.5815854696104118,
       "headline_major_segments": {
-        "business_type_NB": 0.0866548417063062,
-        "business_type_P": -0.0653069588984819,
-        "policy_type_COMP_E": 0.1367636031692696,
-        "policy_type_CC": -0.0927003402380683,
-        "driver_age_35_49": 0.0520007277914196,
-        "driver_age_50_64": -0.0548999876211663
+        "business_type_NB": 0.0864962601575656,
+        "business_type_P": -0.0652041444573332,
+        "policy_type_COMP_E": 0.1368149899758148,
+        "policy_type_CC": -0.0926921621373469,
+        "driver_age_35_49": 0.0519769980380442,
+        "driver_age_50_64": -0.054878194040982
       }
     },
     {
@@ -48,12 +48,12 @@
       "pure_premium_abs_change_gt_10pct_exposure_share": 0.782600691988952,
       "pure_premium_abs_change_gt_20pct_exposure_share": 0.5816832188493929,
       "headline_major_segments": {
-        "business_type_NB": 0.0864962601575656,
-        "business_type_P": -0.0652041444573332,
-        "policy_type_COMP_E": 0.1368149899758148,
-        "policy_type_CC": -0.0926921621373469,
-        "driver_age_35_49": 0.0519769980380442,
-        "driver_age_50_64": -0.054878194040982
+        "business_type_NB": 0.0866548220610712,
+        "business_type_P": -0.0653069588984819,
+        "policy_type_COMP_E": 0.1367636031692696,
+        "policy_type_CC": -0.0927003402380683,
+        "driver_age_35_49": 0.0520007087320331,
+        "driver_age_50_64": -0.0548999876211663
       }
     }
   ],
@@ -61,11 +61,11 @@
     "frequency_reference_total_relative_range": 6.194468469193364e-10,
     "frequency_abs_change_gt_10pct_exposure_share_range": 0.0,
     "frequency_abs_change_gt_20pct_exposure_share_range": 0.0,
-    "pure_premium_reference_total_relative_range": 4.106759118090888e-05,
+    "pure_premium_reference_total_relative_range": 4.1067872274007085e-05,
     "pure_premium_mean_absolute_change_range": 0.001095815168815184,
     "pure_premium_abs_change_gt_10pct_exposure_share_range": 4.470027476533023e-05,
     "pure_premium_abs_change_gt_20pct_exposure_share_range": 9.7749238981093e-05,
-    "headline_major_segment_max_absolute_shift_range": 0.0001585815487405995
+    "headline_major_segment_max_absolute_shift_range": 0.0001585619035055913
   },
   "interpretation": {
     "conclusion": "DESCRIPTIVE_REDISTRIBUTION_HEADLINES_STABLE_WITH_REGISTERED_TWEEDIE_GLM_NUMERICAL_LIMITATION",
