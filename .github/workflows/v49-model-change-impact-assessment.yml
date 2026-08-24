@@ -1,0 +1,168 @@
+name: Model change impact assessment v0.49
+
+on:
+  pull_request:
+    paths:
+      - 'build_model_change_impact_assessment_v49.py'
+      - 'MODEL_CHANGE_IMPACT_ASSESSMENT.md'
+      - 'RESULTS_V49.md'
+      - 'tests/test_model_change_impact_assessment_v49.py'
+      - 'scripts/migrate_evidence_registry_v49.py'
+      - '.github/workflows/v49-model-change-impact-assessment.yml'
+      - 'action_results/v44/**'
+      - 'action_results/v46/**'
+      - 'action_results/v47/**'
+      - 'action_results/v48/**'
+  push:
+    branches: [main]
+    paths:
+      - 'build_model_change_impact_assessment_v49.py'
+      - 'MODEL_CHANGE_IMPACT_ASSESSMENT.md'
+      - 'RESULTS_V49.md'
+      - 'tests/test_model_change_impact_assessment_v49.py'
+      - 'scripts/migrate_evidence_registry_v49.py'
+      - '.github/workflows/v49-model-change-impact-assessment.yml'
+      - 'action_results/v44/**'
+      - 'action_results/v46/**'
+      - 'action_results/v47/**'
+      - 'action_results/v48/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  impact-assessment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate committee-ready impact pack idempotently
+        run: |
+          cp MODEL_CHANGE_IMPACT_ASSESSMENT.md /tmp/MODEL_CHANGE_IMPACT_ASSESSMENT.before.md
+          python build_model_change_impact_assessment_v49.py
+          python build_model_change_impact_assessment_v49.py
+          cmp MODEL_CHANGE_IMPACT_ASSESSMENT.md /tmp/MODEL_CHANGE_IMPACT_ASSESSMENT.before.md
+      - name: Run v0.49 impact assessment contracts
+        run: python -m unittest -v tests/test_model_change_impact_assessment_v49.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v49.py
+          python scripts/migrate_evidence_registry_v49.py
+      - name: Verify decision sequence and aggregate-only boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a = json.loads(Path('results_v49/model_change_impact_assessment_v49.json').read_text())
+          assert a['status'] == 'V49_MODEL_CHANGE_IMPACT_ASSESSMENT_COMPLETE'
+          assert a['row_level_data_accessed'] is False
+          assert a['model_fit_executed'] is False
+          assert a['historical_decisions_changed'] is False
+          assert a['new_performance_gate_created'] is False
+          assert a['new_promotion_threshold_created'] is False
+          assert a['customer_pricing_authorised'] is False
+          assert [x['name'] for x in a['decision_sequence']] == [
+              'EVIDENCE_ADEQUACY',
+              'MODEL_IMPACT_REVIEW',
+              'COMMERCIAL_AND_CUSTOMER_PRICING_GOVERNANCE',
+          ]
+          e = a['evidence_adequacy']
+          assert e['status'] == 'EVIDENCE_GAP_HOLD'
+          assert (e['required_gate_pass_count'], e['required_gate_count']) == (5, 8)
+          assert e['blocker_ids'] == [
+              'G2_LOCKED_TEMPORAL_SUPPORT',
+              'G3_PREREGISTERED_EXTERNAL_SUPPORT',
+              'G4_FRESH_INDEPENDENT_EVIDENCE',
+          ]
+          assert (e['external_target_gates_passed'], e['external_target_gates_evaluated']) == (0, 4)
+          assert e['fresh_independent_validation_available'] is False
+          d = a['current_disposition']
+          assert d['impact_pack_disposition'] == 'DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN'
+          assert d['model_family_decision'] == 'HOLD'
+          assert d['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert d['promotion_review_status'] == 'NOT_OPEN'
+          assert d['model_promotion_authorised'] is False
+          assert d['pricing_change_authorised'] is False
+          PY
+      - name: Persist v0.49 impact assessment evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v49
+          cp results_v49/model_change_impact_assessment_v49.json action_results/v49/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          a = json.loads(Path('results_v49/model_change_impact_assessment_v49.json').read_text())
+          e = a['evidence_adequacy']
+          f = a['impact_diagnostics']['frequency']
+          p = a['impact_diagnostics']['pure_premium']
+          d = a['current_disposition']
+          status = {
+              'workflow': 'Model change impact assessment v0.49',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'scope': a['scope'],
+              'row_level_data_accessed': False,
+              'model_fit_executed': False,
+              'historical_decisions_changed': False,
+              'new_performance_gate_created': False,
+              'new_promotion_threshold_created': False,
+              'committee_status': e['status'],
+              'committee_gate_pass_count': e['required_gate_pass_count'],
+              'committee_gate_count': e['required_gate_count'],
+              'blocker_ids': e['blocker_ids'],
+              'external_target_gates': f"{e['external_target_gates_passed']}/{e['external_target_gates_evaluated']}",
+              'frequency_abs_change_gt_10pct_exposure_share': f['exposure_share_abs_change_gt_10pct'],
+              'pure_premium_abs_change_gt_10pct_exposure_share': p['exposure_share_abs_change_gt_10pct'],
+              'pure_premium_abs_change_gt_20pct_exposure_share': p['exposure_share_abs_change_gt_20pct'],
+              'impact_pack_disposition': d['impact_pack_disposition'],
+              'model_family_decision': d['model_family_decision'],
+              'serving_status': d['serving_status'],
+              'promotion_review_status': d['promotion_review_status'],
+              'customer_pricing_authorised': d['pricing_change_authorised'],
+              'evidence_role': 'ROLLING_AGGREGATE_MODEL_CHANGE_IMPACT_ASSESSMENT',
+          }
+          Path('action_results/v49/ACTION_V49_STATUS.json').write_text(
+              json.dumps(status, indent=2), encoding='utf-8'
+          )
+          PY
+          origin_dir="action_results/v49/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.49 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v49/model_change_impact_assessment_v49.json "$origin_dir/"
+          cp action_results/v49/ACTION_V49_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path('action_results/v49/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V49_STATUS.json'
+          s = json.loads(p.read_text(encoding='utf-8'))
+          s['evidence_role'] = 'IMMUTABLE_AGGREGATE_MODEL_CHANGE_IMPACT_ASSESSMENT_SNAPSHOT'
+          p.write_text(json.dumps(s, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md action_results/v49
+          if git diff --cached --quiet; then
+            echo 'No v0.49 evidence changes'
+          else
+            git commit -m "Persist v0.49 model change impact assessment ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.49 impact assessment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-model-change-impact-v49
+          path: |
+            results_v49/
+            MODEL_CHANGE_IMPACT_ASSESSMENT.md
+          if-no-files-found: error
