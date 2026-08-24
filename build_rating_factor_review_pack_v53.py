@@ -45,52 +45,80 @@ def find_row(rows: list[dict[str, str]], **matches: str) -> dict[str, str]:
     return found[0]
 
 
-def numeric_point(rows: list[dict[str, str]], feature: str, value: float) -> dict:
-    candidates = [row for row in rows if row["feature"] == feature and abs(float(row["value"]) - value) < 1e-9]
+def numeric_quantile(rows: list[dict[str, str]], feature: str, quantile: float) -> dict:
+    candidates = [
+        row for row in rows
+        if row["feature"] == feature and abs(float(row["quantile"]) - quantile) < 1e-12
+    ]
     if len(candidates) != 1:
-        raise RuntimeError(f"Expected one {feature} point at {value}, found {len(candidates)}")
+        raise RuntimeError(f"Expected one {feature} point at quantile {quantile}, found {len(candidates)}")
     row = candidates[0]
+    glm = float(row["glm_frequency_relativity"])
+    xgb = float(row["xgb_frequency_relativity"])
+    if glm <= 0 or xgb <= 0:
+        raise RuntimeError(f"Non-positive relativity for {feature} q={quantile}")
     return {
+        "quantile": float(row["quantile"]),
         "value": float(row["value"]),
-        "glm_relativity": float(row["glm_frequency_relativity"]),
-        "xgb_relativity": float(row["xgb_frequency_relativity"]),
-        "xgb_over_glm": float(row["xgb_over_glm_relativity"]),
+        "glm_relativity": glm,
+        "xgb_relativity": xgb,
+        "xgb_over_glm": xgb / glm,
+        "log_xgb_over_glm": float(row["log_xgb_over_glm_relativity"]),
     }
+
+
+def validate_source_roles(v51: dict, v52: dict, v49: dict) -> tuple[dict, dict]:
+    if v51["status"] != "V51_DEVELOPMENT_RATING_FACTOR_RELATIVITY_AUDIT_COMPLETE":
+        raise RuntimeError("Unexpected v0.51 evidence role")
+    if v51["source"]["years_read"] != [2022]:
+        raise RuntimeError("v0.51 source years changed")
+    if v51["interpretation_boundary"]["validation_performance_evidence_created"]:
+        raise RuntimeError("v0.51 must remain development interpretability only")
+    if v51["interpretation_boundary"]["customer_pricing_authorised"]:
+        raise RuntimeError("v0.51 cannot authorise pricing")
+
+    if v52["status"] != "V52_LABEL_FREE_RATING_FACTOR_SUPPORT_AUDIT_COMPLETE":
+        raise RuntimeError("Unexpected v0.52 evidence role")
+    if v52["source"]["years_read"] != [2022, 2024]:
+        raise RuntimeError("v0.52 source years changed")
+    if v52["source"]["claim_outcomes_read"]:
+        raise RuntimeError("v0.52 must remain label-free")
+    if v52["interpretation_boundary"]["model_fit_executed"]:
+        raise RuntimeError("v0.52 must not fit a model")
+    if not v52["definitions"]["no_composite_score"]:
+        raise RuntimeError("v0.52 composite-score boundary changed")
+
+    evidence = v49["evidence_adequacy"]
+    current = v49["current_disposition"]
+    if evidence["status"] != "EVIDENCE_GAP_HOLD":
+        raise RuntimeError("Committee evidence state changed; review v0.53 pack assumptions")
+    if (evidence["required_gate_pass_count"], evidence["required_gate_count"]) != (5, 8):
+        raise RuntimeError("Committee gate counts changed; review v0.53 pack assumptions")
+    if (evidence["external_target_gates_passed"], evidence["external_target_gates_evaluated"]) != (0, 4):
+        raise RuntimeError("External evidence state changed; review v0.53 pack assumptions")
+    if current["model_family_decision"] != "HOLD":
+        raise RuntimeError("v0.53 source decision is no longer HOLD")
+    if current["promotion_review_status"] != "NOT_OPEN":
+        raise RuntimeError("v0.53 source promotion review is no longer closed")
+    if current["pricing_change_authorised"]:
+        raise RuntimeError("v0.53 cannot synthesise a pricing-authorised state")
+    return evidence, current
 
 
 def build_pack() -> dict:
     v51 = load_json(SOURCES["v51_summary"])
     v52 = load_json(SOURCES["v52_summary"])
     v49 = load_json(SOURCES["v49_impact"])
+    evidence, current = validate_source_roles(v51, v52, v49)
+
     v51_numeric = load_csv(SOURCES["v51_numeric"])
     v51_cat = load_csv(SOURCES["v51_categorical"])
     v52_numeric = {row["feature"]: row for row in load_csv(SOURCES["v52_numeric"])}
-    v52_cat = {row["feature"]: row for row in load_csv(SOURCES["v52_categorical"])}
     v52_levels = load_csv(SOURCES["v52_levels"])
-
-    # Fail closed on decision-critical roles and boundaries, not on invented post-hoc approval thresholds.
-    if v51["status"] != "V51_DEVELOPMENT_RATING_FACTOR_RELATIVITY_AUDIT_COMPLETE":
-        raise RuntimeError("Unexpected v0.51 evidence role")
-    if v51["source"]["years_read"] != [2022] or v51["interpretation_boundary"]["validation_performance_evidence_created"]:
-        raise RuntimeError("v0.51 must remain development interpretability only")
-    if v52["status"] != "V52_LABEL_FREE_RATING_FACTOR_SUPPORT_AUDIT_COMPLETE":
-        raise RuntimeError("Unexpected v0.52 evidence role")
-    if v52["source"]["years_read"] != [2022, 2024] or v52["source"]["claim_outcomes_read"]:
-        raise RuntimeError("v0.52 must remain label-free feature support evidence")
-    if v52["interpretation_boundary"]["model_fit_executed"]:
-        raise RuntimeError("v0.52 must not fit a model")
-    evidence = v49["evidence_adequacy"]
-    current = v49["current_disposition"]
-    if evidence["status"] != "EVIDENCE_GAP_HOLD" or evidence["required_gate_pass_count"] != 5 or evidence["required_gate_count"] != 8:
-        raise RuntimeError("Committee evidence state changed; review v0.53 pack assumptions")
-    if evidence["external_target_gates_passed"] != 0 or evidence["external_target_gates_evaluated"] != 4:
-        raise RuntimeError("External evidence state changed; review v0.53 pack assumptions")
-    if current["model_family_decision"] != "HOLD" or current["promotion_review_status"] != "NOT_OPEN" or current["pricing_change_authorised"]:
-        raise RuntimeError("v0.53 cannot synthesise a promoted/pricing-authorised state")
 
     driver_age = {
         "shape_gap": float(v51["numeric_grid"]["features"]["driver_age"]["max_absolute_log_relativity_gap"]),
-        "points": [numeric_point(v51_numeric, "driver_age", 30.0), numeric_point(v51_numeric, "driver_age", 47.0), numeric_point(v51_numeric, "driver_age", 68.0)],
+        "points": [numeric_quantile(v51_numeric, "driver_age", q) for q in (0.05, 0.50, 0.95)],
         "strict_extrapolation_share": float(v52_numeric["driver_age"]["current_outside_development_observed_range_exposure_share"]),
         "q05_q95_tail_share": float(v52_numeric["driver_age"]["current_outside_development_q05_q95_exposure_share"]),
         "development_median": float(v52_numeric["driver_age"]["development_q50"]),
@@ -98,7 +126,7 @@ def build_pack() -> dict:
     }
     vehicle_age = {
         "shape_gap": float(v51["numeric_grid"]["features"]["vehicle_age"]["max_absolute_log_relativity_gap"]),
-        "points": [numeric_point(v51_numeric, "vehicle_age", 7.0), numeric_point(v51_numeric, "vehicle_age", 23.0), numeric_point(v51_numeric, "vehicle_age", 44.0)],
+        "points": [numeric_quantile(v51_numeric, "vehicle_age", q) for q in (0.05, 0.50, 0.95)],
         "strict_extrapolation_share": float(v52_numeric["vehicle_age"]["current_outside_development_observed_range_exposure_share"]),
         "q05_q95_tail_share": float(v52_numeric["vehicle_age"]["current_outside_development_q05_q95_exposure_share"]),
         "development_median": float(v52_numeric["vehicle_age"]["development_q50"]),
@@ -126,7 +154,7 @@ def build_pack() -> dict:
     bmw = find_row(v51_cat, feature="vehicle_brand", level="BMW")
     brand = v52["categorical_features"]["vehicle_brand"]
     vehicle_brand = {
-        "bmw_development_exposure_share_v51": float(bmw["development_exposure_share"]),
+        "bmw_development_exposure_share_v51": float(bmw["exposure_share"]),
         "bmw_glm_relativity": float(bmw["glm_frequency_relativity"]),
         "bmw_xgb_relativity": float(bmw["xgb_frequency_relativity"]),
         "unseen_2024_level_count": int(brand["current_unseen_nonmissing_level_count"]),
@@ -140,6 +168,8 @@ def build_pack() -> dict:
         for row in impact["selected_major_segments"]
         if row["dimension"] == "business_type"
     }
+    if set(business_segments) != {"NB", "P"}:
+        raise RuntimeError("Expected NB/P business-type impact segments")
 
     return {
         "status": "V53_RATING_FACTOR_REVIEW_PACK_COMPLETE",
@@ -216,11 +246,11 @@ def render_markdown(a: dict) -> str:
     lines = [
         "# Rating Factor Review Pack",
         "",
-        "This pack joins persisted aggregate evidence from v0.51 (development rating structure), v0.52 (label-free feature support/mix), v0.48/v0.49 (portfolio-neutral impact and committee context). It does not access policy rows, refit a model, create a new performance/support gate, or authorise customer pricing.",
+        "This pack joins persisted aggregate evidence from v0.51 (development rating structure), v0.52 (label-free feature support/mix) and v0.49 (portfolio-neutral impact plus committee context). It does not access policy rows, refit a model, create a new performance/support gate, or authorise customer pricing.",
         "",
         "## Executive review answer",
         "",
-        "The current 2024 book is **not broadly outside the numeric support seen in 2022**. Strict out-of-range exposure is near zero for the main numeric factors. The larger monitoring issue is **portfolio reweighting among known rating cells**, especially business type. Separately, the frozen GLM and XGBoost can encode materially different response shapes for supported factors such as driver age and vehicle age, and v0.48 shows that those model-family differences can materially redistribute technical risk even after aggregate predicted totals are forced equal.",
+        "The 2024 feature population is **not broadly outside the numeric support seen in 2022**. Strict out-of-range exposure is near zero for the main numeric factors. The larger monitoring issue is **portfolio reweighting among known rating cells**, especially business type. Separately, the frozen GLM and XGBoost encode materially different response shapes for supported factors such as driver age and vehicle age, and the portfolio-neutral impact evidence shows that model-family differences can materially redistribute technical risk even after aggregate predicted totals are forced equal.",
         "",
         "None of that repairs the validation evidence gap: the committee state remains **`EVIDENCE_GAP_HOLD` (5/8)** with external support **0/4**, so model-family promotion review remains closed.",
         "",
@@ -230,11 +260,11 @@ def render_markdown(a: dict) -> str:
         "",
         f"v0.51 max absolute log-relativity gap: **{da['shape_gap']:.5f}**. Development median age is {da['development_median']:.0f}; the 2024 feature-population median is {da['current_median']:.0f}.",
         "",
-        "| Driver age | GLM relativity | XGB relativity | XGB / GLM |",
-        "|---:|---:|---:|---:|",
+        "| Quantile | Driver age | GLM relativity | XGB relativity | XGB / GLM |",
+        "|---:|---:|---:|---:|---:|",
     ]
     for point in da["points"]:
-        lines.append(f"| {point['value']:.0f} | {point['glm_relativity']:.3f} | {point['xgb_relativity']:.3f} | {point['xgb_over_glm']:.3f} |")
+        lines.append(f"| q{int(point['quantile']*100):02d} | {point['value']:.0f} | {point['glm_relativity']:.3f} | {point['xgb_relativity']:.3f} | {point['xgb_over_glm']:.3f} |")
     lines += [
         "",
         f"Only **{pct(da['strict_extrapolation_share'], 4)}** of 2024 exposure is outside the actual observed 2022 driver-age range; **{pct(da['q05_q95_tail_share'])}** lies outside the 2022 q05–q95 interval. The structural disagreement is therefore mainly **within supported ages**, not broad extrapolation.",
@@ -243,16 +273,16 @@ def render_markdown(a: dict) -> str:
         "",
         f"v0.51 max absolute log-relativity gap: **{va['shape_gap']:.5f}**. Development median is {va['development_median']:.0f}; 2024 median is {va['current_median']:.0f}.",
         "",
-        "| Vehicle age | GLM relativity | XGB relativity | XGB / GLM |",
-        "|---:|---:|---:|---:|",
+        "| Quantile | Vehicle age | GLM relativity | XGB relativity | XGB / GLM |",
+        "|---:|---:|---:|---:|---:|",
     ]
     for point in va["points"]:
-        lines.append(f"| {point['value']:.0f} | {point['glm_relativity']:.3f} | {point['xgb_relativity']:.3f} | {point['xgb_over_glm']:.3f} |")
+        lines.append(f"| q{int(point['quantile']*100):02d} | {point['value']:.0f} | {point['glm_relativity']:.3f} | {point['xgb_relativity']:.3f} | {point['xgb_over_glm']:.3f} |")
     lines += [
         "",
         f"Strict 2024 out-of-range exposure is only **{pct(va['strict_extrapolation_share'], 4)}**; q05–q95 tail exposure is **{pct(va['q05_q95_tail_share'])}**.",
         "",
-        f"`vehicle_value` is a useful counterexample: its model-family shape gap is only **{rs['vehicle_value_counterexample']['shape_gap']:.5f}**, despite **{pct(rs['vehicle_value_counterexample']['q05_q95_tail_share'])}** of 2024 exposure lying outside the development q05–q95 interval. Flexibility does not imply a large response-shape difference for every factor.",
+        f"`vehicle_value` is a counterexample: its model-family shape gap is only **{rs['vehicle_value_counterexample']['shape_gap']:.5f}**, despite **{pct(rs['vehicle_value_counterexample']['q05_q95_tail_share'])}** of 2024 exposure lying outside the development q05–q95 interval. Flexibility does not imply a large response-shape difference for every factor.",
         "",
         "## 2. Feature support and portfolio mix: is the current book unfamiliar?",
         "",
@@ -271,15 +301,15 @@ def render_markdown(a: dict) -> str:
         "",
         "### Vehicle brand",
         "",
-        f"For `BMW` in the 2022 reference-profile audit, GLM/XGB frequency relativities are **{brand['bmw_glm_relativity']:.3f} / {brand['bmw_xgb_relativity']:.3f}**. In 2024 there are {brand['unseen_2024_level_count']} brand levels absent from 2022, but together they represent only **{pct(brand['unseen_2024_exposure_share'], 4)}** of exposure; brand mix TV is **{pct(brand['mix_total_variation'])}**.",
+        f"`BMW` represented **{pct(brand['bmw_development_exposure_share_v51'])}** of 2022 development exposure in the v0.51 displayed grid; GLM/XGB frequency relativities were **{brand['bmw_glm_relativity']:.3f} / {brand['bmw_xgb_relativity']:.3f}**. In 2024 there are {brand['unseen_2024_level_count']} brand levels absent from 2022, but together they represent only **{pct(brand['unseen_2024_exposure_share'], 4)}** of exposure; brand mix TV is **{pct(brand['mix_total_variation'])}**.",
         "",
         "## 3. Portfolio impact: if aggregate technical-risk level is fixed, how much redistribution remains?",
         "",
-        f"v0.48 forces GLM and XGBoost aggregate predicted technical-risk totals equal before comparison. Frequency still shows mean absolute relativity redistribution **{pct(impact['frequency_mean_absolute_relativity_change'])}**, with **{pct(impact['frequency_exposure_share_abs_change_gt_10pct'])}** of exposure moving by more than ±10%.",
+        f"The portfolio-neutral diagnostic forces GLM and XGBoost aggregate predicted technical-risk totals equal before comparison. Frequency still shows mean absolute relativity redistribution **{pct(impact['frequency_mean_absolute_relativity_change'])}**, with **{pct(impact['frequency_exposure_share_abs_change_gt_10pct'])}** of exposure moving by more than ±10%.",
         "",
         f"Pure premium is more sensitive: mean absolute redistribution **{pct(impact['pure_premium_mean_absolute_relativity_change'])}**, **{pct(impact['pure_premium_exposure_share_abs_change_gt_10pct'])}** exposure >±10% and **{pct(impact['pure_premium_exposure_share_abs_change_gt_20pct'])}** >±20%. Business-type pure-premium total relativity shifts are approximately **NB {pct(impact['business_type_nb_pure_premium_total_relativity_change'])} / P {pct(impact['business_type_p_pure_premium_total_relativity_change'])}**.",
         "",
-        "These are **technical-risk score redistributions, not customer premium changes**. v0.51 contains frequency response-shape analysis only; the pure-premium impact evidence comes from the separate frozen-model v0.48 diagnostic.",
+        "These are **technical-risk score redistributions, not customer premium changes**. v0.51 contains frequency response-shape analysis only; the pure-premium impact evidence comes from the separate frozen-model diagnostic summarised by v0.49.",
         "",
         "## 4. Review matrix: do not collapse different risks into one score",
         "",
@@ -308,7 +338,9 @@ def render_markdown(a: dict) -> str:
 def main() -> None:
     OUTDIR.mkdir(exist_ok=True)
     assessment = build_pack()
-    (OUTDIR / "rating_factor_review_pack_v53.json").write_text(json.dumps(assessment, indent=2), encoding="utf-8")
+    (OUTDIR / "rating_factor_review_pack_v53.json").write_text(
+        json.dumps(assessment, indent=2), encoding="utf-8"
+    )
     PACK.write_text(render_markdown(assessment), encoding="utf-8")
     print(json.dumps({
         "status": assessment["status"],
