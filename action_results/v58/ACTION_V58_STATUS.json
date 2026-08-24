@@ -1,0 +1,21 @@
+{
+  "workflow": "euMTPL source-contract incident v0.58",
+  "run_id": "32780676453",
+  "sha": "1bc10caddd94cd7c7deffcba919cdd5d6e302a01",
+  "status": "success",
+  "incident_status": "V58_FAIL_CLOSED_SOURCE_SCHEMA_PREREGISTRATION_MISMATCH",
+  "row_level_dataset_access_occurred": true,
+  "outcome_values_inspected": false,
+  "year_values_inspected": false,
+  "model_fit_executed": false,
+  "performance_metrics_computed": false,
+  "confirmatory_external_temporal_evidence_created": false,
+  "eumtpl_fresh_confirmatory_eligible": false,
+  "raw_external_data_persisted": false,
+  "committee_gate_pass_count": 5,
+  "committee_gate_count": 8,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "evidence_role": "ROLLING_EUMTPL_SOURCE_CONTRACT_INCIDENT"
+}

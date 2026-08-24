@@ -1,0 +1,101 @@
+{
+  "status": "V58_FAIL_CLOSED_SOURCE_SCHEMA_PREREGISTRATION_MISMATCH",
+  "v57_protocol_sha256": "a2b49e26aeca619323129ee4b56ff39d110cf68a08bfe0064fbd3f5886f74ff5",
+  "v57_main_sha": "cacb55a039c6132b7c2466f6356903250dc624d3",
+  "source_identity": {
+    "dataset": "euMTPL",
+    "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+    "git_blob_sha1": "4bb386d89606eb5b529206d0835e11074103042b",
+    "file_sha256": "cf3594f20c0c108fce8efba167f468697a9233372286b29eb81aa43aa724d195",
+    "file_bytes": 17829164,
+    "binary_identity_passed_before_decode": true
+  },
+  "registered_schema": [
+    "policy_id",
+    "year",
+    "group",
+    "fuel_type",
+    "vehicle_category",
+    "vehicle_use",
+    "province",
+    "horsepower",
+    "gender",
+    "age",
+    "exposure",
+    "cost_nc",
+    "num_nc",
+    "cost_cg",
+    "num_cg",
+    "cost_cd",
+    "num_cd",
+    "cost_fcd",
+    "num_fcd"
+  ],
+  "decoded_schema": [
+    "policy_id",
+    "group",
+    "fuel_type",
+    "year",
+    "vehicle_category",
+    "vehicle_use",
+    "province",
+    "horsepower",
+    "gender",
+    "age",
+    "exposure",
+    "cost_nc",
+    "num_nc",
+    "cost_cg",
+    "num_cg",
+    "cost_fcg",
+    "num_fcg",
+    "cost_cd",
+    "num_cd"
+  ],
+  "registered_only_columns": [
+    "cost_fcd",
+    "num_fcd"
+  ],
+  "decoded_only_columns": [
+    "cost_fcg",
+    "num_fcg"
+  ],
+  "same_column_set": false,
+  "same_column_order": false,
+  "observed_mismatch": {
+    "registered_forfait_fields": [
+      "cost_fcd",
+      "num_fcd"
+    ],
+    "decoded_forfait_fields": [
+      "cost_fcg",
+      "num_fcg"
+    ],
+    "column_order_also_differs": true
+  },
+  "access_boundary": {
+    "binary_downloaded": true,
+    "r_object_decoded": true,
+    "row_level_dataset_access_occurred": true,
+    "outcome_values_inspected": false,
+    "year_values_inspected": false,
+    "row_level_summary_computed": false,
+    "model_fit_executed": false,
+    "calibration_executed": false,
+    "locked_test_performance_metrics_computed": false,
+    "registered_gate_evaluated": false
+  },
+  "governance": {
+    "confirmatory_external_temporal_evidence_created": false,
+    "euMTPL_still_eligible_as_fresh_confirmatory_dataset": false,
+    "post_access_schema_amendment_used_for_confirmatory_claim": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false,
+    "committee_gate_pass_count": 5,
+    "committee_gate_count": 8,
+    "required_next_step": "REGISTER_ANOTHER_FRESH_EXTERNAL_DATASET_OR_USE_EUMTPL_ONLY_AS_EXPLICITLY_NON_CONFIRMATORY_DIAGNOSTIC"
+  },
+  "interpretation": "The pinned euMTPL binary was authentic, but its decoded schema did not satisfy the exact v0.57 preregistered source contract. Execution stopped before outcome-value inspection, temporal-label inspection, model fitting, calibration or performance scoring. The dataset has nevertheless been row-level decoded and is therefore not treated as fresh confirmatory evidence after this incident."
+}

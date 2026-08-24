@@ -1,0 +1,17 @@
+{
+  "status": "V58_PINNED_EUMTPL_BINARY_VERIFIED_BEFORE_DECODE",
+  "v57_protocol_sha256": "a2b49e26aeca619323129ee4b56ff39d110cf68a08bfe0064fbd3f5886f74ff5",
+  "v57_main_sha": "cacb55a039c6132b7c2466f6356903250dc624d3",
+  "source_repository": "dutangc/CASdatasets",
+  "source_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+  "source_path": "data/euMTPL.rda",
+  "download_url": "https://raw.githubusercontent.com/dutangc/CASdatasets/227fb56b8734bdb7c0327a41180e01d2ddaeaf26/data/euMTPL.rda",
+  "file_name": "euMTPL.rda",
+  "file_bytes": 17829164,
+  "git_blob_sha1": "4bb386d89606eb5b529206d0835e11074103042b",
+  "file_sha256": "cf3594f20c0c108fce8efba167f468697a9233372286b29eb81aa43aa724d195",
+  "binary_downloaded": true,
+  "decoded_in_downloader": false,
+  "row_outcomes_inspected_in_downloader": false,
+  "raw_data_persisted_to_repository": false
+}
