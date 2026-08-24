@@ -46,4 +46,4 @@ The frozen Tweedie GLM still reaches its registered `max_iter=900` limit. Same-h
 
 The current decision remains **`HOLD / HOLD_SHADOW_ONLY / EVIDENCE_GAP_HOLD`**. This pack does not reopen model-family promotion, authorise a serving change, estimate a customer premium, claim commercial uplift, or establish transfer to FIRST CENTRAL / the current UK motor market.
 
-Source hashes are recorded in `results_v49/model_change_impact_assessment_v49.json` so this document fails closed if the persisted evidence it summarises changes.
+Source hashes are recorded in `results_v49/model_change_impact_assessment_v49.json` for lineage. CI separately pins the decision-critical status, gate counts, blocker set and impact headlines used by this pack.
