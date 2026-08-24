@@ -1,0 +1,30 @@
+{
+  "workflow": "Model change impact assessment v0.49",
+  "run_id": "32675922184",
+  "sha": "9510965cdd844fe3e42f51db1d45b490b2b8f346",
+  "status": "success",
+  "scope": "aggregate_committee_ready_synthesis_of_persisted_evidence",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_decisions_changed": false,
+  "new_performance_gate_created": false,
+  "new_promotion_threshold_created": false,
+  "committee_status": "EVIDENCE_GAP_HOLD",
+  "committee_gate_pass_count": 5,
+  "committee_gate_count": 8,
+  "blocker_ids": [
+    "G2_LOCKED_TEMPORAL_SUPPORT",
+    "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+    "G4_FRESH_INDEPENDENT_EVIDENCE"
+  ],
+  "external_target_gates": "0/4",
+  "frequency_abs_change_gt_10pct_exposure_share": 0.36806017091811,
+  "pure_premium_abs_change_gt_10pct_exposure_share": 0.782600691988952,
+  "pure_premium_abs_change_gt_20pct_exposure_share": 0.5816832188493929,
+  "impact_pack_disposition": "DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN",
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false,
+  "evidence_role": "ROLLING_AGGREGATE_MODEL_CHANGE_IMPACT_ASSESSMENT"
+}

@@ -1,0 +1,213 @@
+{
+  "status": "V49_MODEL_CHANGE_IMPACT_ASSESSMENT_COMPLETE",
+  "scope": "aggregate_committee_ready_synthesis_of_persisted_evidence",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_decisions_changed": false,
+  "new_performance_gate_created": false,
+  "new_promotion_threshold_created": false,
+  "customer_pricing_authorised": false,
+  "source_lineage": {
+    "committee": {
+      "path": "action_results/v44/model_change_committee_decision_v44.json",
+      "sha256": "4502ddc0477ffce60f56eaab325ed72aa5ee10ba1edbae29dff58752f8c8d60e"
+    },
+    "inventory": {
+      "path": "action_results/v46/model_risk_inventory_v46.json",
+      "sha256": "893687676ede1bc645ac37cd657fce00e557cca44c734d0a94074b19229f5676"
+    },
+    "disagreement": {
+      "path": "action_results/v47/disagreement_attribution_summary_v47.json",
+      "sha256": "2f988c234753036795a191fb741c5ab72fb4a69b06ca112b62bae10bfa077d80"
+    },
+    "relativity": {
+      "path": "action_results/v48/portfolio_neutral_relativity_summary_v48.json",
+      "sha256": "dbea61edee41732429503bf53b8cd2bba61827530258bc315bf6e2e3c1caf694"
+    },
+    "repeat_audit": {
+      "path": "action_results/v48/v48_repeat_run_audit.json",
+      "sha256": "2221266ba52712e44c5bc09c85b667f32d581a411dbf5f33a28ff587e61af7c4"
+    },
+    "segments": {
+      "path": "action_results/v48/segment_relativity_migration_v48.csv",
+      "sha256": "2f0a0f8774ed02163e499f4f2d9318ba6ba5c7f4cb617e8fca7406c4e133fae0"
+    }
+  },
+  "decision_sequence": [
+    {
+      "stage": 1,
+      "name": "EVIDENCE_ADEQUACY",
+      "current_status": "EVIDENCE_GAP_HOLD",
+      "must_pass_before_next_stage_can_authorise_promotion": true
+    },
+    {
+      "stage": 2,
+      "name": "MODEL_IMPACT_REVIEW",
+      "current_status": "DIAGNOSTIC_EVIDENCE_AVAILABLE_BUT_NOT_PROMOTION_AUTHORITY",
+      "must_pass_before_next_stage_can_authorise_pricing": true
+    },
+    {
+      "stage": 3,
+      "name": "COMMERCIAL_AND_CUSTOMER_PRICING_GOVERNANCE",
+      "current_status": "OUT_OF_SCOPE_NOT_AUTHORISED",
+      "must_be_separately_authorised": true
+    }
+  ],
+  "evidence_adequacy": {
+    "committee_request_id": "MCR-XGB-MOTOR-001",
+    "status": "EVIDENCE_GAP_HOLD",
+    "required_gate_pass_count": 5,
+    "required_gate_count": 8,
+    "blocker_ids": [
+      "G2_LOCKED_TEMPORAL_SUPPORT",
+      "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+      "G4_FRESH_INDEPENDENT_EVIDENCE"
+    ],
+    "human_committee_review_open": false,
+    "human_signoff_can_override_failed_evidence_gate": false,
+    "external_target_gates_passed": 0,
+    "external_target_gates_evaluated": 4,
+    "fresh_independent_validation_available": false
+  },
+  "operational_readiness": {
+    "shadow_serving_boundary": true,
+    "manual_rollback_control": true,
+    "automatic_review_serving_switch": false,
+    "attested_shadow_admission": true,
+    "raw_source_data_members_in_release_archive": 0
+  },
+  "impact_diagnostics": {
+    "disagreement_analysis_role": "POST_HOC_DIAGNOSTIC_ON_CONSUMED_RETROSPECTIVE_VALIDATION",
+    "relativity_analysis_role": "POST_HOC_LABEL_FREE_TECHNICAL_RELATIVITY_DIAGNOSTIC",
+    "frequency": {
+      "baseline_mean_absolute_log_disagreement": 0.09926441568172852,
+      "top_disagreement_sensitivities": [
+        {
+          "feature": "vehicle_brand",
+          "absolute_disagreement_reduction": 0.010675752988488676,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.10754864082128224,
+          "weighted_sign_flip_rate": 0.21228114730673853
+        },
+        {
+          "feature": "policy_type",
+          "absolute_disagreement_reduction": 0.010505898228850605,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.10583750638834832,
+          "weighted_sign_flip_rate": 0.13384001970284468
+        },
+        {
+          "feature": "vehicle_value",
+          "absolute_disagreement_reduction": 0.00595858004622582,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.060027352252098216,
+          "weighted_sign_flip_rate": 0.12172869424223857
+        }
+      ],
+      "mean_absolute_portfolio_neutral_relativity_change": 0.10181561928799863,
+      "exposure_share_abs_change_gt_10pct": 0.36806017091811,
+      "exposure_share_abs_change_gt_20pct": 0.10979322361662487
+    },
+    "pure_premium": {
+      "baseline_mean_absolute_log_disagreement": 0.31707691256990944,
+      "top_disagreement_sensitivities": [
+        {
+          "feature": "business_type",
+          "absolute_disagreement_reduction": 0.019742473537868732,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.0622639894461439,
+          "weighted_sign_flip_rate": 0.12367886630387541
+        },
+        {
+          "feature": "power_to_weight_ratio",
+          "absolute_disagreement_reduction": 0.010733845828908795,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.03385249888398035,
+          "weighted_sign_flip_rate": 0.16819804357480836
+        },
+        {
+          "feature": "vehicle_value",
+          "absolute_disagreement_reduction": 0.010518763891647465,
+          "fraction_of_baseline_abs_disagreement_reduced": 0.03317417154845128,
+          "weighted_sign_flip_rate": 0.12039359613666271
+        }
+      ],
+      "mean_absolute_portfolio_neutral_relativity_change": 0.322801992361319,
+      "exposure_share_abs_change_gt_10pct": 0.782600691988952,
+      "exposure_share_abs_change_gt_20pct": 0.5816832188493929
+    },
+    "selected_major_segments": [
+      {
+        "dimension": "business_type",
+        "group": "NB",
+        "exposure_share": 0.48179793288623346,
+        "frequency_total_relativity_change": 0.010386598597443397,
+        "pure_premium_total_relativity_change": 0.08665482206107122
+      },
+      {
+        "dimension": "business_type",
+        "group": "P",
+        "exposure_share": 0.5182020671137666,
+        "frequency_total_relativity_change": -0.009148783127355342,
+        "pure_premium_total_relativity_change": -0.06530695889848193
+      },
+      {
+        "dimension": "policy_type",
+        "group": "COMP_E",
+        "exposure_share": 0.27157778033697966,
+        "frequency_total_relativity_change": 0.011889316667981875,
+        "pure_premium_total_relativity_change": 0.1367636031692696
+      },
+      {
+        "dimension": "policy_type",
+        "group": "CC",
+        "exposure_share": 0.5692858715845898,
+        "frequency_total_relativity_change": -0.0029154984537078654,
+        "pure_premium_total_relativity_change": -0.09270034023806839
+      },
+      {
+        "dimension": "driver_age_band",
+        "group": "35-49",
+        "exposure_share": 0.42012320708904616,
+        "frequency_total_relativity_change": -0.02718768685880224,
+        "pure_premium_total_relativity_change": 0.05200070873203311
+      },
+      {
+        "dimension": "driver_age_band",
+        "group": "50-64",
+        "exposure_share": 0.34478285069610354,
+        "frequency_total_relativity_change": 0.00985356472738208,
+        "pure_premium_total_relativity_change": -0.054899987621166324
+      }
+    ],
+    "impact_interpretation": "The diagnostics quantify differences between frozen technical-risk score families after aggregate neutralisation. They are not observed premium changes, performance gates, fairness conclusions or commercial outcomes."
+  },
+  "numerical_limitations": {
+    "frozen_tweedie_glm_max_iter_warning_retained": true,
+    "repeat_run_conclusion": "DESCRIPTIVE_REDISTRIBUTION_HEADLINES_STABLE_WITH_REGISTERED_TWEEDIE_GLM_NUMERICAL_LIMITATION",
+    "pure_premium_reference_total_relative_range": 4.1067872274007085e-05,
+    "pure_premium_abs_change_gt_10pct_exposure_share_range": 4.470027476533023e-05,
+    "pure_premium_abs_change_gt_20pct_exposure_share_range": 9.7749238981093e-05,
+    "headline_major_segment_max_absolute_shift_range": 0.0001585619035055913,
+    "bitwise_reproducibility_claimed": false
+  },
+  "current_disposition": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false,
+    "impact_pack_disposition": "DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN"
+  },
+  "future_review_order": [
+    "Resolve G2/G3/G4 using genuinely new prospectively governed evidence; v0.47/v0.48 cannot clear these blockers.",
+    "If evidence adequacy is later achieved, explicitly review model-family disagreement drivers and portfolio-neutral redistribution before any serving change.",
+    "Evaluate pricing/commercial components separately; technical-risk relativity is not a customer premium.",
+    "Require separate authorised governance for any serving-bundle or customer-pricing action."
+  ],
+  "interpretation_boundaries": {
+    "benchmark_is_not_pricing_uplift": true,
+    "consumed_validation_is_not_fresh_evidence": true,
+    "impact_diagnostics_do_not_clear_evidence_blockers": true,
+    "operational_readiness_does_not_clear_evidence_blockers": true,
+    "technical_relativity_is_not_customer_premium": true,
+    "project_demo_not_insurer_policy": true,
+    "first_central_or_current_uk_transport_claimed": false,
+    "commercial_uplift_claimed": false
+  }
+}
