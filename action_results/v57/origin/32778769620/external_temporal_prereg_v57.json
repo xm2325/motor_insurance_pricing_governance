@@ -1,0 +1,315 @@
+{
+  "schema_version": "0.57",
+  "status": "V57_EUMTPL_EXTERNAL_TEMPORAL_PREREGISTRATION_LOCKED",
+  "protocol_locked_before_first_v57_execution": true,
+  "base_repository_commit": "8100497c7b26d51856b60972b07b3412ffde1748",
+  "registration_purpose": "Freeze a third genuinely fresh external motor-insurance model-family replication with a chronological three-year design before euMTPL row-level data or outcomes are downloaded, decoded or inspected in this project.",
+  "source": {
+    "dataset": "euMTPL",
+    "package": "CASdatasets",
+    "upstream_repository": "dutangc/CASdatasets",
+    "upstream_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+    "upstream_path": "data/euMTPL.rda",
+    "upstream_git_blob_sha": "4bb386d89606eb5b529206d0835e11074103042b",
+    "upstream_blob_size_bytes": 17829164,
+    "documentation_path": "man-md/euMTPL.md",
+    "documentation_git_blob_sha": "c50e96b2a4a470edb000fd71de0f2f01334799c7",
+    "portfolio_context": "Three calendar years of a European MTPL portfolio collected during the first decade of the 21st century. The public CASdatasets documentation anonymises the insurer/source; project materials must not claim FIRST CENTRAL, UK-market or current-market provenance.",
+    "known_from_public_documentation_before_row_level_access": {
+      "rows": 2373197,
+      "columns": 19,
+      "column_names": [
+        "policy_id",
+        "year",
+        "group",
+        "fuel_type",
+        "vehicle_category",
+        "vehicle_use",
+        "province",
+        "horsepower",
+        "gender",
+        "age",
+        "exposure",
+        "cost_nc",
+        "num_nc",
+        "cost_cg",
+        "num_cg",
+        "cost_cd",
+        "num_cd",
+        "cost_fcd",
+        "num_fcd"
+      ],
+      "documented_year_count": 3,
+      "exposure_semantics": "fraction of the year that the policy was in effect",
+      "preexisting_group_semantics": "training, validation and test split in 70/10/20 ratio; deliberately not used by this project protocol",
+      "claim_count_components": ["num_nc", "num_cg", "num_cd", "num_fcd"],
+      "claim_cost_components": ["cost_nc", "cost_cg", "cost_cd", "cost_fcd"]
+    }
+  },
+  "independence_statement": {
+    "row_level_dataset_not_previously_accessed_by_project": true,
+    "outcomes_not_previously_inspected_by_project": true,
+    "metadata_and_documentation_only_reviewed_before_registration": true,
+    "not_a_reuse_of_australian_or_belgian_locked_test": true,
+    "not_a_transport_test_of_spanish_australian_or_belgian_fitted_parameters": true,
+    "evidence_class": "THIRD_EXTERNAL_PORTFOLIO_TEMPORAL_MODEL_FAMILY_REPLICATION",
+    "limitation": "This protocol creates a new external and temporal model-family replication opportunity. A future execution is not direct validation of previously fitted policy-level parameters and cannot by itself establish current UK or FIRST CENTRAL validity."
+  },
+  "pre_access_firewall": {
+    "row_level_access_allowed_in_v57": false,
+    "rda_download_allowed_in_v57": false,
+    "rda_decode_allowed_in_v57": false,
+    "outcome_summary_allowed_in_v57": false,
+    "execution_allowed_only_after_preregistration_status_is_persisted_on_main": true,
+    "future_execution_version": "v0.58_or_later",
+    "forbidden_before_main_lock": [
+      "download_data/euMTPL.rda",
+      "decode_data/euMTPL.rda",
+      "inspect_any_row",
+      "inspect_year_values",
+      "inspect_claim_counts",
+      "inspect_claim_costs",
+      "fit_any_model",
+      "change_split_after_outcome_access"
+    ]
+  },
+  "data_contract_for_future_execution": {
+    "required_rows": 2373197,
+    "required_columns_exactly": [
+      "policy_id",
+      "year",
+      "group",
+      "fuel_type",
+      "vehicle_category",
+      "vehicle_use",
+      "province",
+      "horsepower",
+      "gender",
+      "age",
+      "exposure",
+      "cost_nc",
+      "num_nc",
+      "cost_cg",
+      "num_cg",
+      "cost_cd",
+      "num_cd",
+      "cost_fcd",
+      "num_fcd"
+    ],
+    "required_nonmissing": [
+      "policy_id",
+      "year",
+      "fuel_type",
+      "vehicle_category",
+      "vehicle_use",
+      "province",
+      "horsepower",
+      "age",
+      "exposure",
+      "cost_nc",
+      "num_nc",
+      "cost_cg",
+      "num_cg",
+      "cost_cd",
+      "num_cd",
+      "cost_fcd",
+      "num_fcd"
+    ],
+    "require_exactly_three_distinct_years": true,
+    "fail_on_nonpositive_exposure": true,
+    "fail_on_exposure_above_one": true,
+    "fail_on_negative_claim_count_component": true,
+    "fail_on_noninteger_claim_count_component": true,
+    "fail_on_negative_claim_cost_component": true,
+    "fail_on_nonfinite_numeric_model_input": true,
+    "no_post_download_row_filtering": true,
+    "no_outcome_winsorisation_or_clipping": true,
+    "policy_id_overlap_audit_required": true,
+    "policy_id_overlap_across_years_does_not_change_split_or_filter_rows": true
+  },
+  "temporal_split": {
+    "method": "chronological split by the three distinct documented calendar-year values without using outcomes",
+    "year_values_must_not_be_inspected_before_main_registration": true,
+    "train": "all rows in the earliest distinct year",
+    "calibration": "all rows in the middle distinct year",
+    "locked_test": "all rows in the latest distinct year",
+    "preexisting_group_column_used": false,
+    "outcome_stratification": false,
+    "random_resplitting": false,
+    "test_used_for_hyperparameter_selection": false,
+    "calibration_used_for_hyperparameter_selection": false,
+    "resplitting_after_outcome_inspection_allowed": false,
+    "minimum_nonempty_rows_per_period": 1,
+    "policy_id_overlap_does_not_reassign_rows": true,
+    "interpretation": "The latest calendar year is the locked temporal test. This design is fixed before the actual year labels or outcomes are read."
+  },
+  "features": {
+    "numeric": ["horsepower", "age"],
+    "categorical": ["fuel_type", "vehicle_category", "vehicle_use", "province"],
+    "excluded_from_predictors": [
+      "policy_id",
+      "year",
+      "group",
+      "gender",
+      "exposure",
+      "cost_nc",
+      "num_nc",
+      "cost_cg",
+      "num_cg",
+      "cost_cd",
+      "num_cd",
+      "cost_fcd",
+      "num_fcd"
+    ],
+    "policy_id_rule": "policy_id is audit metadata only and never enters preprocessing, fitting, calibration, ranking or scoring features.",
+    "year_rule": "year defines the temporal split only and is not a predictor.",
+    "group_rule": "the source-provided group split is ignored and is not a predictor.",
+    "gender_policy": "gender is deliberately excluded from the primary replication feature set as a project design choice; this is not presented as a legal conclusion for Europe, Italy or the UK.",
+    "preprocessing": {
+      "fit_on_training_year_only": true,
+      "numeric_transform": "StandardScaler",
+      "categorical_transform": "OneHotEncoder(handle_unknown='ignore', sparse_output=false)",
+      "category_pooling_or_target_encoding_allowed": false
+    }
+  },
+  "targets": {
+    "frequency": {
+      "observed_count": "num_nc + num_cg + num_cd + num_fcd",
+      "rate": "aggregate_claim_count / exposure",
+      "weight": "exposure",
+      "metric": "exposure-weighted mean Poisson deviance"
+    },
+    "pure_premium": {
+      "observed_amount": "cost_nc + cost_cg + cost_cd + cost_fcd",
+      "rate": "aggregate_claim_cost / exposure",
+      "weight": "exposure",
+      "metric": "exposure-weighted mean Tweedie deviance with power 1.5"
+    },
+    "component_specific_model_selection_allowed": false,
+    "post_result_target_redefinition_allowed": false
+  },
+  "runtime_reproducibility": {
+    "python_version": "3.12",
+    "numpy_version": "2.5.2",
+    "scipy_version": "1.18.0",
+    "scikit_learn_version": "1.9.0",
+    "xgboost_version": "3.4.1",
+    "pyreadr_version": "0.5.3",
+    "thread_environment": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "minimum_independent_actions_executions_for_positive_external_support": 2,
+    "positive_external_support_requires_matching_registered_decisions": true,
+    "positive_external_support_requires_registered_point_metric_reproducibility": true,
+    "point_metric_relative_tolerance": 1e-8,
+    "point_metric_absolute_tolerance": 1e-10,
+    "if_decision_matches_but_point_metric_tolerance_fails": "METRIC_NUMERICAL_REPRODUCIBILITY_REVIEW",
+    "if_any_positive_gate_is_not_reproduced": "NO_EXTERNAL_TEMPORAL_REPLICATION_SUPPORT"
+  },
+  "models": {
+    "frequency_glm": {
+      "estimator": "sklearn.linear_model.PoissonRegressor",
+      "alpha": 1e-8,
+      "solver": "newton-cholesky",
+      "tol": 1e-10,
+      "max_iter": 500,
+      "fit_intercept": true,
+      "convergence_required": true,
+      "fallback_solver_allowed": false
+    },
+    "frequency_xgb": {
+      "estimator": "xgboost.XGBRegressor",
+      "objective": "count:poisson",
+      "n_estimators": 400,
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "min_child_weight": 20,
+      "reg_lambda": 5.0,
+      "random_state": 20260825,
+      "n_jobs": 1
+    },
+    "pure_premium_glm": {
+      "estimator": "sklearn.linear_model.TweedieRegressor",
+      "power": 1.5,
+      "alpha": 1e-6,
+      "link": "log",
+      "solver": "newton-cholesky",
+      "tol": 1e-10,
+      "max_iter": 500,
+      "fit_intercept": true,
+      "convergence_required": true,
+      "fallback_solver_allowed": false
+    },
+    "pure_premium_xgb": {
+      "estimator": "xgboost.XGBRegressor",
+      "objective": "reg:tweedie",
+      "tweedie_variance_power": 1.5,
+      "n_estimators": 400,
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "min_child_weight": 20,
+      "reg_lambda": 5.0,
+      "random_state": 20260825,
+      "n_jobs": 1
+    },
+    "hyperparameter_search_allowed": false,
+    "early_stopping_allowed": false,
+    "post_result_solver_or_parameter_change_allowed": false
+  },
+  "calibration": {
+    "method": "single multiplicative scale estimated on middle-year calibration rows only",
+    "frequency_scale": "sum(aggregate_claim_count) / sum(predicted_frequency_rate * exposure)",
+    "pure_premium_scale": "sum(aggregate_claim_cost) / sum(predicted_pure_premium_rate * exposure)",
+    "scale_guardrails": [0.5, 2.0],
+    "scale_clipping_allowed": false,
+    "if_scale_outside_guardrails": "REPORT_INVALID_EXTERNAL_TEMPORAL_CANDIDATE_AND_RETAIN_HOLD"
+  },
+  "locked_test_metrics": {
+    "frequency": [
+      "poisson_deviance",
+      "aggregate_calibration_ratio_pred_over_actual",
+      "aggregate_abs_log_calibration_error",
+      "top_10_percent_exposure_claim_capture"
+    ],
+    "pure_premium": [
+      "tweedie_deviance_p1_5",
+      "aggregate_calibration_ratio_pred_over_actual",
+      "aggregate_abs_log_calibration_error",
+      "top_10_percent_exposure_loss_capture"
+    ]
+  },
+  "paired_bootstrap": {
+    "draws": 500,
+    "seed": 20260826,
+    "resampling_unit": "locked latest-year policy row",
+    "paired_across_models": true,
+    "interval": "95% percentile interval",
+    "frequency_statistic": "1 - XGB Poisson deviance / GLM Poisson deviance",
+    "pure_premium_statistic": "1 - XGB Tweedie deviance / GLM Tweedie deviance"
+  },
+  "registered_external_temporal_gate": {
+    "minimum_relative_deviance_improvement": 0.005,
+    "bootstrap_relative_improvement_ci_lower_bound_must_exceed": 0.0,
+    "maximum_additional_abs_log_aggregate_calibration_error": 0.01,
+    "frequency_pass_label": "THIRD_EXTERNAL_TEMPORAL_REPLICATION_SUPPORTS_XGB_FREQUENCY_FOR_FURTHER_VALIDATION",
+    "frequency_fail_label": "NO_THIRD_EXTERNAL_TEMPORAL_FREQUENCY_REPLICATION_SUPPORT",
+    "pure_premium_pass_label": "THIRD_EXTERNAL_TEMPORAL_REPLICATION_SUPPORTS_XGB_PURE_PREMIUM_FOR_FURTHER_VALIDATION",
+    "pure_premium_fail_label": "NO_THIRD_EXTERNAL_TEMPORAL_PURE_PREMIUM_REPLICATION_SUPPORT"
+  },
+  "decision_boundary": {
+    "model_family_decision_after_v57": "HOLD",
+    "serving_status_after_v57": "HOLD_SHADOW_ONLY",
+    "promotion_review_status_after_v57": "NOT_OPEN",
+    "preregistration_itself_changes_committee_machine_gate_count": false,
+    "future_positive_replication_can_directly_authorise_model_promotion": false,
+    "future_positive_replication_can_directly_authorise_customer_pricing": false,
+    "no_source_split_feature_target_model_solver_metric_gate_or_reproducibility_changes_after_row_level_access": true,
+    "interpretation": "v0.57 only locks a fresh external-temporal experiment. It does not clear G2, G3 or G4, does not change the current 5/8 committee state, and does not establish current UK or FIRST CENTRAL pricing validity."
+  }
+}

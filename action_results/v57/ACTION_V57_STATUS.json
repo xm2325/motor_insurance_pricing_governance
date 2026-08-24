@@ -1,0 +1,22 @@
+{
+  "workflow": "euMTPL external temporal preregistration v0.57",
+  "run_id": "32778769620",
+  "sha": "cacb55a039c6132b7c2466f6356903250dc624d3",
+  "status": "success",
+  "protocol_status": "V57_EUMTPL_EXTERNAL_TEMPORAL_PREREGISTRATION_LOCKED",
+  "source_dataset": "euMTPL",
+  "row_level_external_data_accessed": false,
+  "outcomes_inspected": false,
+  "actual_year_labels_inspected": false,
+  "chronological_split_registered": true,
+  "future_execution_requires_this_main_lock": true,
+  "future_row_level_execution_allowed_only_in_v58_or_later": true,
+  "committee_status": "EVIDENCE_GAP_HOLD",
+  "committee_gate_pass_count": 5,
+  "committee_gate_count": 8,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false,
+  "evidence_role": "ROLLING_FRESH_EXTERNAL_TEMPORAL_PREREGISTRATION"
+}
