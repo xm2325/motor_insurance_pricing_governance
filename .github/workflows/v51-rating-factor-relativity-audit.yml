@@ -5,6 +5,8 @@ on:
     paths:
       - 'run_rating_factor_relativity_audit_v51.py'
       - 'tests/test_rating_factor_relativity_v51.py'
+      - 'scripts/migrate_evidence_registry_v51.py'
+      - 'RESULTS_V51.md'
       - '.github/workflows/v51-rating-factor-relativity-audit.yml'
       - 'build_deployment_bundle_v21.py'
       - 'deployment/**'
@@ -16,6 +18,8 @@ on:
     paths:
       - 'run_rating_factor_relativity_audit_v51.py'
       - 'tests/test_rating_factor_relativity_v51.py'
+      - 'scripts/migrate_evidence_registry_v51.py'
+      - 'RESULTS_V51.md'
       - '.github/workflows/v51-rating-factor-relativity-audit.yml'
       - 'build_deployment_bundle_v21.py'
       - 'deployment/**'
@@ -55,6 +59,12 @@ jobs:
         run: python run_rating_factor_relativity_audit_v51.py
       - name: Run v0.51 contracts
         run: python -m unittest -v tests/test_rating_factor_relativity_v51.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v51.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v51.once.md
+          python scripts/migrate_evidence_registry_v51.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v51.once.md
       - name: Assert development-only and aggregate-output boundary
         run: |
           python - <<'PY'
@@ -112,6 +122,8 @@ jobs:
               'model_promotion_evidence_created': False,
               'customer_pricing_authorised': False,
               'persisted_row_level_data': False,
+              'top_numeric_shape_gap_feature': s['ranked_numeric_shape_gaps'][0]['feature'],
+              'top_numeric_shape_gap': s['ranked_numeric_shape_gaps'][0]['max_absolute_log_relativity_gap'],
               'model_family_decision': 'HOLD',
               'serving_status': 'HOLD_SHADOW_ONLY',
               'committee_readiness': 'EVIDENCE_GAP_HOLD',
@@ -138,7 +150,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- action_results/v51
+          git add -- EVIDENCE_REGISTRY.md action_results/v51
           if git diff --cached --quiet; then
             echo 'No v0.51 evidence changes'
           else
