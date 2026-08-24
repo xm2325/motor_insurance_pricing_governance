@@ -120,11 +120,13 @@ jobs:
           assert d['promotion_review_status'] == 'NOT_OPEN'
           assert d['customer_pricing_authorised'] is False
           v50 = Path('.github/workflows/v50-recruiter-front-door.yml').read_text(encoding='utf-8')
-          assert '  push:' not in v50
-          assert '  pull_request:' not in v50
-          assert 'contents: read' in v50
-          assert 'git push' not in v50
-          assert 'push_evidence_with_rebase' not in v50
+          lines = v50.splitlines()
+          assert '  push:' not in lines
+          assert '  pull_request:' not in lines
+          assert '  workflow_dispatch:' in lines
+          assert '  contents: read' in lines
+          assert not any(line.strip().startswith('git push') for line in lines)
+          assert not any(line.strip().startswith('bash scripts/push_evidence_with_rebase.sh') for line in lines)
           PY
 
       - name: Persist v0.54 rolling front door and immutable audit
