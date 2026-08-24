@@ -1,10 +1,10 @@
 # Interview Evidence Pack
 
-Use this file as the short-form explanation of the project. Every headline number is mapped in `EVIDENCE_REGISTRY.md`; the current committee-ready synthesis is `MODEL_CHANGE_IMPACT_ASSESSMENT.md`, backed by machine-readable v0.44/v0.46/v0.47/v0.48/v0.49 evidence.
+Use this file as the short-form explanation of the project. Every headline number is mapped in `EVIDENCE_REGISTRY.md`; the current rating-factor review is `RATING_FACTOR_REVIEW_PACK.md`, and the committee-ready model-change synthesis is `MODEL_CHANGE_IMPACT_ASSESSMENT.md`. The latest front door is current through v0.53.
 
 ## 20-second version
 
-I built a motor-insurance pricing and model-governance workbench to test whether XGBoost actually deserved to replace a GLM. XGBoost looked materially better on a French cross-sectional frequency benchmark, with a **5.43% Poisson-deviance reduction**, but the locked Spanish calendar OOT and two preregistered external portfolios did not produce a stable promotion case: **0 of 4 Australian/Belgian target gates passed**, and the machine committee gate remains **`EVIDENCE_GAP_HOLD` (5/8 gates pass)**. I then separated model impact from model approval. Without reading 2024 outcomes or actual premiums, I measured frozen GLM/XGBoost disagreement and portfolio-neutral technical-relativity redistribution: **36.81%** of exposure moves by more than ±10% for frequency, while pure premium is much more sensitive at **78.26% >±10%** and **58.17% >±20%**. v0.49 packages the review order as **evidence adequacy → model impact → separate commercial/customer-pricing governance**. Those impact numbers are technical-risk score redistributions, not customer-price changes, and promotion remains closed.
+I built a motor-insurance pricing and model-governance workbench to test whether XGBoost actually deserved to replace a GLM. It looked materially better on a French development benchmark — **5.43% lower Poisson deviance** — but the locked Spanish OOT and two preregistered external portfolios did not support promotion: **0/4 external target gates pass** and the committee gate remains **`EVIDENCE_GAP_HOLD` (5/8)**. I then made the model-risk story insurance-specific. On 2022 development data, `driver_age` has a large GLM/XGB frequency response-shape gap (**0.26866**), yet only **0.00159%** of 2024 exposure is strictly outside the observed 2022 driver-age range. `business_type` shows the opposite pattern: a much smaller frequency shape gap (**0.02571**) but **48.60%** 2022→2024 mix TV with **0% unseen exposure**. Separately, after forcing aggregate technical-risk totals equal, **36.81%** of frequency exposure and **78.26%** of pure-premium exposure still differ by more than ±10%. Those are technical-risk redistributions, not customer-price changes, and promotion remains closed.
 
 ## 2-minute walkthrough
 
@@ -155,7 +155,63 @@ Current pack disposition is `DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REM
 
 This is the main governance lesson: impact analysis matters, but **large impact is not evidence that a challenger is better**, and operational readiness is not statistical approval.
 
+### 14. Inspect rating-factor response shapes on development data
+
+v0.51 goes back to the **2022 development population only** and refits the already frozen frequency specifications. It then varies one rating factor across exposure-weighted q05–q95 values around a common reference profile.
+
+Two examples are especially useful in an insurance interview:
+
+- `driver_age`: maximum absolute GLM/XGBoost log-relativity gap **0.26866**. At q05/q50/q95 ages **30 / 47 / 68**, GLM relativities are about **0.880 / 1.000 / 1.172** while XGBoost is **1.013 / 1.000 / 0.896**.
+- `vehicle_age`: maximum gap **0.26771**. At q05/q50/q95 ages **7 / 23 / 44**, GLM is **1.309 / 1.000 / 0.702** while XGBoost is **1.338 / 1.000 / 0.918**.
+
+`vehicle_value` is a useful counterexample: its maximum shape gap is only **0.03394**. So the conclusion is not “XGBoost is non-linear everywhere”.
+
+These are **reference-profile development sensitivities**, not population-average PDPs, causal rating effects, validation results or customer premiums.
+
+### 15. Separate feature support from portfolio mix
+
+v0.52 reads **rating features, year and exposure only** for 2022 and 2024. It does not read claim/loss outcomes and does not fit a model.
+
+I distinguish strict support from central-tail movement:
+
+- strict numeric extrapolation means a 2024 value below the actual observed 2022 minimum or above the observed maximum;
+- q01–q99 and q05–q95 exposure are reported separately as tail/mix diagnostics;
+- categorical support means whether a 2024 non-missing level was absent from 2022.
+
+The result is that broad numeric extrapolation is negligible. The largest strict out-of-range share is only **0.00227%** of exposure for `power_to_weight_ratio`; `driver_age` is **0.00159%**.
+
+The much larger change is **reweighting among known categories**. For `business_type`, NB/P exposure moves from **96.78% / 3.22%** in 2022 to **48.18% / 51.82%** in 2024. Total-variation distance is **48.60%**, but unseen business-type exposure is **0%**.
+
+That is a stronger monitoring explanation than simply saying “PSI is high”: the current book is not dominated by unknown cells; known rating cells have changed weight dramatically.
+
+### 16. Join rating structure, support, impact and evidence without a composite score
+
+v0.53 generates `RATING_FACTOR_REVIEW_PACK.md` from persisted aggregate evidence only. The review order is:
+
+1. **rating structure** — what response shape did each model learn?
+2. **strict support** — is the current book outside development values/categories?
+3. **portfolio mix** — have known rating cells reweighted?
+4. **portfolio impact** — how differently do frozen model families redistribute technical risk?
+5. **evidence adequacy** — do validation gates permit promotion review?
+6. **pricing governance** — separate authorisation still required.
+
+`driver_age` and `business_type` explain why I refuse a composite score. Driver age has a **large shape gap (0.26866)** but negligible strict extrapolation (**0.00159%**). Business type has a **small frequency shape gap (0.02571)** but an enormous **48.60%** mix shift.
+
+Those are different model-risk questions. Neither says XGBoost is more accurate. The controlling state therefore remains **`EVIDENCE_GAP_HOLD`, 5/8 gates, 0/4 external support, promotion review NOT_OPEN**.
+
 ## Likely interview questions
+
+### If driver age is well supported, why care about the GLM/XGBoost shape gap?
+
+Because support and model structure are different questions. At age 68, both models are still being evaluated inside the observed 2022 development range, yet the reference-profile frequency relativities are about **1.172 for GLM versus 0.896 for XGBoost**. That is useful model-review evidence: the challenger is encoding a materially different age relationship, not merely extrapolating beyond the training range. It still does not tell me which relationship is more accurate — that requires valid outcome evidence.
+
+### If strict extrapolation is near zero, why did monitoring show such large drift?
+
+Because drift can come from **portfolio reweighting**, not unseen values. `business_type` is the clearest example: both NB and P existed in development, so unseen exposure is zero, but their exposure shares nearly reverse by 2024 and the total-variation distance is **48.60%**. “Known cells, very different weights” is a different risk from extrapolation.
+
+### Why not combine shape gap, support drift and impact into one risk score?
+
+They answer different questions and have different evidence roles. A large shape gap does not imply poor support; a large mix shift does not imply model-family disagreement; a large technical-risk redistribution does not prove better predictive performance. A single hand-built score would introduce arbitrary weights and could hide exactly the trade-offs a model reviewer should see.
 
 ### What does “78.26% of exposure moves by more than ±10%” actually mean?
 
@@ -207,11 +263,11 @@ I would use governed rating and claims data with as-of feature lineage; align ac
 
 **Situation:** XGBoost looked materially stronger than a Poisson GLM on a standard motor-frequency development benchmark.
 
-**Task:** Determine whether that apparent improvement was reliable enough across time and independent portfolios to justify opening a model-family promotion review, then quantify model-change impact without confusing technical-risk redistribution with customer pricing.
+**Task:** Determine whether that apparent improvement was reliable enough across time and independent portfolios to justify opening a model-family promotion review, then make the model-change story interpretable at insurance rating-factor level without confusing technical-risk impact with customer pricing.
 
-**Action:** I built a locked Spanish calendar OOT track, added validation-use ledgers to prevent holdout recycling, preregistered Australian and Belgian external replications before row-level access, retained negative/mixed results without relaxing gates, added numerical-reproducibility controls, and linked the evidence to shadow deployment and a fail-closed Model Change Committee gate. After the validation data were consumed, I used label-free diagnostics to explain frozen GLM/XGBoost disagreement and measured portfolio-neutral technical-relativity redistribution across all 168,085 positive-exposure 2024 feature rows. I then generated a committee-ready v0.49 pack enforcing evidence adequacy before impact review and separate pricing governance.
+**Action:** I built a locked Spanish calendar OOT track, added validation-use ledgers to prevent holdout recycling, preregistered Australian and Belgian external replications before row-level access, retained negative/mixed results without relaxing gates, added numerical-reproducibility controls, and linked the evidence to shadow deployment and a fail-closed Model Change Committee gate. After the validation data were consumed, I used label-free diagnostics to quantify frozen GLM/XGBoost disagreement and portfolio-neutral technical-relativity redistribution. I then added a 2022-only rating-factor response-shape audit and a separate label-free 2022→2024 support/mix audit, before generating a v0.53 review pack that keeps response shape, extrapolation, portfolio mix, impact and evidence adequacy as separate questions.
 
-**Result:** The original **5.43%** development signal did not become a stable promotion case: Spanish OOT stayed HOLD, **0/4** preregistered Australian/Belgian target gates passed, and the committee gate remains **`EVIDENCE_GAP_HOLD` with 5/8 gates passing**. At the same time, portfolio-neutral diagnostics show that the frozen model families can redistribute technical risk materially — especially pure premium, where **78.26%** of exposure differs by more than ±10% and **58.17%** by more than ±20%. Those impact results do not override the failed evidence gates; model promotion and customer pricing remain unauthorised.
+**Result:** The original **5.43%** development signal did not become a stable promotion case: Spanish OOT stayed HOLD, **0/4** preregistered Australian/Belgian target gates passed, and the committee gate remains **`EVIDENCE_GAP_HOLD` with 5/8 gates passing**. The rating-factor review also shows why model risk cannot be reduced to one number: `driver_age` has a **0.26866** model-family shape gap with only **0.00159%** strict extrapolation, while `business_type` has a **0.02571** frequency shape gap but **48.60%** mix TV and zero unseen exposure. Portfolio-neutral diagnostics still show material technical-risk redistribution, especially pure premium where **78.26%** of exposure differs by more than ±10%. None of these diagnostics overrides the failed evidence gates; model promotion and customer pricing remain unauthorised.
 
 ## Claims to avoid
 
@@ -226,3 +282,6 @@ Do not say:
 - “Deployment, attestation or rollback proves the model is safe for customer pricing.” Those are operational/provenance controls, not pricing approval.
 - “The project increased profit or conversion.” No observed commercial uplift is claimed.
 - “The v0.48 ±10% / ±20% migration figures are customer premium changes.” They are portfolio-neutral technical-risk score redistributions with no actual premium, commercial or pricing-action model.
+- “The driver-age curve proves age causes higher/lower claim risk.” v0.51 is a one-factor reference-profile development sensitivity, not a causal estimate or population-average PDP.
+- “A 48.60% business-type TV means half the portfolio is out of support.” Both business-type levels were already seen in 2022; the number measures exposure-share reweighting, while unseen exposure is 0%.
+- “v0.53 gives a single model-risk score.” It deliberately refuses a composite score because response shape, support, mix, impact and validation answer different questions.

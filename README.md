@@ -2,7 +2,7 @@
 
 A reproducible insurance data-science case study asking a deliberately difficult model-risk question:
 
-> **Does a more flexible ML challenger improve the pricing target reliably enough, across time and independent portfolios, to justify replacing a GLM — and can deployment readiness and model-impact analysis be kept separate from approval?**
+> **Does a more flexible ML challenger improve the pricing target reliably enough, across time and independent portfolios, to justify replacing a GLM — and can rating structure, portfolio drift, deployment readiness and model impact be reviewed without confusing any of them with approval?**
 
 ## 30-second result
 
@@ -10,18 +10,17 @@ A reproducible insurance data-science case study asking a deliberately difficult
 |---|---|
 | Cross-sectional development signal | XGBoost reduced Poisson deviance by **5.43%** and increased top-10% exposure claim capture **20.59% → 31.17%** on freMTPL2; this is development evidence, not pricing uplift |
 | Spanish calendar OOT | **2022 train → 2023 calibration → 2024 locked first-use OOT**; GLM retained slightly lower 2024 frequency and pure-premium deviance, so the registered model-family decision stayed **HOLD** |
-| Validation lifecycle | Spanish 2024 is now **`CONSUMED_RETROSPECTIVE_VALIDATION`**, not a fresh candidate-selection holdout; Australia and Belgium are also consumed external validation assets |
+| Validation lifecycle | Spanish 2024 is now **`CONSUMED_RETROSPECTIVE_VALIDATION`**; Australia and Belgium are also consumed external validation assets rather than reusable independent confirmation samples |
 | Preregistered external replication | Australia + Belgium contribute **4 preregistered target gates and 0 passes**; mixed/favourable point metrics are retained, but no gate is relaxed after outcomes are seen |
-| Model Change Committee gate | Request `MCR-XGB-MOTOR-001` is **`EVIDENCE_GAP_HOLD`**: **5/8** required gates pass; blockers are locked temporal support, preregistered external support and fresh independent evidence |
-| Why the frozen models disagree | Label-free v0.47 diagnostic: mean absolute log(XGB/GLM) disagreement **0.0993 frequency / 0.3171 pure premium**; leading sensitivities are `vehicle_brand`, `policy_type`, `vehicle_value` for frequency and `business_type`, `power_to_weight_ratio`, `vehicle_value` for pure premium |
-| Portfolio-neutral impact | On all **168,085** positive-exposure 2024 feature rows, aggregate GLM/XGB technical-risk totals are forced equal first. **36.81%** of exposure moves by >±10% for frequency; **78.26%** by >±10% and **58.17%** by >±20% for pure premium |
-| Major pure-premium segment redistribution | After aggregate neutralisation: business type **NB +8.65% vs P −6.53%**, policy type **COMP_E +13.68% vs CC −9.27%**, driver age **35–49 +5.20% vs 50–64 −5.49%**; these are technical-risk score shifts, not price changes |
-| Numerical limitation retained | Frozen Tweedie GLM reaches its registered `max_iter=900`; same-head v0.48 repeats keep the displayed redistribution headlines stable, but bitwise/performance reproducibility is not claimed |
+| Model Change Committee gate | Request `MCR-XGB-MOTOR-001` is **`EVIDENCE_GAP_HOLD`**: **5/8** required gates pass; blockers remain locked temporal support, preregistered external support and fresh independent evidence |
+| Rating-factor response shape | v0.51 development-only reference-profile audit: `driver_age` and `vehicle_age` show large GLM/XGB frequency shape gaps (**0.26866 / 0.26771**). At driver age 68, GLM/XGB relativities are **1.172 / 0.896** around the same 2022 reference profile |
+| Support vs mix | v0.52 reads 2022/2024 rating features + exposure only. Maximum strict numeric extrapolation is only **0.00227% exposure**, while `business_type` mix TV is **48.60%** with **0% unseen business-type exposure** — known cells reweighted rather than becoming unfamiliar |
+| Portfolio-neutral impact | On all **168,085** positive-exposure 2024 feature rows, aggregate GLM/XGB technical-risk totals are forced equal first. **36.81%** of exposure moves by >±10% for frequency; pure premium has **78.26% >±10%** and **58.17% >±20%** |
+| Rating-factor review pack | v0.53 joins **response shape → strict support → portfolio mix → technical-risk redistribution → evidence adequacy → separate pricing governance**, without a composite risk score or new promotion threshold |
 | Operational controls | FastAPI/Docker shadow scoring, monitoring, content-addressed bundles, manual rollback, GitHub/Sigstore provenance and attested **shadow-only** admission are demonstrated — without converting deployability into approval |
-| Committee-ready impact assessment | v0.49 enforces **evidence adequacy → model impact review → separate commercial/customer-pricing governance**. Current disposition: `DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN` |
 | Current decision | **HOLD / HOLD_SHADOW_ONLY**; `promotion_review_status=NOT_OPEN`; no model promotion or customer-pricing change is authorised |
 
-The central result is not that “XGBoost is bad”. It is that a strong development signal did **not** become a stable promotion case once challenged across calendar time and independent portfolios. The later diagnostics add a second lesson: even with aggregate technical-risk totals held equal, two plausible model families can redistribute risk materially across policies and major segments. That impact matters for review, but it does not repair missing validation evidence or become a customer premium by itself.
+The central result is not that “XGBoost is bad”. A strong development signal did **not** become a stable promotion case across calendar time and independent portfolios. The later rating-factor work adds a more insurance-specific lesson: **model response-shape disagreement, feature support, portfolio mix and technical-risk redistribution are different risks**. `driver_age` has a large model-family shape gap while remaining well inside development support; `business_type` has a much smaller frequency shape gap but a **48.60%** portfolio-mix shift. Those diagnostics improve review quality, but they do not repair missing validation evidence or become customer premiums.
 
 ## Evidence story
 
@@ -32,16 +31,21 @@ The central result is not that “XGBoost is bad”. It is that a strong develop
 5. **Protect numerical evidence:** external replication separates stable decisions from point-metric reproducibility and adds prospective numerical controls.
 6. **Synthesize without score-shopping:** heterogeneous portfolios keep their original evidence classes and decisions; **0/4** external target gates pass.
 7. **Separate evidence from operations:** shadow deployment, monitoring, rollback and attested admission can pass while model promotion remains blocked.
-8. **Explain the frozen-model difference without reusing outcomes:** v0.47 reads 2024 rating features/exposure only and identifies descriptive disagreement sensitivities.
-9. **Translate disagreement into impact:** v0.48 forces aggregate technical-risk totals equal, then measures full-population and major-segment relativity redistribution without reading 2024 outcomes or actual premiums.
-10. **Put review steps in the right order:** v0.49 requires evidence adequacy first, impact review second, and separate commercial/customer-pricing governance last.
+8. **Explain frozen-model disagreement without reusing outcomes:** v0.47 reads consumed 2024 rating features/exposure only and identifies descriptive disagreement sensitivities.
+9. **Translate disagreement into impact:** v0.48 forces aggregate technical-risk totals equal, then measures portfolio and major-segment relativity redistribution without reading 2024 outcomes or actual premiums.
+10. **Put review steps in the right order:** v0.49 requires evidence adequacy first, impact review second and separate commercial/customer-pricing governance last.
+11. **Inspect rating structure on development data:** v0.51 compares frozen Poisson-GLM/XGBoost frequency relativities across supported 2022 rating-factor grids; it is interpretability, not validation.
+12. **Separate extrapolation from mix drift:** v0.52 shows strict numeric/unseen-category support remains strong while `business_type` exposure shares almost reverse.
+13. **Package the insurance review logic:** v0.53 joins rating structure, support, mix and technical-risk impact but refuses a composite score and leaves the 5/8, 0/4 HOLD state controlling.
 
 ## Start here
 
 - **Short interview story:** [Interview Evidence Pack](INTERVIEW_EVIDENCE_PACK.md)
+- **Rating-factor model review:** [Rating Factor Review Pack](RATING_FACTOR_REVIEW_PACK.md)
 - **Decision-ready impact assessment:** [Model Change Impact Assessment](MODEL_CHANGE_IMPACT_ASSESSMENT.md)
 - **Trace every headline claim:** [Evidence Registry](EVIDENCE_REGISTRY.md)
 - **Current model scope and consumed-validation roles:** [Model Card](MODEL_CARD.md)
+- **Rating-factor chain:** [v0.51 response shapes](RESULTS_V51.md) → [v0.52 support/mix](RESULTS_V52.md) → [v0.53 review pack](RESULTS_V53.md)
 - **Why the frozen models disagree:** [v0.47 results](RESULTS_V47.md)
 - **Portfolio-neutral technical relativity migration:** [v0.48 results](RESULTS_V48.md)
 - **Committee-ready synthesis:** [v0.49 results](RESULTS_V49.md)
@@ -55,10 +59,12 @@ The central result is not that “XGBoost is bad”. It is that a strong develop
 - Spanish 2024 was independent at its **first** locked OOT use; it is no longer fresh evidence for candidate selection. Australia and Belgium are likewise consumed for new independent-confirmation claims.
 - Australian and Belgian results replicate a **GLM-vs-XGBoost model-family question** in different portfolio contexts; they are not direct validation of the fitted Spanish models.
 - `0/4` refers specifically to the four preregistered Australian/Belgian target gates; it does not mean every XGBoost metric is worse.
-- v0.47 and v0.48 are **post-hoc diagnostics on consumed validation features**, not new performance evidence and not a way to clear G2/G3/G4.
-- v0.48 technical-relativity percentages are **score redistribution after aggregate neutralisation**, not customer premium, quote or realised commercial impact.
+- v0.47/v0.48 are **post-hoc diagnostics on consumed validation features**; v0.51 is **development interpretability**; v0.52 is a **label-free feature support/mix audit**; v0.53 is an **aggregate synthesis/navigation pack**. None is fresh performance evidence or a way to clear G2/G3/G4.
+- v0.51 response profiles hold other factors at a common 2022 reference profile. They are not population-average PDPs, causal rating effects or pricing recommendations.
+- v0.52 distinguishes strict observed-range/unseen-category support from q05–q95 tail exposure and portfolio mix; tail exposure is not automatically extrapolation.
+- v0.48/v0.53 technical-relativity percentages are **score redistribution after aggregate neutralisation**, not customer premium, quote or realised commercial impact.
 - The frozen Tweedie GLM `max_iter=900` warning remains registered; descriptive v0.48 headlines are reported only at precision supported by the repeat-run envelope.
-- `EVIDENCE_GAP_HOLD`, `HOLD_SHADOW_ONLY`, `NOT_OPEN` and the v0.49 impact-pack disposition are project governance states, not FIRST CENTRAL or regulatory approval states.
+- `EVIDENCE_GAP_HOLD`, `HOLD_SHADOW_ONLY`, `NOT_OPEN` and `DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN` are project governance states, not FIRST CENTRAL or regulatory approval states.
 - No result establishes transport to FIRST CENTRAL, the current UK motor market, production safety, customer-pricing impact, profit or conversion uplift.
 ---
 

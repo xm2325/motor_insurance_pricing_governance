@@ -1,0 +1,61 @@
+{
+  "status": "V54_RATING_FRONT_DOOR_SYNC_PASS",
+  "scope": "documentation_and_evidence_navigation_only",
+  "front_door_current_through": "v0.53",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_model_or_validation_decisions_changed": false,
+  "v50_rolling_writer_frozen": true,
+  "v45_rolling_writer_frozen": true,
+  "readme_historical_body_sha256": "fa5c9fa71a268d7beceedabc284b8f745ab8b3a3f87ac0080707186fd9bc9ee7",
+  "checks": {
+    "readme_has_rating_review_pack": true,
+    "readme_has_v51_shape_gap": true,
+    "readme_has_v52_strict_support": true,
+    "readme_has_v52_business_mix": true,
+    "readme_has_v53_sequence": true,
+    "readme_has_rating_chain_links": true,
+    "interview_has_v51_section": true,
+    "interview_has_v52_section": true,
+    "interview_has_v53_section": true,
+    "interview_has_support_vs_mix_question": true,
+    "interview_has_no_composite_question": true,
+    "rating_pack_has_same_driver_gap": true,
+    "rating_pack_has_same_business_tv": true,
+    "v53_main_evidence_success": true,
+    "v53_main_scope_aggregate": true,
+    "v50_push_listener_removed": true,
+    "v50_pr_listener_removed": true,
+    "v50_manual_read_only": true,
+    "v50_has_no_push_command": true,
+    "v45_still_manual_read_only": true
+  },
+  "headline_boundaries": {
+    "benchmark_is_not_pricing_uplift": true,
+    "consumed_validation_not_relabelled_fresh": true,
+    "v51_not_relabelled_validation": true,
+    "v52_not_relabelled_performance": true,
+    "v53_not_relabelled_performance": true,
+    "technical_relativity_not_customer_premium": true,
+    "first_central_or_current_uk_transfer_claimed": false,
+    "commercial_uplift_claimed": false
+  },
+  "rating_review_headlines": {
+    "driver_age_shape_gap": 0.26865990121735667,
+    "driver_age_strict_extrapolation_exposure_share": 1.5871206507159884e-05,
+    "business_type_mix_tv": 0.48595824222641637,
+    "business_type_unseen_exposure_share": 0.0,
+    "frequency_mean_absolute_portfolio_neutral_relativity_change": 0.10181561928799863,
+    "pure_premium_mean_absolute_portfolio_neutral_relativity_change": 0.322801992361319
+  },
+  "current_decision": {
+    "committee_status": "EVIDENCE_GAP_HOLD",
+    "committee_gate_pass_count": 5,
+    "committee_gate_count": 8,
+    "external_target_gates": "0/4",
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false
+  }
+}
