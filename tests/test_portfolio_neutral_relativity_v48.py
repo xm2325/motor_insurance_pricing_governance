@@ -55,6 +55,7 @@ class PortfolioNeutralRelativityV48Tests(unittest.TestCase):
     def test_portfolio_neutralisation_is_exact_within_numeric_tolerance(self):
         for target in ["frequency", "pure_premium"]:
             n = self.summary["targets"][target]["portfolio_neutralisation"]
+            self.assertEqual(n["calculation_dtype"], "float64")
             self.assertTrue(math.isfinite(n["portfolio_neutral_scale_applied_to_challenger"]))
             self.assertGreater(n["portfolio_neutral_scale_applied_to_challenger"], 0)
             self.assertAlmostEqual(n["normalised_total_over_reference"], 1.0, places=12)
@@ -93,6 +94,24 @@ class PortfolioNeutralRelativityV48Tests(unittest.TestCase):
             q = d["quantiles"]
             ordered = [q[k] for k in ["q05", "q10", "q25", "q50", "q75", "q90", "q95"]]
             self.assertEqual(ordered, sorted(ordered))
+
+    def test_major_segment_headlines_are_descriptive_and_stable_in_direction(self):
+        # These are post-result regression checks for the published descriptive
+        # headline, not acceptance thresholds and not a promotion gate.
+        pp = "pure_premium_segment_total_relativity_change"
+        lookup = self.segments.set_index(["dimension", "group"])
+        self.assertGreater(float(lookup.loc[("business_type", "NB"), pp]), 0.08)
+        self.assertLess(float(lookup.loc[("business_type", "P"), pp]), -0.06)
+        self.assertGreater(float(lookup.loc[("policy_type", "COMP_E"), pp]), 0.13)
+        self.assertLess(float(lookup.loc[("policy_type", "CC"), pp]), -0.09)
+        self.assertGreater(float(lookup.loc[("driver_age_band", "35-49"), pp]), 0.05)
+        self.assertLess(float(lookup.loc[("driver_age_band", "50-64"), pp]), -0.05)
+        for dimension, group in [
+            ("business_type", "NB"), ("business_type", "P"),
+            ("policy_type", "COMP_E"), ("policy_type", "CC"),
+            ("driver_age_band", "35-49"), ("driver_age_band", "50-64"),
+        ]:
+            self.assertGreater(float(lookup.loc[(dimension, group), "exposure_share"]), 0.25 if dimension == "business_type" else 0.09)
 
     def test_segment_migration_is_aggregate_only(self):
         forbidden = {"insured_id", "total_claims", "total_incurred", "total_premium", "reference", "challenger"}
