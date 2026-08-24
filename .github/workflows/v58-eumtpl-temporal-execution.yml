@@ -1,0 +1,184 @@
+name: euMTPL source-contract incident v0.58
+
+on:
+  pull_request:
+    paths:
+      - 'download_eumtpl_motor_v58.py'
+      - 'record_eumtpl_schema_contract_incident_v58.py'
+      - 'tests/test_eumtpl_external_temporal_v58.py'
+      - 'scripts/migrate_evidence_registry_v58.py'
+      - 'RESULTS_V58.md'
+      - '.github/workflows/v58-eumtpl-temporal-execution.yml'
+      - 'governance/external_temporal_prereg_v57.json'
+      - 'action_results/v57/**'
+  push:
+    branches: [main]
+    paths:
+      - 'download_eumtpl_motor_v58.py'
+      - 'record_eumtpl_schema_contract_incident_v58.py'
+      - 'tests/test_eumtpl_external_temporal_v58.py'
+      - 'scripts/migrate_evidence_registry_v58.py'
+      - 'RESULTS_V58.md'
+      - '.github/workflows/v58-eumtpl-temporal-execution.yml'
+      - 'governance/external_temporal_prereg_v57.json'
+  workflow_dispatch:
+
+concurrency:
+  group: v58-eumtpl-schema-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  eumtpl-source-contract-incident:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install frozen R-data reader
+        run: pip install pyreadr==0.5.3
+      - name: Verify fail-closed v0.58 contracts before repeated decode
+        run: python -m unittest -v tests/test_eumtpl_external_temporal_v58.py
+      - name: Fetch and verify the same pinned euMTPL binary before decode
+        run: python download_eumtpl_motor_v58.py
+      - name: Record schema mismatch without outcome-value or model inspection
+        run: python record_eumtpl_schema_contract_incident_v58.py
+      - name: Apply and verify v0.57-v0.58 evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v58.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v58_once.md
+          python scripts/migrate_evidence_registry_v58.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v58_once.md
+          grep -F '| v0.58 euMTPL source-contract incident |' EVIDENCE_REGISTRY.md
+          grep -F 'Decoding a fresh external object consumes fresh-confirmatory eligibility' EVIDENCE_REGISTRY.md
+      - name: Assert fail-closed incident boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results_v58/eumtpl_schema_contract_incident_v58.json').read_text())
+          assert r['status'] == 'V58_FAIL_CLOSED_SOURCE_SCHEMA_PREREGISTRATION_MISMATCH'
+          assert r['v57_protocol_sha256'] == 'a2b49e26aeca619323129ee4b56ff39d110cf68a08bfe0064fbd3f5886f74ff5'
+          assert r['v57_main_sha'] == 'cacb55a039c6132b7c2466f6356903250dc624d3'
+          assert r['source_identity']['git_blob_sha1'] == '4bb386d89606eb5b529206d0835e11074103042b'
+          assert r['source_identity']['binary_identity_passed_before_decode'] is True
+          assert r['registered_only_columns'] == ['cost_fcd', 'num_fcd']
+          assert r['decoded_only_columns'] == ['cost_fcg', 'num_fcg']
+          assert r['same_column_set'] is False
+          assert r['same_column_order'] is False
+          a = r['access_boundary']
+          assert a['row_level_dataset_access_occurred'] is True
+          assert a['outcome_values_inspected'] is False
+          assert a['year_values_inspected'] is False
+          assert a['model_fit_executed'] is False
+          assert a['calibration_executed'] is False
+          assert a['locked_test_performance_metrics_computed'] is False
+          assert a['registered_gate_evaluated'] is False
+          g = r['governance']
+          assert g['confirmatory_external_temporal_evidence_created'] is False
+          assert g['euMTPL_still_eligible_as_fresh_confirmatory_dataset'] is False
+          assert g['post_access_schema_amendment_used_for_confirmatory_claim'] is False
+          assert g['committee_gate_pass_count'] == 5
+          assert g['committee_gate_count'] == 8
+          assert g['model_family_decision'] == 'HOLD'
+          assert g['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert g['promotion_review_status'] == 'NOT_OPEN'
+          assert g['customer_pricing_authorised'] is False
+          print(json.dumps({
+              'status': r['status'],
+              'file_sha256': r['source_identity']['file_sha256'],
+              'registered_only_columns': r['registered_only_columns'],
+              'decoded_only_columns': r['decoded_only_columns'],
+              'model_fit_executed': a['model_fit_executed'],
+              'performance_metrics_computed': a['locked_test_performance_metrics_computed'],
+              'fresh_confirmatory_eligible': g['euMTPL_still_eligible_as_fresh_confirmatory_dataset'],
+          }, indent=2))
+          PY
+      - name: Persist aggregate v0.58 incident evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          mkdir -p action_results/v58
+          cp results_v58/eumtpl_source_binary_audit.json action_results/v58/
+          cp results_v58/eumtpl_schema_contract_incident_v58.json action_results/v58/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v58/ACTION_V58_STATUS.json').write_text(json.dumps({
+              'workflow': 'euMTPL source-contract incident v0.58',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'incident_status': 'V58_FAIL_CLOSED_SOURCE_SCHEMA_PREREGISTRATION_MISMATCH',
+              'row_level_dataset_access_occurred': True,
+              'outcome_values_inspected': False,
+              'year_values_inspected': False,
+              'model_fit_executed': False,
+              'performance_metrics_computed': False,
+              'confirmatory_external_temporal_evidence_created': False,
+              'eumtpl_fresh_confirmatory_eligible': False,
+              'raw_external_data_persisted': False,
+              'committee_gate_pass_count': 5,
+              'committee_gate_count': 8,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'promotion_review_status': 'NOT_OPEN',
+              'evidence_role': 'ROLLING_EUMTPL_SOURCE_CONTRACT_INCIDENT',
+          }, indent=2) + '\n', encoding='utf-8')
+          PY
+          origin_dir="action_results/v58/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.58 incident snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v58/eumtpl_source_binary_audit.json "$origin_dir/"
+          cp action_results/v58/eumtpl_schema_contract_incident_v58.json "$origin_dir/"
+          cp action_results/v58/ACTION_V58_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          origin = Path('action_results/v58/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V58_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['evidence_role'] = 'IMMUTABLE_EUMTPL_SOURCE_CONTRACT_INCIDENT_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2) + '\n')
+          files = {}
+          for name in ['ACTION_V58_STATUS.json','eumtpl_source_binary_audit.json','eumtpl_schema_contract_incident_v58.json']:
+              files[name] = hashlib.sha256((origin / name).read_bytes()).hexdigest()
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'files': files,
+          }, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v58 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.58 incident evidence changes'
+          else
+            git commit -m "Persist v0.58 euMTPL schema incident ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Assert raw euMTPL data are not staged
+        if: always()
+        run: |
+          if git ls-files --error-unmatch data_external_v58/euMTPL.rda >/dev/null 2>&1; then
+            echo 'Raw euMTPL external data must never be tracked' >&2
+            exit 1
+          fi
+      - name: Upload aggregate euMTPL schema-incident evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-eumtpl-schema-incident-v58
+          path: results_v58/
+          if-no-files-found: error
