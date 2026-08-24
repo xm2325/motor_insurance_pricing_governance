@@ -1,0 +1,303 @@
+{
+  "status": "V55_DEVELOPMENT_RATING_SHAPE_STABILITY_AUDIT_COMPLETE",
+  "analysis_role": "DEVELOPMENT_ONLY_FIXED_FOLD_RESPONSE_SHAPE_STABILITY_AUDIT",
+  "protocol": {
+    "path": "governance/rating_shape_stability_protocol_v55.json",
+    "sha256": "16f96d57e10e0445c014d6fce1cd8dbfdabbd04c4c82b826a13d18899d298f48",
+    "locked_before_first_execution": true
+  },
+  "lineage": {
+    "v51_summary_sha256": "5e3301de275acc5a85c7ad1567f0dd5b60a5c4ccfd66ed6ad2462f86a2009685",
+    "v51_numeric_grid_sha256": "d05189c2fa4ae0bfb995a7ee7d50ea320af7789c60356f9837b385fc404a091c",
+    "v51_categorical_grid_sha256": "548b17109d4cc2e84ee8c954108103ba55eff8a4fa50526979f2293df36b3fb6",
+    "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25",
+    "reference_profile": {
+      "driver_age": 47.0,
+      "vehicle_age": 23.0,
+      "age_driving_licence": 21.0,
+      "vehicle_value": 24693.375,
+      "seats": 5.0,
+      "power_to_weight_ratio": 12.0,
+      "policy_type": "CC",
+      "business_type": "NB",
+      "payment_frequency": "A",
+      "bonus_score": "G",
+      "fuel_type": "D",
+      "vehicle_brand": "RENAULT",
+      "municipality_type": "I",
+      "circulation_area": "U"
+    }
+  },
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "source_file_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+    "years_read": [
+      2022
+    ],
+    "rows": 67171,
+    "exposure": 41912.495890410966,
+    "claims": 12664.0,
+    "2023_rows_read": false,
+    "2024_rows_read": false,
+    "incurred_loss_read": false,
+    "actual_premium_read": false,
+    "customer_id_read": false,
+    "policy_status_read": false
+  },
+  "fold_design": {
+    "fold_count": 5,
+    "seed": 20260824,
+    "outcome_stratification": false,
+    "held_out_performance_metric_computed": false,
+    "folds": [
+      {
+        "fold_id": 0,
+        "train_rows": 53736,
+        "train_exposure": 33588.24931506849,
+        "train_claims": 10197.0,
+        "reference_profile_scores": {
+          "poisson_glm_frequency": 0.22528821798533202,
+          "xgb_poisson_frequency": 0.22003984451293945
+        },
+        "excluded_rows": 13435,
+        "excluded_exposure": 8324.246575342466,
+        "excluded_claims": 2467.0
+      },
+      {
+        "fold_id": 1,
+        "train_rows": 53737,
+        "train_exposure": 33499.18904109589,
+        "train_claims": 10056.0,
+        "reference_profile_scores": {
+          "poisson_glm_frequency": 0.23046229707723792,
+          "xgb_poisson_frequency": 0.2187138795852661
+        },
+        "excluded_rows": 13434,
+        "excluded_exposure": 8413.306849315068,
+        "excluded_claims": 2608.0
+      },
+      {
+        "fold_id": 2,
+        "train_rows": 53737,
+        "train_exposure": 33547.21095890411,
+        "train_claims": 10087.0,
+        "reference_profile_scores": {
+          "poisson_glm_frequency": 0.2220833956678612,
+          "xgb_poisson_frequency": 0.20997877418994904
+        },
+        "excluded_rows": 13434,
+        "excluded_exposure": 8365.284931506849,
+        "excluded_claims": 2577.0
+      },
+      {
+        "fold_id": 3,
+        "train_rows": 53737,
+        "train_exposure": 33543.81095890411,
+        "train_claims": 10187.0,
+        "reference_profile_scores": {
+          "poisson_glm_frequency": 0.21563641855363383,
+          "xgb_poisson_frequency": 0.19966939091682434
+        },
+        "excluded_rows": 13434,
+        "excluded_exposure": 8368.68493150685,
+        "excluded_claims": 2477.0
+      },
+      {
+        "fold_id": 4,
+        "train_rows": 53737,
+        "train_exposure": 33471.52328767123,
+        "train_claims": 10129.0,
+        "reference_profile_scores": {
+          "poisson_glm_frequency": 0.23043802303670038,
+          "xgb_poisson_frequency": 0.22467011213302612
+        },
+        "excluded_rows": 13434,
+        "excluded_exposure": 8440.972602739726,
+        "excluded_claims": 2535.0
+      }
+    ],
+    "excluded_row_count_sum": 67171
+  },
+  "models": {
+    "names": [
+      "poisson_glm_frequency",
+      "xgb_poisson_frequency"
+    ],
+    "target": "frequency",
+    "definition_source": "build_deployment_bundle_v21.py::model_definitions",
+    "model_fit_executed": true,
+    "fit_scope": "five deterministic 80-percent development subsets only",
+    "calibration_applied": false,
+    "grid_reestimated_per_fold": false,
+    "reference_profile_reestimated_per_fold": false
+  },
+  "registered_grid": {
+    "numeric_point_count": 66,
+    "categorical_point_count": 30,
+    "fold_point_row_count": 480,
+    "point_summary_row_count": 96
+  },
+  "feature_summary": {
+    "age_driving_licence": {
+      "point_type": "numeric",
+      "v51_max_absolute_log_gap": 0.1706896171757457,
+      "max_fold_log_gap_range_over_registered_points": 0.16206196234343964,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.8,
+      "registered_point_count": 11
+    },
+    "bonus_score": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.10885825583897207,
+      "max_fold_log_gap_range_over_registered_points": 0.13043528539568627,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 1.0,
+      "registered_point_count": 3
+    },
+    "business_type": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.02571338968862851,
+      "max_fold_log_gap_range_over_registered_points": 0.07816387091570648,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.8,
+      "registered_point_count": 2
+    },
+    "circulation_area": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.022735580925951144,
+      "max_fold_log_gap_range_over_registered_points": 0.03002992452116001,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 1.0,
+      "registered_point_count": 2
+    },
+    "driver_age": {
+      "point_type": "numeric",
+      "v51_max_absolute_log_gap": 0.26865990121735667,
+      "max_fold_log_gap_range_over_registered_points": 0.2341315650101671,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 1.0,
+      "registered_point_count": 11
+    },
+    "fuel_type": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.015066288572301217,
+      "max_fold_log_gap_range_over_registered_points": 0.08437139907921118,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.6,
+      "registered_point_count": 2
+    },
+    "municipality_type": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.06418950895698353,
+      "max_fold_log_gap_range_over_registered_points": 0.07781134330914649,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.8,
+      "registered_point_count": 3
+    },
+    "payment_frequency": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.009107527965752886,
+      "max_fold_log_gap_range_over_registered_points": 0.05904749318782943,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.4,
+      "registered_point_count": 3
+    },
+    "policy_type": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.14857731979556676,
+      "max_fold_log_gap_range_over_registered_points": 0.21607089702811927,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.2,
+      "registered_point_count": 5
+    },
+    "power_to_weight_ratio": {
+      "point_type": "numeric",
+      "v51_max_absolute_log_gap": 0.06065046982641897,
+      "max_fold_log_gap_range_over_registered_points": 0.1427443764749412,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.2,
+      "registered_point_count": 11
+    },
+    "seats": {
+      "point_type": "numeric",
+      "v51_max_absolute_log_gap": 0.07231603991198374,
+      "max_fold_log_gap_range_over_registered_points": 0.07885319314785667,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 1.0,
+      "registered_point_count": 11
+    },
+    "vehicle_age": {
+      "point_type": "numeric",
+      "v51_max_absolute_log_gap": 0.26770589446186105,
+      "max_fold_log_gap_range_over_registered_points": 0.34222712660558574,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.6,
+      "registered_point_count": 11
+    },
+    "vehicle_brand": {
+      "point_type": "categorical",
+      "v51_max_absolute_log_gap": 0.1231813633549763,
+      "max_fold_log_gap_range_over_registered_points": 0.08905607575959505,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.6,
+      "registered_point_count": 10
+    },
+    "vehicle_value": {
+      "point_type": "numeric",
+      "v51_max_absolute_log_gap": 0.03393746743310981,
+      "max_fold_log_gap_range_over_registered_points": 0.08725113114688318,
+      "minimum_same_sign_fraction_over_nonzero_v51_points": 0.2,
+      "registered_point_count": 11
+    }
+  },
+  "preselected_review_points": [
+    {
+      "feature": "driver_age",
+      "point_type": "numeric",
+      "point_key": "q0.95",
+      "value_or_level": "68.0",
+      "v51_full_fit_log_gap": -0.2686599012173566,
+      "fold_mean_log_gap": -0.24672184920133855,
+      "fold_min_log_gap": -0.35617851231999964,
+      "fold_max_log_gap": -0.12204694730983254,
+      "fold_log_gap_range": 0.2341315650101671,
+      "fold_std_log_gap": 0.08219501461266172,
+      "fraction_folds_same_sign_as_v51_full_fit": 1.0,
+      "v51_full_fit_gap_inside_fold_min_max": true,
+      "reason": "v0.51 high-age point has a large displayed GLM/XGBoost response-shape difference"
+    },
+    {
+      "feature": "vehicle_age",
+      "point_type": "numeric",
+      "point_key": "q0.95",
+      "value_or_level": "44.0",
+      "v51_full_fit_log_gap": 0.267705894461861,
+      "fold_mean_log_gap": 0.2555649225867943,
+      "fold_min_log_gap": 0.156785937322128,
+      "fold_max_log_gap": 0.34626424742165646,
+      "fold_log_gap_range": 0.18947831009952845,
+      "fold_std_log_gap": 0.07342943840469905,
+      "fraction_folds_same_sign_as_v51_full_fit": 1.0,
+      "v51_full_fit_gap_inside_fold_min_max": true,
+      "reason": "v0.51 older-vehicle point has a large displayed GLM/XGBoost response-shape difference"
+    },
+    {
+      "feature": "vehicle_value",
+      "point_type": "numeric",
+      "point_key": "q0.95",
+      "value_or_level": "49666.33455",
+      "v51_full_fit_log_gap": -0.0219636947962022,
+      "fold_mean_log_gap": -0.00506967604408909,
+      "fold_min_log_gap": -0.05907259276468516,
+      "fold_max_log_gap": 0.028178538382198016,
+      "fold_log_gap_range": 0.08725113114688318,
+      "fold_std_log_gap": 0.03386612582107728,
+      "fraction_folds_same_sign_as_v51_full_fit": 0.4,
+      "v51_full_fit_gap_inside_fold_min_max": true,
+      "reason": "v0.51 vehicle-value response is a deliberately smaller-gap counterexample"
+    }
+  ],
+  "interpretation_boundary": {
+    "confidence_interval_claimed": false,
+    "bootstrap_claimed": false,
+    "predictive_validation_evidence_created": false,
+    "candidate_selection_allowed": false,
+    "model_promotion_evidence_created": false,
+    "customer_pricing_authorised": false,
+    "causal_interpretation_claimed": false,
+    "population_average_pdp_claimed": false,
+    "stability_acceptance_threshold_created": false,
+    "composite_score_created": false,
+    "first_central_or_current_uk_transport_claimed": false,
+    "note": "Five fixed development folds are a deterministic sample-perturbation diagnostic. Their range or standard deviation is not a sampling confidence interval and cannot clear any existing validation blocker.",
+    "interpretation": "The five fixed folds perturb only which 2022 development rows are used to refit the frozen frequency specifications while holding the v0.51 reference profile and evaluation grid fixed. Fold ranges and standard deviations describe development response-shape sensitivity; they are not confidence intervals, held-out predictive validation, causal effects, population-average PDPs, candidate-selection evidence or customer-pricing authority."
+  },
+  "persisted_row_level_data": false
+}

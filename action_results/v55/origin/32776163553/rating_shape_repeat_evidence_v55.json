@@ -1,0 +1,68 @@
+{
+  "status": "V55_HOSTED_REPEAT_NUMERICAL_REVIEW_COMPLETE",
+  "scope": "same_locked_head_development_shape_stability_repeat",
+  "locked_head_sha": "cc6babb828680fef050a1267055373e3cc8ae455",
+  "workflow_run_id": 32703117264,
+  "attempts": [
+    {
+      "attempt": 1,
+      "job_id": 97358535042,
+      "azure_region": "westus",
+      "runner_image": "ubuntu-24.04",
+      "runner_image_version": "20260816.277.1",
+      "python": "3.12.14",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "scikit_learn": "1.9.0",
+      "xgboost": "3.4.1",
+      "artifact_id": 9511256152,
+      "artifact_zip_sha256": "3ec6a77766cef355b423a39f2b0461751b94b651f245af4176db82340b482763",
+      "inner_sha256": {
+        "rating_shape_stability_fold_points_v55.csv": "f7595c3189d3a05ea788eae840eb30fc0448cc49f572aeea51a45e5241ae8fcf",
+        "rating_shape_stability_point_summary_v55.csv": "6cebbf5cdbec986894b557c51419ede18231a63ed70eb661ac063efa5583e24a",
+        "rating_shape_stability_summary_v55.json": "e3a649642990589933572b969e28d2a41da94fd3b405809e1434e433455ae347"
+      }
+    },
+    {
+      "attempt": 2,
+      "job_id": 97585065220,
+      "azure_region": "eastus2",
+      "runner_image": "ubuntu-24.04",
+      "runner_image_version": "20260816.277.1",
+      "python": "3.12.14",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "scikit_learn": "1.9.0",
+      "xgboost": "3.4.1",
+      "artifact_id": 9537751339,
+      "artifact_zip_sha256": "d45fe2345cef2b7c2f35efff477b9b067da99cb03ef13faa2212320bf717030a",
+      "inner_sha256": {
+        "rating_shape_stability_fold_points_v55.csv": "9c8f6dff5056e4854c55ff973d2fe4d033f11cc9a0f1d2972909aa63c7e3f307",
+        "rating_shape_stability_point_summary_v55.csv": "3d86957e70af1a43c373e201f8f7b8cfb03d18b780db715a3bcb6f06b5fb46e1",
+        "rating_shape_stability_summary_v55.json": "9528ba8f0a8522bc6ba142a5eac790a17bb95a0136f5154d82c6b5bf59874b1c"
+      }
+    }
+  ],
+  "comparison": {
+    "byte_identical_outputs": false,
+    "non_numeric_keys_and_rows_equal": true,
+    "xgb_frequency_relativity_exactly_equal": true,
+    "max_absolute_difference_glm_frequency_relativity": 3.502415468759068e-09,
+    "max_absolute_difference_log_xgb_over_glm_relativity": 3.4748424138086875e-09,
+    "max_absolute_difference_point_summary_fold_log_gap_range": 2.731874004791024e-09,
+    "preselected_same_sign_fractions_unchanged": true,
+    "driver_age_q95_same_sign_fraction_both_attempts": 1.0,
+    "vehicle_age_q95_same_sign_fraction_both_attempts": 1.0,
+    "vehicle_value_q95_same_sign_fraction_both_attempts": 0.4,
+    "interpretive_conclusion_changed": false
+  },
+  "interpretation": {
+    "claim_bitwise_reproducibility": false,
+    "claim_exact_metric_reproducibility": false,
+    "numerical_drift_is_material_relative_to_observed_fold_ranges": false,
+    "reason": "Hosted repeats on two Azure regions preserve all rows, keys, XGBoost relativities and qualitative same-sign conclusions. The iterative GLM response differs at approximately 1e-9 scale, far below the preregistered development-fold perturbation ranges. No v0.55 numerical acceptance threshold exists, so this is descriptive reproducibility evidence rather than a pass/fail gate.",
+    "predictive_validation_evidence_created": false,
+    "promotion_evidence_created": false,
+    "customer_pricing_authorised": false
+  }
+}
