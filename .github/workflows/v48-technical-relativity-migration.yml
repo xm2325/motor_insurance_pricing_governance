@@ -1,0 +1,206 @@
+name: Portfolio-neutral technical relativity migration v0.48
+
+on:
+  pull_request:
+    paths:
+      - 'run_portfolio_neutral_relativity_migration_v48.py'
+      - 'tests/test_portfolio_neutral_relativity_v48.py'
+      - 'scripts/migrate_evidence_registry_v48.py'
+      - 'governance/v48_repeat_run_audit.json'
+      - 'RESULTS_V48.md'
+      - '.github/workflows/v48-technical-relativity-migration.yml'
+      - 'run_frozen_model_disagreement_attribution_v47.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+      - 'download_spanish_motor_2022_2024.py'
+      - 'discover_spanish_motor_2022_2024.py'
+      - 'requirements.txt'
+      - 'action_results/v35/validation_firewall_summary.json'
+      - 'action_results/v47/disagreement_attribution_summary_v47.json'
+  push:
+    branches: [main]
+    paths:
+      - 'run_portfolio_neutral_relativity_migration_v48.py'
+      - 'tests/test_portfolio_neutral_relativity_v48.py'
+      - 'scripts/migrate_evidence_registry_v48.py'
+      - 'governance/v48_repeat_run_audit.json'
+      - 'RESULTS_V48.md'
+      - '.github/workflows/v48-technical-relativity-migration.yml'
+      - 'run_frozen_model_disagreement_attribution_v47.py'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+      - 'action_results/v35/validation_firewall_summary.json'
+      - 'action_results/v47/disagreement_attribution_summary_v47.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  portfolio-neutral-relativity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Verify consumed-validation boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          f = json.loads(Path('action_results/v35/validation_firewall_summary.json').read_text())
+          assert f['2024']['current_role'] == 'CONSUMED_RETROSPECTIVE_VALIDATION'
+          assert 'post_hoc_diagnostics' in f['firewall']['allowed_future_2024_purposes']
+          assert 'authorise_customer_pricing' in f['firewall']['forbidden_future_2024_purposes']
+          PY
+      - name: Discover Spanish source
+        run: python discover_spanish_motor_2022_2024.py
+      - name: Download or reuse and verify source
+        run: python download_spanish_motor_2022_2024.py
+      - name: Run portfolio-neutral relativity diagnostic
+        env:
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+          MKL_NUM_THREADS: '1'
+        run: python run_portfolio_neutral_relativity_migration_v48.py
+      - name: Run v0.48 contracts
+        run: python -m unittest -v tests/test_portfolio_neutral_relativity_v48.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v48.py
+          python scripts/migrate_evidence_registry_v48.py
+      - name: Verify repeat-run audit contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a = json.loads(Path('governance/v48_repeat_run_audit.json').read_text())
+          assert a['status'] == 'V48_REPEAT_RUN_NUMERICAL_ENVELOPE_REGISTERED'
+          assert a['head_sha'] == '3492c6a72db69a47a7708f4dc4ea1420e366616f'
+          assert len(a['observations']) == 2
+          assert all(x['calculation_dtype'] == 'float64' for x in a['observations'])
+          assert all(x['pure_premium_raw_challenger_predicted_total'] == 35575822.67597267 for x in a['observations'])
+          e = a['derived_envelope']
+          assert e['frequency_abs_change_gt_10pct_exposure_share_range'] == 0.0
+          assert e['frequency_abs_change_gt_20pct_exposure_share_range'] == 0.0
+          assert e['pure_premium_reference_total_relative_range'] < 5e-5
+          assert e['pure_premium_abs_change_gt_10pct_exposure_share_range'] < 5e-5
+          assert e['pure_premium_abs_change_gt_20pct_exposure_share_range'] < 1e-4
+          assert e['headline_major_segment_max_absolute_shift_range'] < 2e-4
+          assert a['interpretation']['tweedie_glm_max_iter_warning_retained'] is True
+          assert a['interpretation']['bitwise_reproducibility_claimed'] is False
+          assert a['interpretation']['performance_reproducibility_claimed'] is False
+          PY
+      - name: Assert no pricing or row-level artifact
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s = json.loads(Path('results_v48/portfolio_neutral_relativity_summary_v48.json').read_text())
+          assert s['source']['diagnostic_rows'] == 168085
+          assert s['source']['diagnostic_2024_outcome_labels_read'] is False
+          assert s['actual_customer_premium_used'] is False
+          assert s['customer_pricing_authorised'] is False
+          assert s['promotion_evidence_created'] is False
+          assert s['persisted_row_level_data'] is False
+          assert s['interpretation_boundary']['pricing_action_or_rate_change'] is False
+          for target in ['frequency', 'pure_premium']:
+              n = s['targets'][target]['portfolio_neutralisation']
+              assert n['calculation_dtype'] == 'float64'
+              assert abs(n['normalised_total_over_reference'] - 1.0) <= 1e-12
+              assert n['absolute_total_difference_after_neutralisation'] == 0.0
+          PY
+          test ! -e results_v48/policy_level_changes.csv
+          test ! -e results_v48/predictions.csv
+          if find results_v48 -type f \( -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' -o -name '*.rda' -o -name '*.parquet' \) | grep -q .; then
+            echo 'v0.48 must persist aggregate diagnostics only' >&2
+            exit 1
+          fi
+      - name: Persist v0.48 aggregate diagnostics
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v48
+          cp results_v48/portfolio_neutral_relativity_summary_v48.json action_results/v48/
+          cp results_v48/relativity_migration_bands_v48.csv action_results/v48/
+          cp results_v48/segment_relativity_migration_v48.csv action_results/v48/
+          cp governance/v48_repeat_run_audit.json action_results/v48/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          s = json.loads(Path('results_v48/portfolio_neutral_relativity_summary_v48.json').read_text())
+          f = s['targets']['frequency']['relativity_change_distribution']
+          p = s['targets']['pure_premium']['relativity_change_distribution']
+          Path('action_results/v48/ACTION_V48_STATUS.json').write_text(json.dumps({
+              'workflow': 'Portfolio-neutral technical relativity migration v0.48',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'analysis_role': s['analysis_role'],
+              'diagnostic_rows': s['source']['diagnostic_rows'],
+              'diagnostic_2024_outcome_labels_read': False,
+              'actual_customer_premium_used': False,
+              'candidate_selection_allowed': False,
+              'model_or_calibration_parameter_change': False,
+              'promotion_evidence_created': False,
+              'customer_pricing_authorised': False,
+              'persisted_row_level_data': False,
+              'portfolio_neutral_calculation_dtype': 'float64',
+              'frequency_abs_change_gt_10pct_exposure_share': f['absolute_change_gt_10pct_exposure_share'],
+              'frequency_abs_change_gt_20pct_exposure_share': f['absolute_change_gt_20pct_exposure_share'],
+              'pure_premium_abs_change_gt_10pct_exposure_share': p['absolute_change_gt_10pct_exposure_share'],
+              'pure_premium_abs_change_gt_20pct_exposure_share': p['absolute_change_gt_20pct_exposure_share'],
+              'repeat_run_numerical_limitation_registered': True,
+              'frozen_tweedie_glm_convergence_limitation_registered': True,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'committee_readiness': 'EVIDENCE_GAP_HOLD',
+              'evidence_role': 'ROLLING_POST_HOC_TECHNICAL_RELATIVITY_DIAGNOSTIC',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v48/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.48 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v48/portfolio_neutral_relativity_summary_v48.json "$origin_dir/"
+          cp action_results/v48/relativity_migration_bands_v48.csv "$origin_dir/"
+          cp action_results/v48/segment_relativity_migration_v48.csv "$origin_dir/"
+          cp action_results/v48/v48_repeat_run_audit.json "$origin_dir/"
+          cp action_results/v48/ACTION_V48_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          status_path = Path('action_results/v48/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V48_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_POST_HOC_TECHNICAL_RELATIVITY_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md action_results/v48
+          if git diff --cached --quiet; then
+            echo 'No v0.48 evidence changes'
+          else
+            git commit -m "Persist v0.48 technical relativity diagnostic ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.48 aggregate diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-technical-relativity-v48
+          path: results_v48/
+          if-no-files-found: error
