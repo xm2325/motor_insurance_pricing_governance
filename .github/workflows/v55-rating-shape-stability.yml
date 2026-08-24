@@ -4,11 +4,16 @@ on:
   pull_request:
     paths:
       - 'governance/rating_shape_stability_protocol_v55.json'
+      - 'governance/rating_shape_repeat_evidence_v55.json'
       - 'run_rating_shape_stability_audit_v55.py'
       - 'tests/test_rating_shape_stability_v55.py'
+      - 'tests/test_rating_shape_repeat_evidence_v55.py'
+      - 'scripts/migrate_evidence_registry_v55.py'
+      - 'RESULTS_V55.md'
       - '.github/workflows/v55-rating-shape-stability.yml'
       - 'run_rating_factor_relativity_audit_v51.py'
       - 'action_results/v51/**'
+      - 'action_results/v54/ACTION_V54_STATUS.json'
       - 'build_deployment_bundle_v21.py'
       - 'deployment/**'
       - 'download_spanish_motor_2022_2024.py'
@@ -18,8 +23,12 @@ on:
     branches: [main]
     paths:
       - 'governance/rating_shape_stability_protocol_v55.json'
+      - 'governance/rating_shape_repeat_evidence_v55.json'
       - 'run_rating_shape_stability_audit_v55.py'
       - 'tests/test_rating_shape_stability_v55.py'
+      - 'tests/test_rating_shape_repeat_evidence_v55.py'
+      - 'scripts/migrate_evidence_registry_v55.py'
+      - 'RESULTS_V55.md'
       - '.github/workflows/v55-rating-shape-stability.yml'
       - 'run_rating_factor_relativity_audit_v51.py'
       - 'action_results/v51/**'
@@ -28,7 +37,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   rating-shape-stability:
@@ -36,6 +45,8 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -73,13 +84,22 @@ jobs:
           MKL_NUM_THREADS: '1'
         run: python run_rating_shape_stability_audit_v55.py
       - name: Run v0.55 contracts
-        run: python -m unittest -v tests/test_rating_shape_stability_v55.py
+        run: |
+          python -m unittest -v tests/test_rating_shape_stability_v55.py
+          python -m unittest -v tests/test_rating_shape_repeat_evidence_v55.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v55.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v55.once.md
+          python scripts/migrate_evidence_registry_v55.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v55.once.md
       - name: Assert development-only non-validation boundary
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           s = json.loads(Path('results_v55/rating_shape_stability_summary_v55.json').read_text())
+          r = json.loads(Path('governance/rating_shape_repeat_evidence_v55.json').read_text())
           assert s['analysis_role'] == 'DEVELOPMENT_ONLY_FIXED_FOLD_RESPONSE_SHAPE_STABILITY_AUDIT'
           assert s['source']['years_read'] == [2022]
           assert s['source']['2023_rows_read'] is False
@@ -99,9 +119,116 @@ jobs:
           assert b['stability_acceptance_threshold_created'] is False
           assert b['composite_score_created'] is False
           assert s['persisted_row_level_data'] is False
+          assert r['comparison']['byte_identical_outputs'] is False
+          assert r['comparison']['xgb_frequency_relativity_exactly_equal'] is True
+          assert r['interpretation']['claim_bitwise_reproducibility'] is False
+          assert r['interpretation']['predictive_validation_evidence_created'] is False
+          assert r['interpretation']['promotion_evidence_created'] is False
+          assert r['interpretation']['customer_pricing_authorised'] is False
           PY
           test ! -e results_v55/predictions.csv
           test ! -e results_v55/raw_rows.csv
+      - name: Persist v0.55 rolling and immutable aggregate evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v55
+          cp results_v55/rating_shape_stability_fold_points_v55.csv action_results/v55/
+          cp results_v55/rating_shape_stability_point_summary_v55.csv action_results/v55/
+          cp results_v55/rating_shape_stability_summary_v55.json action_results/v55/
+          cp governance/rating_shape_repeat_evidence_v55.json action_results/v55/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          s = json.loads(Path('results_v55/rating_shape_stability_summary_v55.json').read_text())
+          repeat = json.loads(Path('governance/rating_shape_repeat_evidence_v55.json').read_text())
+          prior = json.loads(Path('action_results/v54/ACTION_V54_STATUS.json').read_text())
+          points = {p['feature']: p for p in s['preselected_review_points']}
+          status = {
+              'workflow': 'Rating-shape stability audit v0.55',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'analysis_role': s['analysis_role'],
+              'protocol_sha256': s['protocol']['sha256'],
+              'development_years_read': s['source']['years_read'],
+              'development_rows': s['source']['rows'],
+              'fold_count': s['fold_design']['fold_count'],
+              'held_out_performance_metric_computed': False,
+              'driver_age_q95_full_fit_log_gap': points['driver_age']['v51_full_fit_log_gap'],
+              'driver_age_q95_fold_min_log_gap': points['driver_age']['fold_min_log_gap'],
+              'driver_age_q95_fold_max_log_gap': points['driver_age']['fold_max_log_gap'],
+              'driver_age_q95_same_sign_fraction': points['driver_age']['fraction_folds_same_sign_as_v51_full_fit'],
+              'vehicle_age_q95_full_fit_log_gap': points['vehicle_age']['v51_full_fit_log_gap'],
+              'vehicle_age_q95_fold_min_log_gap': points['vehicle_age']['fold_min_log_gap'],
+              'vehicle_age_q95_fold_max_log_gap': points['vehicle_age']['fold_max_log_gap'],
+              'vehicle_age_q95_same_sign_fraction': points['vehicle_age']['fraction_folds_same_sign_as_v51_full_fit'],
+              'vehicle_value_q95_full_fit_log_gap': points['vehicle_value']['v51_full_fit_log_gap'],
+              'vehicle_value_q95_fold_min_log_gap': points['vehicle_value']['fold_min_log_gap'],
+              'vehicle_value_q95_fold_max_log_gap': points['vehicle_value']['fold_max_log_gap'],
+              'vehicle_value_q95_same_sign_fraction': points['vehicle_value']['fraction_folds_same_sign_as_v51_full_fit'],
+              'hosted_repeat_cross_region_recorded': True,
+              'hosted_repeat_byte_identical': repeat['comparison']['byte_identical_outputs'],
+              'hosted_repeat_xgb_relativity_exact': repeat['comparison']['xgb_frequency_relativity_exactly_equal'],
+              'hosted_repeat_max_abs_glm_relativity_diff': repeat['comparison']['max_absolute_difference_glm_frequency_relativity'],
+              'hosted_repeat_max_abs_log_gap_diff': repeat['comparison']['max_absolute_difference_log_xgb_over_glm_relativity'],
+              'confidence_interval_claimed': False,
+              'predictive_validation_evidence_created': False,
+              'candidate_selection_allowed': False,
+              'model_promotion_evidence_created': False,
+              'stability_acceptance_threshold_created': False,
+              'customer_pricing_authorised': False,
+              'committee_status': prior['committee_status'],
+              'committee_gate_pass_count': prior['committee_gate_pass_count'],
+              'committee_gate_count': prior['committee_gate_count'],
+              'external_target_gates': prior['external_target_gates'],
+              'model_family_decision': prior['model_family_decision'],
+              'serving_status': prior['serving_status'],
+              'promotion_review_status': prior['promotion_review_status'],
+              'evidence_role': 'ROLLING_DEVELOPMENT_RATING_SHAPE_STABILITY_AUDIT',
+          }
+          Path('action_results/v55/ACTION_V55_STATUS.json').write_text(
+              json.dumps(status, indent=2), encoding='utf-8'
+          )
+          PY
+          origin_dir="action_results/v55/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.55 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v55/rating_shape_stability_fold_points_v55.csv "$origin_dir/"
+          cp action_results/v55/rating_shape_stability_point_summary_v55.csv "$origin_dir/"
+          cp action_results/v55/rating_shape_stability_summary_v55.json "$origin_dir/"
+          cp action_results/v55/rating_shape_repeat_evidence_v55.json "$origin_dir/"
+          cp action_results/v55/ACTION_V55_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          d = Path('action_results/v55/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = d / 'ACTION_V55_STATUS.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          status['evidence_role'] = 'IMMUTABLE_DEVELOPMENT_RATING_SHAPE_STABILITY_AUDIT_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2), encoding='utf-8')
+          manifest = {
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'files': {},
+          }
+          for p in sorted(d.iterdir()):
+              if p.name == 'ORIGIN_MANIFEST.json':
+                  continue
+              manifest['files'][p.name] = hashlib.sha256(p.read_bytes()).hexdigest()
+          (d / 'ORIGIN_MANIFEST.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md action_results/v55
+          if git diff --cached --quiet; then
+            echo 'No v0.55 aggregate evidence changes'
+          else
+            git commit -m "Persist v0.55 rating-shape stability evidence ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
       - name: Upload v0.55 aggregate shape-stability audit
         if: always()
         uses: actions/upload-artifact@v4
