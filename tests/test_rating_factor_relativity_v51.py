@@ -20,6 +20,9 @@ class RatingFactorRelativityV51Tests(unittest.TestCase):
         )
         cls.numeric = pd.read_csv(ROOT / "results_v51/numeric_rating_factor_relativities_v51.csv")
         cls.categorical = pd.read_csv(ROOT / "results_v51/categorical_rating_factor_relativities_v51.csv")
+        cls.repeat = json.loads(
+            (ROOT / "governance/v51_repeat_run_audit.json").read_text(encoding="utf-8")
+        )
 
     def test_scope_is_2022_development_only(self):
         s = self.summary
@@ -100,6 +103,29 @@ class RatingFactorRelativityV51Tests(unittest.TestCase):
             self.assertGreater(item["displayed_exposure_share"], 0)
             self.assertLessEqual(item["displayed_exposure_share"], 1.0 + 1e-12)
 
+    def test_repeat_run_audit_is_descriptive_and_stable_at_reported_precision(self):
+        r = self.repeat
+        self.assertEqual(r["status"], "V51_DEVELOPMENT_INTERPRETABILITY_REPEAT_RUN_AUDIT_PASS")
+        self.assertEqual(r["evidence_role"], "DEVELOPMENT_INTERPRETABILITY_NUMERICAL_REPRODUCIBILITY_AUDIT")
+        self.assertEqual(len(r["executions"]), 2)
+        self.assertTrue(all(x["workflow_conclusion"] == "success" for x in r["executions"]))
+        c = r["comparison"]
+        self.assertTrue(c["numeric_grid_keys_identical"])
+        self.assertTrue(c["categorical_grid_keys_identical"])
+        self.assertTrue(c["numeric_factor_ranking_identical"])
+        self.assertTrue(c["categorical_factor_ranking_identical"])
+        self.assertEqual(c["numeric_xgb_relativity_max_absolute_difference"], 0.0)
+        self.assertEqual(c["categorical_xgb_relativity_max_absolute_difference"], 0.0)
+        self.assertLess(c["numeric_glm_relativity_max_absolute_difference"], 1e-6)
+        self.assertLess(c["categorical_glm_relativity_max_absolute_difference"], 1e-6)
+        self.assertFalse(r["validation_performance_evidence_created"])
+        self.assertFalse(r["candidate_selection_allowed"])
+        self.assertFalse(r["model_promotion_evidence_created"])
+        self.assertFalse(r["customer_pricing_authorised"])
+        self.assertFalse(r["interpretation"]["bitwise_reproducibility_claimed"])
+        self.assertFalse(r["interpretation"]["validation_reproducibility_claimed"])
+        self.assertFalse(r["interpretation"]["performance_reproducibility_claimed"])
+
     def test_interpretation_is_not_pdp_validation_or_pricing(self):
         b = self.summary["interpretation_boundary"]
         self.assertTrue(b["reference_profile_not_population_average_pdp"])
@@ -113,7 +139,6 @@ class RatingFactorRelativityV51Tests(unittest.TestCase):
         self.assertIn("not a population-average pdp", lower)
         self.assertIn("customer premium", lower)
         self.assertIn("model-promotion gate", lower)
-        # The shared leading negation must govern the listed validation/causal/pricing/promotion concepts.
         self.assertIn("not a population-average pdp, validation result, causal effect, customer premium or model-promotion gate", lower)
 
     def test_outputs_are_aggregate_reference_profiles_only(self):
