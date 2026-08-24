@@ -1,0 +1,26 @@
+{
+  "workflow": "Rating-factor relativity audit v0.51",
+  "run_id": "32700221642",
+  "sha": "e185bde486701e68d0a275ae516e79a9e740050d",
+  "status": "success",
+  "analysis_role": "DEVELOPMENT_ONLY_REFERENCE_PROFILE_INTERPRETABILITY_AUDIT",
+  "source_years_read": [
+    2022
+  ],
+  "development_rows": 67171,
+  "model_fit_executed": true,
+  "2023_rows_read": false,
+  "2024_rows_read": false,
+  "validation_performance_evidence_created": false,
+  "candidate_selection_allowed": false,
+  "model_promotion_evidence_created": false,
+  "customer_pricing_authorised": false,
+  "persisted_row_level_data": false,
+  "top_numeric_shape_gap_feature": "driver_age",
+  "top_numeric_shape_gap": 0.26865990121735667,
+  "repeat_run_conclusion": "DEVELOPMENT_RESPONSE_SHAPES_REPRODUCIBLE_AT_REPORTED_PRECISION",
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "committee_readiness": "EVIDENCE_GAP_HOLD",
+  "evidence_role": "ROLLING_DEVELOPMENT_INTERPRETABILITY_AUDIT"
+}

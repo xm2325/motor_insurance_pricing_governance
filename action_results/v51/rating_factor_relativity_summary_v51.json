@@ -1,0 +1,426 @@
+{
+  "status": "V51_DEVELOPMENT_RATING_FACTOR_RELATIVITY_AUDIT_COMPLETE",
+  "analysis_role": "DEVELOPMENT_ONLY_REFERENCE_PROFILE_INTERPRETABILITY_AUDIT",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "source_file_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+    "years_read": [
+      2022
+    ],
+    "rows": 67171,
+    "exposure": 41912.495890410966,
+    "claims": 12664.0,
+    "2023_rows_read": false,
+    "2024_rows_read": false,
+    "incurred_loss_read": false,
+    "actual_premium_read": false,
+    "customer_id_read": false
+  },
+  "frozen_frequency_definition": {
+    "source": "build_deployment_bundle_v21.py::model_definitions",
+    "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25",
+    "models": [
+      "poisson_glm_frequency",
+      "xgb_poisson_frequency"
+    ],
+    "model_fit_executed": true,
+    "calibration_applied": false,
+    "reason_calibration_not_needed": "Each model's factor sweep is normalised to its own 2022 reference-profile score, so an aggregate multiplicative calibration scale would cancel from the relativity."
+  },
+  "reference_profile": {
+    "driver_age": 47.0,
+    "vehicle_age": 23.0,
+    "age_driving_licence": 21.0,
+    "vehicle_value": 24693.375,
+    "seats": 5.0,
+    "power_to_weight_ratio": 12.0,
+    "policy_type": "CC",
+    "business_type": "NB",
+    "payment_frequency": "A",
+    "bonus_score": "G",
+    "fuel_type": "D",
+    "vehicle_brand": "RENAULT",
+    "municipality_type": "I",
+    "circulation_area": "U"
+  },
+  "reference_profile_scores": {
+    "poisson_glm_frequency": 0.22519883061590085,
+    "xgb_poisson_frequency": 0.21322748064994812
+  },
+  "numeric_grid": {
+    "quantiles": [
+      0.05,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      0.95
+    ],
+    "exposure_weighted": true,
+    "features": {
+      "driver_age": {
+        "grid_points": 11,
+        "min_grid_value": 30.0,
+        "max_grid_value": 68.0,
+        "glm_relativity_min": 0.8796810286266358,
+        "glm_relativity_max": 1.1715874768282517,
+        "xgb_relativity_min": 0.8946749470664639,
+        "xgb_relativity_max": 1.0148880593207819,
+        "glm_direction_changes_over_quantile_grid": 0,
+        "xgb_direction_changes_over_quantile_grid": 4,
+        "max_absolute_log_relativity_gap": 0.26865990121735667,
+        "max_gap_quantile": 0.95,
+        "max_gap_value": 68.0,
+        "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+      },
+      "vehicle_age": {
+        "grid_points": 11,
+        "min_grid_value": 7.0,
+        "max_grid_value": 44.0,
+        "glm_relativity_min": 0.7021790363986598,
+        "glm_relativity_max": 1.30915813004366,
+        "xgb_relativity_min": 0.915249247106144,
+        "xgb_relativity_max": 1.3384124928875694,
+        "glm_direction_changes_over_quantile_grid": 0,
+        "xgb_direction_changes_over_quantile_grid": 3,
+        "max_absolute_log_relativity_gap": 0.26770589446186105,
+        "max_gap_quantile": 0.95,
+        "max_gap_value": 44.0,
+        "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+      },
+      "age_driving_licence": {
+        "grid_points": 11,
+        "min_grid_value": 18.0,
+        "max_grid_value": 37.0,
+        "glm_relativity_min": 0.9073700816282093,
+        "glm_relativity_max": 1.0183930213945438,
+        "xgb_relativity_min": 1.0,
+        "xgb_relativity_max": 1.0762521057756642,
+        "glm_direction_changes_over_quantile_grid": 0,
+        "xgb_direction_changes_over_quantile_grid": 2,
+        "max_absolute_log_relativity_gap": 0.1706896171757457,
+        "max_gap_quantile": 0.95,
+        "max_gap_value": 37.0,
+        "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+      },
+      "vehicle_value": {
+        "grid_points": 11,
+        "min_grid_value": 12739.125,
+        "max_grid_value": 49666.33455,
+        "glm_relativity_min": 0.9559411903804603,
+        "glm_relativity_max": 1.0987025807454882,
+        "xgb_relativity_min": 0.9431265511598137,
+        "xgb_relativity_max": 1.0748340922022601,
+        "glm_direction_changes_over_quantile_grid": 0,
+        "xgb_direction_changes_over_quantile_grid": 2,
+        "max_absolute_log_relativity_gap": 0.03393746743310981,
+        "max_gap_quantile": 0.3,
+        "max_gap_value": 19732.3854,
+        "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+      },
+      "seats": {
+        "grid_points": 11,
+        "min_grid_value": 4.0,
+        "max_grid_value": 7.0,
+        "glm_relativity_min": 0.9924729878465982,
+        "glm_relativity_max": 1.0152257140373386,
+        "xgb_relativity_min": 1.0,
+        "xgb_relativity_max": 1.0669035310501715,
+        "glm_direction_changes_over_quantile_grid": 0,
+        "xgb_direction_changes_over_quantile_grid": 0,
+        "max_absolute_log_relativity_gap": 0.07231603991198374,
+        "max_gap_quantile": 0.05,
+        "max_gap_value": 4.0,
+        "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+      },
+      "power_to_weight_ratio": {
+        "grid_points": 11,
+        "min_grid_value": 8.68,
+        "max_grid_value": 16.72,
+        "glm_relativity_min": 0.9771271700690117,
+        "glm_relativity_max": 1.0334427025301411,
+        "xgb_relativity_min": 1.0,
+        "xgb_relativity_max": 1.0980612537697105,
+        "glm_direction_changes_over_quantile_grid": 0,
+        "xgb_direction_changes_over_quantile_grid": 1,
+        "max_absolute_log_relativity_gap": 0.06065046982641897,
+        "max_gap_quantile": 0.95,
+        "max_gap_value": 16.72,
+        "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+      }
+    }
+  },
+  "categorical_grid": {
+    "selection": "top 10 levels by 2022 exposure, plus reference level if needed",
+    "features": {
+      "policy_type": {
+        "displayed_levels": 5,
+        "displayed_exposure_share": 0.9999999999999999,
+        "reference_level": "CC",
+        "max_absolute_log_relativity_gap": 0.14857731979556676,
+        "max_gap_level": "TP",
+        "max_gap_level_exposure_share": 0.012217038486119252,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "business_type": {
+        "displayed_levels": 2,
+        "displayed_exposure_share": 1.0,
+        "reference_level": "NB",
+        "max_absolute_log_relativity_gap": 0.02571338968862851,
+        "max_gap_level": "P",
+        "max_gap_level_exposure_share": 0.0322438248873501,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "payment_frequency": {
+        "displayed_levels": 3,
+        "displayed_exposure_share": 1.0,
+        "reference_level": "A",
+        "max_absolute_log_relativity_gap": 0.009107527965752886,
+        "max_gap_level": "Q",
+        "max_gap_level_exposure_share": 0.06106270592070459,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "bonus_score": {
+        "displayed_levels": 3,
+        "displayed_exposure_share": 1.0000000000000002,
+        "reference_level": "G",
+        "max_absolute_log_relativity_gap": 0.10885825583897207,
+        "max_gap_level": "N",
+        "max_gap_level_exposure_share": 0.02178936271727509,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "fuel_type": {
+        "displayed_levels": 2,
+        "displayed_exposure_share": 1.0,
+        "reference_level": "D",
+        "max_absolute_log_relativity_gap": 0.015066288572301217,
+        "max_gap_level": "G",
+        "max_gap_level_exposure_share": 0.36069678525926124,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "vehicle_brand": {
+        "displayed_levels": 10,
+        "displayed_exposure_share": 0.7265663929565976,
+        "reference_level": "RENAULT",
+        "max_absolute_log_relativity_gap": 0.1231813633549763,
+        "max_gap_level": "BMW",
+        "max_gap_level_exposure_share": 0.04144015375543345,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "municipality_type": {
+        "displayed_levels": 3,
+        "displayed_exposure_share": 1.0,
+        "reference_level": "I",
+        "max_absolute_log_relativity_gap": 0.06418950895698353,
+        "max_gap_level": "IS",
+        "max_gap_level_exposure_share": 0.07270150119024887,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      },
+      "circulation_area": {
+        "displayed_levels": 2,
+        "displayed_exposure_share": 1.0,
+        "reference_level": "U",
+        "max_absolute_log_relativity_gap": 0.022735580925951144,
+        "max_gap_level": "R",
+        "max_gap_level_exposure_share": 0.45981696634625785,
+        "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+      }
+    }
+  },
+  "ranked_numeric_shape_gaps": [
+    {
+      "feature": "driver_age",
+      "grid_points": 11,
+      "min_grid_value": 30.0,
+      "max_grid_value": 68.0,
+      "glm_relativity_min": 0.8796810286266358,
+      "glm_relativity_max": 1.1715874768282517,
+      "xgb_relativity_min": 0.8946749470664639,
+      "xgb_relativity_max": 1.0148880593207819,
+      "glm_direction_changes_over_quantile_grid": 0,
+      "xgb_direction_changes_over_quantile_grid": 4,
+      "max_absolute_log_relativity_gap": 0.26865990121735667,
+      "max_gap_quantile": 0.95,
+      "max_gap_value": 68.0,
+      "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+    },
+    {
+      "feature": "vehicle_age",
+      "grid_points": 11,
+      "min_grid_value": 7.0,
+      "max_grid_value": 44.0,
+      "glm_relativity_min": 0.7021790363986598,
+      "glm_relativity_max": 1.30915813004366,
+      "xgb_relativity_min": 0.915249247106144,
+      "xgb_relativity_max": 1.3384124928875694,
+      "glm_direction_changes_over_quantile_grid": 0,
+      "xgb_direction_changes_over_quantile_grid": 3,
+      "max_absolute_log_relativity_gap": 0.26770589446186105,
+      "max_gap_quantile": 0.95,
+      "max_gap_value": 44.0,
+      "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+    },
+    {
+      "feature": "age_driving_licence",
+      "grid_points": 11,
+      "min_grid_value": 18.0,
+      "max_grid_value": 37.0,
+      "glm_relativity_min": 0.9073700816282093,
+      "glm_relativity_max": 1.0183930213945438,
+      "xgb_relativity_min": 1.0,
+      "xgb_relativity_max": 1.0762521057756642,
+      "glm_direction_changes_over_quantile_grid": 0,
+      "xgb_direction_changes_over_quantile_grid": 2,
+      "max_absolute_log_relativity_gap": 0.1706896171757457,
+      "max_gap_quantile": 0.95,
+      "max_gap_value": 37.0,
+      "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+    },
+    {
+      "feature": "seats",
+      "grid_points": 11,
+      "min_grid_value": 4.0,
+      "max_grid_value": 7.0,
+      "glm_relativity_min": 0.9924729878465982,
+      "glm_relativity_max": 1.0152257140373386,
+      "xgb_relativity_min": 1.0,
+      "xgb_relativity_max": 1.0669035310501715,
+      "glm_direction_changes_over_quantile_grid": 0,
+      "xgb_direction_changes_over_quantile_grid": 0,
+      "max_absolute_log_relativity_gap": 0.07231603991198374,
+      "max_gap_quantile": 0.05,
+      "max_gap_value": 4.0,
+      "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+    },
+    {
+      "feature": "power_to_weight_ratio",
+      "grid_points": 11,
+      "min_grid_value": 8.68,
+      "max_grid_value": 16.72,
+      "glm_relativity_min": 0.9771271700690117,
+      "glm_relativity_max": 1.0334427025301411,
+      "xgb_relativity_min": 1.0,
+      "xgb_relativity_max": 1.0980612537697105,
+      "glm_direction_changes_over_quantile_grid": 0,
+      "xgb_direction_changes_over_quantile_grid": 1,
+      "max_absolute_log_relativity_gap": 0.06065046982641897,
+      "max_gap_quantile": 0.95,
+      "max_gap_value": 16.72,
+      "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+    },
+    {
+      "feature": "vehicle_value",
+      "grid_points": 11,
+      "min_grid_value": 12739.125,
+      "max_grid_value": 49666.33455,
+      "glm_relativity_min": 0.9559411903804603,
+      "glm_relativity_max": 1.0987025807454882,
+      "xgb_relativity_min": 0.9431265511598137,
+      "xgb_relativity_max": 1.0748340922022601,
+      "glm_direction_changes_over_quantile_grid": 0,
+      "xgb_direction_changes_over_quantile_grid": 2,
+      "max_absolute_log_relativity_gap": 0.03393746743310981,
+      "max_gap_quantile": 0.3,
+      "max_gap_value": 19732.3854,
+      "interpretation": "Reference-profile sensitivity over exposure-weighted 2022 support. A larger gap means the frozen development GLM and XGBoost imply different one-factor technical-risk relativities at that supported value. This is not a causal effect or customer premium."
+    }
+  ],
+  "ranked_categorical_shape_gaps": [
+    {
+      "feature": "policy_type",
+      "displayed_levels": 5,
+      "displayed_exposure_share": 0.9999999999999999,
+      "reference_level": "CC",
+      "max_absolute_log_relativity_gap": 0.14857731979556676,
+      "max_gap_level": "TP",
+      "max_gap_level_exposure_share": 0.012217038486119252,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "vehicle_brand",
+      "displayed_levels": 10,
+      "displayed_exposure_share": 0.7265663929565976,
+      "reference_level": "RENAULT",
+      "max_absolute_log_relativity_gap": 0.1231813633549763,
+      "max_gap_level": "BMW",
+      "max_gap_level_exposure_share": 0.04144015375543345,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "bonus_score",
+      "displayed_levels": 3,
+      "displayed_exposure_share": 1.0000000000000002,
+      "reference_level": "G",
+      "max_absolute_log_relativity_gap": 0.10885825583897207,
+      "max_gap_level": "N",
+      "max_gap_level_exposure_share": 0.02178936271727509,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "municipality_type",
+      "displayed_levels": 3,
+      "displayed_exposure_share": 1.0,
+      "reference_level": "I",
+      "max_absolute_log_relativity_gap": 0.06418950895698353,
+      "max_gap_level": "IS",
+      "max_gap_level_exposure_share": 0.07270150119024887,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "business_type",
+      "displayed_levels": 2,
+      "displayed_exposure_share": 1.0,
+      "reference_level": "NB",
+      "max_absolute_log_relativity_gap": 0.02571338968862851,
+      "max_gap_level": "P",
+      "max_gap_level_exposure_share": 0.0322438248873501,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "circulation_area",
+      "displayed_levels": 2,
+      "displayed_exposure_share": 1.0,
+      "reference_level": "U",
+      "max_absolute_log_relativity_gap": 0.022735580925951144,
+      "max_gap_level": "R",
+      "max_gap_level_exposure_share": 0.45981696634625785,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "fuel_type",
+      "displayed_levels": 2,
+      "displayed_exposure_share": 1.0,
+      "reference_level": "D",
+      "max_absolute_log_relativity_gap": 0.015066288572301217,
+      "max_gap_level": "G",
+      "max_gap_level_exposure_share": 0.36069678525926124,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    },
+    {
+      "feature": "payment_frequency",
+      "displayed_levels": 3,
+      "displayed_exposure_share": 1.0,
+      "reference_level": "A",
+      "max_absolute_log_relativity_gap": 0.009107527965752886,
+      "max_gap_level": "Q",
+      "max_gap_level_exposure_share": 0.06106270592070459,
+      "interpretation": "Reference-profile categorical sensitivity for the highest-exposure 2022 levels (plus the reference level if needed). It is not an exhaustive category effect estimate, causal effect or premium change."
+    }
+  ],
+  "interpretation_boundary": {
+    "reference_profile_not_population_average_pdp": true,
+    "causal_interpretation_claimed": false,
+    "validation_performance_evidence_created": false,
+    "candidate_selection_allowed": false,
+    "model_promotion_evidence_created": false,
+    "customer_pricing_authorised": false,
+    "actual_premium_or_quote": false,
+    "interpretation": "The audit compares one-factor technical-risk relativities implied by frozen development frequency model specifications around one exposure-weighted 2022 reference profile. It is a development interpretability diagnostic, not a population-average PDP, validation result, causal effect, customer premium or model-promotion gate."
+  },
+  "persisted_row_level_data": false
+}
