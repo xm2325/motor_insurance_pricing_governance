@@ -1,0 +1,156 @@
+name: Committee request reachability audit v0.59
+
+on:
+  pull_request:
+    paths:
+      - 'governance/model_change_reachability_policy_v59.json'
+      - 'audit_model_change_reachability_v59.py'
+      - 'tests/test_model_change_reachability_v59.py'
+      - 'scripts/migrate_evidence_registry_v59.py'
+      - 'RESULTS_V59.md'
+      - '.github/workflows/v59-committee-reachability.yml'
+      - 'governance/model_change_committee_policy_v44.json'
+      - 'action_results/v44/model_change_committee_decision_v44.json'
+      - 'action_results/v43/model_family_evidence_synthesis_summary.json'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/model_change_reachability_policy_v59.json'
+      - 'audit_model_change_reachability_v59.py'
+      - 'tests/test_model_change_reachability_v59.py'
+      - 'scripts/migrate_evidence_registry_v59.py'
+      - 'RESULTS_V59.md'
+      - '.github/workflows/v59-committee-reachability.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: v59-reachability-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  committee-request-reachability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify v0.59 no-data reachability contracts
+        run: python -m unittest -v tests/test_model_change_reachability_v59.py
+      - name: Compute committee-request reachability from persisted evidence
+        run: python audit_model_change_reachability_v59.py
+      - name: Assert terminal 7-of-8 ceiling for existing request
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results_v59/committee_gate_reachability_audit_v59.json').read_text())
+          assert r['status'] == 'V59_EXISTING_MODEL_CHANGE_REQUEST_STRUCTURALLY_UNREACHABLE'
+          assert r['request_id'] == 'MCR-XGB-MOTOR-001'
+          assert r['current_machine_gate_state']['passed'] == 5
+          assert r['current_machine_gate_state']['required'] == 8
+          assert r['structural_blocker']['gate_id'] == 'G2_LOCKED_TEMPORAL_SUPPORT'
+          assert r['structural_blocker']['historical_event_complete'] is True
+          assert r['structural_blocker']['future_external_evidence_can_retroactively_change_this_gate'] is False
+          assert r['reachability']['structurally_unreachable_gate_ids'] == ['G2_LOCKED_TEMPORAL_SUPPORT']
+          assert r['reachability']['maximum_machine_gate_pass_count_without_redefining_existing_request'] == 7
+          assert r['reachability']['required_machine_gate_pass_count'] == 8
+          assert r['reachability']['ready_for_human_committee_review_reachable_for_existing_request'] is False
+          assert r['reachability']['terminal_existing_request_state'] == 'TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST'
+          assert r['stop_rule']['continue_external_dataset_shopping_only_to_open_MCR_XGB_MOTOR_001'] is False
+          assert r['stop_rule']['new_change_request_requires_prospective_registration_before_fresh_outcome_access'] is True
+          assert r['governance']['model_family_decision'] == 'HOLD'
+          assert r['governance']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert r['governance']['promotion_review_status'] == 'NOT_OPEN'
+          assert r['governance']['customer_pricing_authorised'] is False
+          assert r['evidence_boundary']['row_level_external_data_accessed'] is False
+          assert r['evidence_boundary']['outcome_values_inspected'] is False
+          assert r['evidence_boundary']['candidate_selection_performed'] is False
+          print(json.dumps(r['reachability'], indent=2))
+          PY
+      - name: Apply and verify v0.59 evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v59.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v59_once.md
+          python scripts/migrate_evidence_registry_v59.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v59_once.md
+          grep -F '| v0.59 committee-gate reachability audit |' EVIDENCE_REGISTRY.md
+          grep -F 'Evidence acquisition has a stop condition' EVIDENCE_REGISTRY.md
+      - name: Persist aggregate v0.59 reachability evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          mkdir -p action_results/v59
+          cp results_v59/committee_gate_reachability_audit_v59.json action_results/v59/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          r = json.loads(Path('results_v59/committee_gate_reachability_audit_v59.json').read_text())
+          Path('action_results/v59/ACTION_V59_STATUS.json').write_text(json.dumps({
+              'workflow': 'Committee request reachability audit v0.59',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'request_id': r['request_id'],
+              'reachability_status': r['status'],
+              'committee_gate_pass_count': r['current_machine_gate_state']['passed'],
+              'committee_gate_count': r['current_machine_gate_state']['required'],
+              'structurally_unreachable_gate_ids': r['reachability']['structurally_unreachable_gate_ids'],
+              'maximum_machine_gate_pass_count_without_redefining_existing_request': r['reachability']['maximum_machine_gate_pass_count_without_redefining_existing_request'],
+              'ready_for_human_committee_review_reachable_for_existing_request': r['reachability']['ready_for_human_committee_review_reachable_for_existing_request'],
+              'terminal_existing_request_state': r['reachability']['terminal_existing_request_state'],
+              'external_row_data_accessed': False,
+              'candidate_selection_performed': False,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+              'evidence_role': 'ROLLING_COMMITTEE_REQUEST_REACHABILITY_AUDIT',
+          }, indent=2) + '\n', encoding='utf-8')
+          PY
+          origin_dir="action_results/v59/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.59 snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v59/committee_gate_reachability_audit_v59.json "$origin_dir/"
+          cp action_results/v59/ACTION_V59_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          origin = Path('action_results/v59/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V59_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['evidence_role'] = 'IMMUTABLE_COMMITTEE_REQUEST_REACHABILITY_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2) + '\n')
+          files = {}
+          for name in ['ACTION_V59_STATUS.json', 'committee_gate_reachability_audit_v59.json']:
+              files[name] = hashlib.sha256((origin / name).read_bytes()).hexdigest()
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'files': files,
+          }, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v59 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.59 reachability evidence changes'
+          else
+            git commit -m "Persist v0.59 committee reachability ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload aggregate v0.59 reachability evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-committee-reachability-v59
+          path: results_v59/
+          if-no-files-found: error

@@ -1,0 +1,42 @@
+{
+  "schema_version": "0.59",
+  "status": "V59_MODEL_CHANGE_REACHABILITY_AUDIT_POLICY",
+  "purpose": "Determine whether the already-registered model-change request MCR-XGB-MOTOR-001 can still reach its v0.44 machine-gate condition without altering historical evidence or retrospectively redefining an existing gate.",
+  "request_id": "MCR-XGB-MOTOR-001",
+  "source_contracts": {
+    "committee_policy": "governance/model_change_committee_policy_v44.json",
+    "committee_decision": "action_results/v44/model_change_committee_decision_v44.json",
+    "evidence_synthesis": "action_results/v43/model_family_evidence_synthesis_summary.json",
+    "latest_pre_audit_project_state": "action_results/v58/ACTION_V58_STATUS.json"
+  },
+  "historical_integrity_rules": {
+    "existing_request_id_must_not_change": true,
+    "existing_gate_descriptions_must_not_change": true,
+    "original_locked_spanish_gate_result_must_not_be_relabelled": true,
+    "consumed_validation_must_not_be_relabelled_fresh": true,
+    "human_signoff_must_not_override_failed_evidence_gate": true,
+    "development_benchmark_must_not_override_validation_failure": true
+  },
+  "reachability_rules": {
+    "all_required_gates_must_pass_for_human_review": true,
+    "an_existing_gate_is_structurally_unreachable_when_its_required_historical_event_is_complete_and_failed": true,
+    "future_external_evidence_may_not_rewrite_a_gate_whose_description_explicitly_requires_the_original_locked_temporal_evaluation": true,
+    "maximum_reachable_gate_count_is_computed_assuming_all_non_structurally_blocked_current_failures_could_pass_in_future": true,
+    "no_new_performance_threshold_is_created": true,
+    "no_new_candidate_selection_is_performed": true
+  },
+  "stop_rule": {
+    "terminal_label_for_existing_request": "TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST",
+    "do_not_collect_or_consume_new_external_outcomes_only_to_make_MCR_XGB_MOTOR_001_reach_8_of_8": true,
+    "future_external_research_can_continue_only_for_a_distinct_prospectively_registered_question_or_new_change_request": true,
+    "a_new_change_request_must_be_registered_before_accessing_any_fresh_outcomes_relied_on_by_that_request": true,
+    "a_new_change_request_must_not_relabel_or_delete_the_failed_MCR_XGB_MOTOR_001_history": true
+  },
+  "governance_boundary": {
+    "this_audit_does_not_authorise_a_new_change_request": true,
+    "this_audit_does_not_authorise_model_promotion": true,
+    "this_audit_does_not_authorise_customer_pricing": true,
+    "first_central_or_current_uk_transport_claimed": false,
+    "project_demo_not_insurer_policy": true
+  }
+}
