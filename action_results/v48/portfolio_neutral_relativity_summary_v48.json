@@ -1,0 +1,306 @@
+{
+  "status": "V48_PORTFOLIO_NEUTRAL_RELATIVITY_MIGRATION_COMPLETE",
+  "analysis_role": "POST_HOC_LABEL_FREE_TECHNICAL_RELATIVITY_DIAGNOSTIC",
+  "validation_role": "CONSUMED_RETROSPECTIVE_VALIDATION_DIAGNOSTIC_ONLY",
+  "candidate_selection_allowed": false,
+  "model_or_calibration_parameter_change": false,
+  "promotion_evidence_created": false,
+  "customer_pricing_authorised": false,
+  "actual_customer_premium_used": false,
+  "commercial_uplift_claimed": false,
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "source_file_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+    "training_year": 2022,
+    "calibration_year": 2023,
+    "diagnostic_year": 2024,
+    "diagnostic_rows": 168085,
+    "diagnostic_exposure": 126014.36438356164,
+    "diagnostic_2024_outcome_labels_read": false,
+    "full_positive_exposure_population_used": true
+  },
+  "frozen_model_definition": {
+    "source": "build_deployment_bundle_v21.py::model_definitions via v0.47 helper",
+    "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25",
+    "locked_calibration_scales": {
+      "poisson_glm_frequency": 1.012399917638075,
+      "xgb_poisson_frequency": 1.0277575870212368,
+      "tweedie_glm_pure_premium": 0.9141249647626554,
+      "xgb_tweedie_pure_premium": 1.2075552522048616
+    },
+    "frozen_tweedie_glm_convergence_limitation_inherited": true
+  },
+  "portfolio_neutralisation": {
+    "formula": "normalised_challenger = raw_challenger * sum(reference * exposure) / sum(raw_challenger * exposure)",
+    "calculation_dtype": "float64",
+    "purpose": "Force the challenger and reference to the same aggregate predicted technical-risk total before measuring redistribution across policies and segments.",
+    "uses_2024_outcomes": false,
+    "uses_actual_premium": false
+  },
+  "fixed_change_bands": [
+    {
+      "id": "LT_MINUS_20",
+      "label": "< -20%",
+      "low": null,
+      "high": -0.2
+    },
+    {
+      "id": "MINUS_20_TO_MINUS_10",
+      "label": "[-20%, -10%)",
+      "low": -0.2,
+      "high": -0.1
+    },
+    {
+      "id": "MINUS_10_TO_MINUS_5",
+      "label": "[-10%, -5%)",
+      "low": -0.1,
+      "high": -0.05
+    },
+    {
+      "id": "WITHIN_5",
+      "label": "[-5%, +5%]",
+      "low": -0.05,
+      "high": 0.05
+    },
+    {
+      "id": "PLUS_5_TO_PLUS_10",
+      "label": "(+5%, +10%]",
+      "low": 0.05,
+      "high": 0.1
+    },
+    {
+      "id": "PLUS_10_TO_PLUS_20",
+      "label": "(+10%, +20%]",
+      "low": 0.1,
+      "high": 0.2
+    },
+    {
+      "id": "GT_PLUS_20",
+      "label": "> +20%",
+      "low": 0.2,
+      "high": null
+    }
+  ],
+  "targets": {
+    "frequency": {
+      "portfolio_neutralisation": {
+        "calculation_dtype": "float64",
+        "reference_predicted_total": 37826.24530729653,
+        "raw_challenger_predicted_total": 37708.299841359214,
+        "raw_challenger_total_over_reference": 0.9968819145284143,
+        "portfolio_neutral_scale_applied_to_challenger": 1.0031278383388675,
+        "normalised_challenger_predicted_total": 37826.24530729653,
+        "normalised_total_over_reference": 1.0,
+        "absolute_total_difference_after_neutralisation": 0.0
+      },
+      "relativity_change_distribution": {
+        "exposure_weighted_mean_change": 0.011882498649243543,
+        "exposure_weighted_mean_absolute_change": 0.10181561928799863,
+        "challenger_higher_exposure_share": 0.4779767116351576,
+        "challenger_lower_exposure_share": 0.5220232883648425,
+        "absolute_change_gt_5pct_exposure_share": 0.6496297236651191,
+        "absolute_change_gt_10pct_exposure_share": 0.36806017091811,
+        "absolute_change_gt_20pct_exposure_share": 0.10979322361662487,
+        "quantiles": {
+          "q05": -0.1775960693721367,
+          "q10": -0.13622426715997737,
+          "q25": -0.07520211159737901,
+          "q50": -0.006110863679887638,
+          "q75": 0.07337035047870932,
+          "q90": 0.1674896978487145,
+          "q95": 0.2523273916873067
+        }
+      },
+      "migration_bands": [
+        {
+          "target": "frequency",
+          "band_id": "LT_MINUS_20",
+          "band_label": "< -20%",
+          "low": null,
+          "high": -0.2,
+          "rows": 5601,
+          "exposure": 4353.684931506849,
+          "exposure_share": 0.034549116307527716
+        },
+        {
+          "target": "frequency",
+          "band_id": "MINUS_20_TO_MINUS_10",
+          "band_label": "[-20%, -10%)",
+          "low": -0.2,
+          "high": -0.1,
+          "rows": 22979,
+          "exposure": 17891.40273972603,
+          "exposure_share": 0.14197907379247895
+        },
+        {
+          "target": "frequency",
+          "band_id": "MINUS_10_TO_MINUS_5",
+          "band_label": "[-10%, -5%)",
+          "low": -0.1,
+          "high": -0.05,
+          "rows": 26361,
+          "exposure": 20184.4,
+          "exposure_share": 0.16017539031155897
+        },
+        {
+          "target": "frequency",
+          "band_id": "WITHIN_5",
+          "band_label": "[-5%, +5%]",
+          "low": -0.05,
+          "high": 0.05,
+          "rows": 58811,
+          "exposure": 44151.687671232874,
+          "exposure_share": 0.350370276334881
+        },
+        {
+          "target": "frequency",
+          "band_id": "PLUS_5_TO_PLUS_10",
+          "band_label": "(+5%, +10%]",
+          "low": 0.05,
+          "high": 0.1,
+          "rows": 20805,
+          "exposure": 15297.408219178084,
+          "exposure_share": 0.12139416243545013
+        },
+        {
+          "target": "frequency",
+          "band_id": "PLUS_10_TO_PLUS_20",
+          "band_label": "(+10%, +20%]",
+          "low": 0.1,
+          "high": 0.2,
+          "rows": 20334,
+          "exposure": 14653.942465753425,
+          "exposure_share": 0.11628787350900614
+        },
+        {
+          "target": "frequency",
+          "band_id": "GT_PLUS_20",
+          "band_label": "> +20%",
+          "low": 0.2,
+          "high": null,
+          "rows": 13194,
+          "exposure": 9481.838356164382,
+          "exposure_share": 0.07524410730909716
+        }
+      ]
+    },
+    "pure_premium": {
+      "portfolio_neutralisation": {
+        "calculation_dtype": "float64",
+        "reference_predicted_total": 36317995.75736617,
+        "raw_challenger_predicted_total": 35575822.67597267,
+        "raw_challenger_total_over_reference": 0.9795645914396867,
+        "portfolio_neutral_scale_applied_to_challenger": 1.0208617264638762,
+        "normalised_challenger_predicted_total": 36317995.75736617,
+        "normalised_total_over_reference": 1.0,
+        "absolute_total_difference_after_neutralisation": 0.0
+      },
+      "relativity_change_distribution": {
+        "exposure_weighted_mean_change": 0.044846876679765536,
+        "exposure_weighted_mean_absolute_change": 0.322801992361319,
+        "challenger_higher_exposure_share": 0.47035027078778563,
+        "challenger_lower_exposure_share": 0.5296497292122143,
+        "absolute_change_gt_5pct_exposure_share": 0.890426190377992,
+        "absolute_change_gt_10pct_exposure_share": 0.782600691988952,
+        "absolute_change_gt_20pct_exposure_share": 0.5816832188493929,
+        "quantiles": {
+          "q05": -0.52186092864039,
+          "q10": -0.42692672745652327,
+          "q25": -0.2499197390489621,
+          "q50": -0.026844657752966686,
+          "q75": 0.23604916944417506,
+          "q90": 0.5166982253138332,
+          "q95": 0.7353592493584524
+        }
+      },
+      "migration_bands": [
+        {
+          "target": "pure_premium",
+          "band_id": "LT_MINUS_20",
+          "band_label": "< -20%",
+          "low": null,
+          "high": -0.2,
+          "rows": 48174,
+          "exposure": 38205.27123287671,
+          "exposure_share": 0.3031818746995205
+        },
+        {
+          "target": "pure_premium",
+          "band_id": "MINUS_20_TO_MINUS_10",
+          "band_label": "[-20%, -10%)",
+          "low": -0.2,
+          "high": -0.1,
+          "rows": 18300,
+          "exposure": 14172.336986301369,
+          "exposure_share": 0.11246604349932447
+        },
+        {
+          "target": "pure_premium",
+          "band_id": "MINUS_10_TO_MINUS_5",
+          "band_label": "[-10%, -5%)",
+          "low": -0.1,
+          "high": -0.05,
+          "rows": 9610,
+          "exposure": 7305.4219178082185,
+          "exposure_share": 0.05797292993973311
+        },
+        {
+          "target": "pure_premium",
+          "band_id": "WITHIN_5",
+          "band_label": "[-5%, +5%]",
+          "low": -0.05,
+          "high": 0.05,
+          "rows": 18426,
+          "exposure": 13807.873972602738,
+          "exposure_share": 0.10957380962200808
+        },
+        {
+          "target": "pure_premium",
+          "band_id": "PLUS_5_TO_PLUS_10",
+          "band_label": "(+5%, +10%]",
+          "low": 0.05,
+          "high": 0.1,
+          "rows": 8476,
+          "exposure": 6282.139726027397,
+          "exposure_share": 0.049852568449306814
+        },
+        {
+          "target": "pure_premium",
+          "band_id": "PLUS_10_TO_PLUS_20",
+          "band_label": "(+10%, +20%]",
+          "low": 0.1,
+          "high": 0.2,
+          "rows": 15292,
+          "exposure": 11146.150684931506,
+          "exposure_share": 0.08845142964023475
+        },
+        {
+          "target": "pure_premium",
+          "band_id": "GT_PLUS_20",
+          "band_label": "> +20%",
+          "low": 0.2,
+          "high": null,
+          "rows": 49807,
+          "exposure": 35095.169863013696,
+          "exposure_share": 0.2785013441498722
+        }
+      ]
+    }
+  },
+  "segment_dimensions": [
+    "business_type",
+    "policy_type",
+    "payment_frequency",
+    "driver_age_band"
+  ],
+  "interpretation_boundary": {
+    "technical_risk_score_only": true,
+    "actual_premium_or_quote": false,
+    "pricing_action_or_rate_change": false,
+    "expense_commission_reinsurance_profit_tax_demand_components_included": false,
+    "fairness_or_regulatory_conclusion_claimed": false,
+    "causal_interpretation_claimed": false,
+    "interpretation": "The result measures how two frozen technical risk-score families redistribute relative indications after aggregate predicted totals are forced equal. It is not a customer premium, quote, rate filing, commercial impact estimate or pricing recommendation."
+  },
+  "persisted_row_level_data": false
+}

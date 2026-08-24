@@ -1,0 +1,78 @@
+{
+  "status": "V48_REPEAT_RUN_NUMERICAL_ENVELOPE_REGISTERED",
+  "scope": "same-head repeat executions of the float64 portfolio-neutral technical relativity diagnostic",
+  "evidence_role": "POST_HOC_NUMERICAL_REPRODUCIBILITY_AUDIT",
+  "promotion_evidence_created": false,
+  "customer_pricing_authorised": false,
+  "row_level_data_persisted": false,
+  "head_sha": "3492c6a72db69a47a7708f4dc4ea1420e366616f",
+  "source_dataset_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+  "observations": [
+    {
+      "workflow_run_id": 32643619315,
+      "job_id": 97204386862,
+      "artifact_id": 9494274481,
+      "artifact_sha256": "6bdeebfa4fbd364a40cd99c66b24181aa198d4c4788d916ca83a5f539a7e29c2",
+      "calculation_dtype": "float64",
+      "frequency_reference_predicted_total": 37826.24528386518,
+      "frequency_raw_challenger_predicted_total": 37708.299841359214,
+      "frequency_abs_change_gt_10pct_exposure_share": 0.36806017091811,
+      "frequency_abs_change_gt_20pct_exposure_share": 0.10979322361662487,
+      "pure_premium_reference_predicted_total": 36316504.285180956,
+      "pure_premium_raw_challenger_predicted_total": 35575822.67597267,
+      "pure_premium_mean_absolute_change": 0.3238978075301342,
+      "pure_premium_abs_change_gt_10pct_exposure_share": 0.7825559917141867,
+      "pure_premium_abs_change_gt_20pct_exposure_share": 0.5815854696104118,
+      "headline_major_segments": {
+        "business_type_NB": 0.0864962601575656,
+        "business_type_P": -0.0652041444573332,
+        "policy_type_COMP_E": 0.1368149899758148,
+        "policy_type_CC": -0.0926921621373469,
+        "driver_age_35_49": 0.0519769980380442,
+        "driver_age_50_64": -0.054878194040982
+      }
+    },
+    {
+      "workflow_run_id": 32643619315,
+      "job_id": 97282171330,
+      "artifact_id": 9502479141,
+      "artifact_sha256": "3cfb9501a11834cdc70e7004914256cc1d07f30c634349666270a7972701af25",
+      "calculation_dtype": "float64",
+      "frequency_reference_predicted_total": 37826.24530729653,
+      "frequency_raw_challenger_predicted_total": 37708.299841359214,
+      "frequency_abs_change_gt_10pct_exposure_share": 0.36806017091811,
+      "frequency_abs_change_gt_20pct_exposure_share": 0.10979322361662487,
+      "pure_premium_reference_predicted_total": 36317995.75736617,
+      "pure_premium_raw_challenger_predicted_total": 35575822.67597267,
+      "pure_premium_mean_absolute_change": 0.322801992361319,
+      "pure_premium_abs_change_gt_10pct_exposure_share": 0.782600691988952,
+      "pure_premium_abs_change_gt_20pct_exposure_share": 0.5816832188493929,
+      "headline_major_segments": {
+        "business_type_NB": 0.0866548220610712,
+        "business_type_P": -0.0653069588984819,
+        "policy_type_COMP_E": 0.1367636031692696,
+        "policy_type_CC": -0.0927003402380683,
+        "driver_age_35_49": 0.0520007087320331,
+        "driver_age_50_64": -0.0548999876211663
+      }
+    }
+  ],
+  "derived_envelope": {
+    "frequency_reference_total_relative_range": 6.194468469193364e-10,
+    "frequency_abs_change_gt_10pct_exposure_share_range": 0.0,
+    "frequency_abs_change_gt_20pct_exposure_share_range": 0.0,
+    "pure_premium_reference_total_relative_range": 4.1067872274007085e-05,
+    "pure_premium_mean_absolute_change_range": 0.001095815168815184,
+    "pure_premium_abs_change_gt_10pct_exposure_share_range": 4.470027476533023e-05,
+    "pure_premium_abs_change_gt_20pct_exposure_share_range": 9.7749238981093e-05,
+    "headline_major_segment_max_absolute_shift_range": 0.0001585619035055913
+  },
+  "interpretation": {
+    "conclusion": "DESCRIPTIVE_REDISTRIBUTION_HEADLINES_STABLE_WITH_REGISTERED_TWEEDIE_GLM_NUMERICAL_LIMITATION",
+    "tweedie_glm_max_iter_warning_retained": true,
+    "bitwise_reproducibility_claimed": false,
+    "performance_reproducibility_claimed": false,
+    "high_precision_pure_premium_headline_claimed": false,
+    "boundary": "The repeat-run envelope quantifies numerical sensitivity of the descriptive v0.48 score-redistribution diagnostic. It is not independent validation, a performance gate, a premium impact study or authority to alter customer pricing."
+  }
+}
