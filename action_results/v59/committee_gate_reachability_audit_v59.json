@@ -1,0 +1,79 @@
+{
+  "status": "V59_EXISTING_MODEL_CHANGE_REQUEST_STRUCTURALLY_UNREACHABLE",
+  "request_id": "MCR-XGB-MOTOR-001",
+  "current_machine_gate_state": {
+    "status": "EVIDENCE_GAP_HOLD",
+    "passed": 5,
+    "required": 8,
+    "failed_gate_ids": [
+      "G2_LOCKED_TEMPORAL_SUPPORT",
+      "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+      "G4_FRESH_INDEPENDENT_EVIDENCE"
+    ]
+  },
+  "structural_blocker": {
+    "gate_id": "G2_LOCKED_TEMPORAL_SUPPORT",
+    "registered_requirement": "The original locked temporal evaluation supports a global model-family change under its registered rule.",
+    "persisted_result": "FAIL",
+    "persisted_evidence": "Spanish 2024 registered decisions remain HOLD for frequency and pure premium; both original locked target gates are not supportive of a global family switch.",
+    "historical_event_complete": true,
+    "future_external_evidence_can_retroactively_change_this_gate": false,
+    "reason": "G2 is defined on the original locked temporal evaluation. Both Spanish 2024 registered target decisions are HOLD, so new external evidence cannot make that historical event supportive without changing the existing request's gate semantics."
+  },
+  "spanish_locked_evidence": [
+    {
+      "id": "spanish_2024_frequency",
+      "target": "frequency",
+      "registered_decision": "HOLD",
+      "gate_passed": false,
+      "relative_deviance_improvement": -0.0002673255247430206
+    },
+    {
+      "id": "spanish_2024_pure_premium",
+      "target": "pure_premium",
+      "registered_decision": "HOLD",
+      "gate_passed": false,
+      "relative_deviance_improvement": -0.00020770346083116105
+    }
+  ],
+  "reachability": {
+    "structurally_unreachable_gate_ids": [
+      "G2_LOCKED_TEMPORAL_SUPPORT"
+    ],
+    "potentially_resolvable_current_failed_gate_ids": [
+      "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+      "G4_FRESH_INDEPENDENT_EVIDENCE"
+    ],
+    "maximum_machine_gate_pass_count_without_redefining_existing_request": 7,
+    "required_machine_gate_pass_count": 8,
+    "ready_for_human_committee_review_reachable_for_existing_request": false,
+    "terminal_existing_request_state": "TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST"
+  },
+  "stop_rule": {
+    "continue_external_dataset_shopping_only_to_open_MCR_XGB_MOTOR_001": false,
+    "rewrite_G2_after_observing_new_evidence": false,
+    "relabel_spanish_2024_supportive": false,
+    "relabel_consumed_validation_fresh": false,
+    "new_external_research_for_distinct_prospectively_registered_question_allowed": true,
+    "new_change_request_requires_prospective_registration_before_fresh_outcome_access": true,
+    "old_failed_request_history_must_remain_visible": true
+  },
+  "governance": {
+    "committee_status": "EVIDENCE_GAP_HOLD",
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "model_promotion_authorised": false,
+    "customer_pricing_authorised": false,
+    "new_change_request_authorised": false,
+    "first_central_or_current_uk_transport_claimed": false
+  },
+  "evidence_boundary": {
+    "row_level_external_data_accessed": false,
+    "outcome_values_inspected": false,
+    "candidate_selection_performed": false,
+    "performance_metric_computed": false,
+    "new_performance_gate_created": false,
+    "v44_policy_modified": false
+  }
+}

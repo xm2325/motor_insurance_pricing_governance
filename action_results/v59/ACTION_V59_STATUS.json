@@ -1,0 +1,23 @@
+{
+  "workflow": "Committee request reachability audit v0.59",
+  "run_id": "32781853884",
+  "sha": "c072cd009b45a374c5a996b549d4415d554d18a3",
+  "status": "success",
+  "request_id": "MCR-XGB-MOTOR-001",
+  "reachability_status": "V59_EXISTING_MODEL_CHANGE_REQUEST_STRUCTURALLY_UNREACHABLE",
+  "committee_gate_pass_count": 5,
+  "committee_gate_count": 8,
+  "structurally_unreachable_gate_ids": [
+    "G2_LOCKED_TEMPORAL_SUPPORT"
+  ],
+  "maximum_machine_gate_pass_count_without_redefining_existing_request": 7,
+  "ready_for_human_committee_review_reachable_for_existing_request": false,
+  "terminal_existing_request_state": "TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST",
+  "external_row_data_accessed": false,
+  "candidate_selection_performed": false,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false,
+  "evidence_role": "ROLLING_COMMITTEE_REQUEST_REACHABILITY_AUDIT"
+}

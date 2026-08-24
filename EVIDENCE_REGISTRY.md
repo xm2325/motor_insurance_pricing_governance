@@ -195,7 +195,16 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.58 confirmatory eligibility | because row-level R-object decode occurred before the source-schema mismatch was known, no post-access schema amendment is used for confirmatory evidence and `euMTPL` is no longer treated as a fresh independent confirmatory dataset; future use must be explicitly diagnostic/non-confirmatory | `RESULTS_V58.md`, `results_v58/eumtpl_schema_contract_incident_v58.json` |
 | v0.58 governance outcome | no external/temporal model evidence or machine-gate credit was created; committee state remains `EVIDENCE_GAP_HOLD`, **5/8**, `HOLD / HOLD_SHADOW_ONLY / NOT_OPEN`, customer pricing unauthorised | `RESULTS_V58.md`, `action_results/v58/ACTION_V58_STATUS.json` |
 
+
+| v0.59 committee-gate reachability audit | machine audit of existing request `MCR-XGB-MOTOR-001` shows G2 is structurally unreachable because its registered v0.44 definition requires the **original** locked temporal evaluation to support the global family change, while both Spanish 2024 locked targets are already registered HOLD; even assuming future G3/G4 success, the existing request has a 7/8 ceiling and cannot reach `READY_FOR_HUMAN_COMMITTEE_REVIEW` without redefining its historical gate | `governance/model_change_reachability_policy_v59.json`, `audit_model_change_reachability_v59.py`, `action_results/v59/committee_gate_reachability_audit_v59.json` |
+| v0.59 stop rule | do not consume additional fresh external outcomes solely to try to make `MCR-XGB-MOTOR-001` reach 8/8; future external evidence may still be valuable only under a distinct prospectively registered scientific question or a new change request whose temporal criterion is frozen before fresh outcome access, while the failed MCR-001 history remains visible | `RESULTS_V59.md`, `action_results/v59/ACTION_V59_STATUS.json` |
+
 ## Interpretation rules
+
+- A failed gate tied explicitly to a completed historical event cannot be repaired by unrelated future evidence without changing that existing gate's semantics.
+- New evidence can support a **new prospectively registered request**, but must not be used to rewrite, delete or relabel the failed historical request.
+- Evidence acquisition has a stop condition: once a request is structurally unable to reach its own all-required-gates rule, consuming fresh validation only to increase that request's score is not justified.
+- A terminal HOLD for one change request is not a claim that XGBoost can never be useful; it is a claim about the reachability of that specific registered request under its own frozen evidence rules.
 
 - A source identity check can pass while a preregistered schema contract fails. Authentic bytes do not justify silently repairing a post-access schema mismatch.
 - Decoding a fresh external object consumes fresh-confirmatory eligibility for this project when a material exact-schema/target amendment would be required afterwards, even if no model performance metric was computed.
