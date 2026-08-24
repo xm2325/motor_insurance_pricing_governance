@@ -1,0 +1,46 @@
+{
+  "status": "V51_DEVELOPMENT_INTERPRETABILITY_REPEAT_RUN_AUDIT_PASS",
+  "scope": "two successful hosted executions of the unchanged v0.51 rating-factor relativity implementation",
+  "evidence_role": "DEVELOPMENT_INTERPRETABILITY_NUMERICAL_REPRODUCIBILITY_AUDIT",
+  "validation_performance_evidence_created": false,
+  "candidate_selection_allowed": false,
+  "model_promotion_evidence_created": false,
+  "customer_pricing_authorised": false,
+  "runner_code_blob_sha": "8dabb33b5024a16724b7925a7ca9863d69f40997",
+  "source_dataset_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+  "executions": [
+    {
+      "workflow_run_id": 32699530679,
+      "artifact_id": 9510019607,
+      "artifact_digest": "sha256:4a4e6cacc6dc598b13f0aa2d260c169c711e03140d731ba58319e09704b6abdc",
+      "workflow_conclusion": "success"
+    },
+    {
+      "workflow_run_id": 32699792156,
+      "artifact_id": 9510106871,
+      "artifact_digest": "sha256:b69f24c0a514634657a22d36613fe13efc652afb0d535173a142390df5354634",
+      "workflow_conclusion": "success"
+    }
+  ],
+  "comparison": {
+    "numeric_grid_keys_identical": true,
+    "categorical_grid_keys_identical": true,
+    "numeric_factor_ranking_identical": true,
+    "categorical_factor_ranking_identical": true,
+    "numeric_xgb_relativity_max_absolute_difference": 0.0,
+    "categorical_xgb_relativity_max_absolute_difference": 0.0,
+    "numeric_glm_relativity_max_absolute_difference": 8.023643149890347e-08,
+    "categorical_glm_relativity_max_absolute_difference": 3.858196606643105e-08,
+    "numeric_log_gap_max_absolute_difference": 6.922571987866277e-08,
+    "categorical_log_gap_max_absolute_difference": 2.277306019975167e-08,
+    "reference_profile_xgb_score_max_absolute_difference": 0.0,
+    "reference_profile_glm_score_absolute_difference": 4.779522694287497e-09
+  },
+  "interpretation": {
+    "conclusion": "DEVELOPMENT_RESPONSE_SHAPES_REPRODUCIBLE_AT_REPORTED_PRECISION",
+    "bitwise_reproducibility_claimed": false,
+    "validation_reproducibility_claimed": false,
+    "performance_reproducibility_claimed": false,
+    "boundary": "This audit supports the numerical stability of the v0.51 development reference-profile response-shape diagnostic at the reporting precision used in RESULTS_V51.md. It is not fresh validation, a performance gate, a causal rating-factor result, a pricing recommendation or authority to change customer premiums."
+  }
+}
