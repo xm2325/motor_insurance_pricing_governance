@@ -1,0 +1,156 @@
+{
+  "status": "V56_DEVELOPMENT_RATING_CONTEXT_SENSITIVITY_PROTOCOL_LOCKED",
+  "version": "v0.56",
+  "objective": "Test whether the large v0.51 driver-age and vehicle-age GLM/XGBoost development response-shape differences are specific to the single v0.51 reference profile or remain visible when one high-exposure categorical context is changed at a time.",
+  "protocol_locked_before_first_v56_execution": true,
+  "base_repository_commit": "fe4f0d1638068879de40e1f76b5f2ebdaad2d894",
+  "evidence_class": "DEVELOPMENT_ONLY_REFERENCE_PROFILE_CONTEXT_SENSITIVITY",
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "expected_source_file_sha256": "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4",
+    "years_allowed": [2022],
+    "years_forbidden": [2023, 2024],
+    "incurred_loss_allowed": false,
+    "actual_premium_allowed": false,
+    "customer_id_allowed": false,
+    "policy_status_allowed": false,
+    "frequency_claim_count_allowed_for_development_fit": true
+  },
+  "frozen_model_definitions": {
+    "source": "build_deployment_bundle_v21.py::model_definitions",
+    "models": ["poisson_glm_frequency", "xgb_poisson_frequency"],
+    "feature_contract_hash": "55d45bd12228a8007f17d59cb2fa37f23b90e3b0315f78478db28c7a19622e25",
+    "fit_population": "all valid positive-exposure 2022 development rows",
+    "calibration_applied": false,
+    "hyperparameter_search": false,
+    "candidate_selection": false
+  },
+  "v51_reference_profile": {
+    "driver_age": 47.0,
+    "vehicle_age": 23.0,
+    "age_driving_licence": 21.0,
+    "vehicle_value": 24693.375,
+    "seats": 5.0,
+    "power_to_weight_ratio": 12.0,
+    "policy_type": "CC",
+    "business_type": "NB",
+    "payment_frequency": "A",
+    "bonus_score": "G",
+    "fuel_type": "D",
+    "vehicle_brand": "RENAULT",
+    "municipality_type": "I",
+    "circulation_area": "U"
+  },
+  "target_features": {
+    "driver_age": {
+      "reference_value": 47.0,
+      "grid_quantiles": [0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95],
+      "grid_values": [30.0, 32.0, 36.0, 39.0, 43.0, 47.0, 51.0, 55.0, 59.0, 64.0, 68.0],
+      "v51_base_q95_log_gap": -0.26865990121735667
+    },
+    "vehicle_age": {
+      "reference_value": 23.0,
+      "grid_quantiles": [0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95],
+      "grid_values": [7.0, 10.0, 14.0, 17.0, 20.0, 23.0, 27.0, 32.0, 36.0, 41.0, 44.0],
+      "v51_base_q95_log_gap": 0.26770589446186105
+    }
+  },
+  "context_selection": {
+    "selection_locked_before_execution": true,
+    "source": "action_results/v51/categorical_rating_factor_relativities_v51.csv",
+    "rule": "Use the original v0.51 BASE profile plus, for each of four preselected categorical dimensions, the highest-2022-exposure non-reference level already persisted by v0.51. Change exactly one categorical field from BASE at a time.",
+    "why_these_dimensions": "business_type represents new/renewal context, policy_type coverage context, fuel_type vehicle context, and circulation_area broad geographic/usage context. They are selected for interpretability breadth before any v0.56 scores are computed.",
+    "contexts": [
+      {
+        "context_id": "BASE",
+        "change_from_v51_reference": {},
+        "v51_marginal_exposure_share_of_changed_level": 1.0
+      },
+      {
+        "context_id": "BUSINESS_TYPE_P",
+        "change_from_v51_reference": {"business_type": "P"},
+        "v51_marginal_exposure_share_of_changed_level": 0.0322438248873501
+      },
+      {
+        "context_id": "POLICY_TYPE_COMP_E",
+        "change_from_v51_reference": {"policy_type": "COMP_E"},
+        "v51_marginal_exposure_share_of_changed_level": 0.2375225200108693
+      },
+      {
+        "context_id": "FUEL_TYPE_G",
+        "change_from_v51_reference": {"fuel_type": "G"},
+        "v51_marginal_exposure_share_of_changed_level": 0.36069678525926124
+      },
+      {
+        "context_id": "CIRCULATION_AREA_R",
+        "change_from_v51_reference": {"circulation_area": "R"},
+        "v51_marginal_exposure_share_of_changed_level": 0.45981696634625785
+      }
+    ],
+    "observed_joint_cells_claimed": false,
+    "context_profiles_are_synthetic_reference_profiles": true,
+    "marginal_exposure_share_is_not_joint_profile_prevalence": true
+  },
+  "curve_definition": {
+    "for_each": "target_feature x context x model",
+    "normalisation": "Within each context and model, divide the score at each target-feature grid value by that model/context score at the target feature's registered v0.51 reference value.",
+    "purpose": "Remove the categorical context main-effect level and compare response shape rather than absolute score level.",
+    "log_gap": "log(xgb_frequency_relativity / glm_frequency_relativity)",
+    "grid_reestimated": false,
+    "reference_profile_reestimated": false,
+    "model_refit_per_context": false
+  },
+  "registered_outputs": {
+    "curve_points": [
+      "feature", "context_id", "quantile", "value",
+      "glm_frequency_relativity", "xgb_frequency_relativity", "log_xgb_over_glm_relativity"
+    ],
+    "context_feature_summary": [
+      "feature", "context_id", "q05_log_gap", "q95_log_gap",
+      "max_absolute_log_gap", "max_gap_quantile", "max_gap_value",
+      "glm_direction_changes", "xgb_direction_changes"
+    ],
+    "cross_context_summary": [
+      "feature", "base_q95_log_gap", "q95_log_gap_min", "q95_log_gap_max",
+      "q95_log_gap_range", "fraction_contexts_same_q95_sign_as_base",
+      "max_absolute_context_minus_base_log_gap_over_registered_grid",
+      "max_xgb_log_relativity_range_across_contexts_over_registered_grid",
+      "max_glm_log_relativity_range_across_contexts_over_registered_grid"
+    ]
+  },
+  "preselected_review_points": [
+    {"feature": "driver_age", "quantile": 0.95, "value": 68.0},
+    {"feature": "vehicle_age", "quantile": 0.95, "value": 44.0}
+  ],
+  "numerical_contracts": {
+    "single_thread_env": ["OMP_NUM_THREADS=1", "OPENBLAS_NUM_THREADS=1", "MKL_NUM_THREADS=1"],
+    "glm_context_invariance_expected_from_additive_no_interaction_specification": true,
+    "glm_context_invariance_absolute_tolerance": 1e-8,
+    "normalised_reference_point_absolute_tolerance_from_one": 1e-10,
+    "these_are_computational_contracts_not_model_acceptance_thresholds": true
+  },
+  "interpretation_rules": {
+    "context_stability_acceptance_threshold_created": false,
+    "composite_score_created": false,
+    "confidence_interval_claimed": false,
+    "predictive_validation_evidence_created": false,
+    "causal_interaction_claimed": false,
+    "observed_segment_effect_claimed": false,
+    "customer_premium_effect_claimed": false,
+    "candidate_selection_allowed": false,
+    "model_promotion_evidence_created": false,
+    "customer_pricing_authorised": false,
+    "first_central_or_current_uk_transport_claimed": false,
+    "required_language": "Report whether response-shape disagreement changes across these fixed synthetic reference-profile contexts. Do not call the contexts observed customer cells, do not infer causal interactions, and do not use the result to clear existing validation blockers."
+  },
+  "governance_state_must_remain": {
+    "committee_status": "EVIDENCE_GAP_HOLD",
+    "committee_gate_pass_count": 5,
+    "committee_gate_count": 8,
+    "external_target_gates": "0/4",
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false
+  }
+}

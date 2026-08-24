@@ -1,0 +1,241 @@
+name: Rating-context sensitivity audit v0.56
+
+on:
+  pull_request:
+    paths:
+      - 'governance/rating_context_sensitivity_protocol_v56.json'
+      - 'governance/rating_context_repeat_evidence_v56.json'
+      - 'run_rating_context_sensitivity_audit_v56.py'
+      - 'tests/test_rating_context_sensitivity_v56.py'
+      - 'tests/test_rating_context_repeat_evidence_v56.py'
+      - 'scripts/migrate_evidence_registry_v56.py'
+      - 'RESULTS_V56.md'
+      - '.github/workflows/v56-rating-context-sensitivity.yml'
+      - 'run_rating_factor_relativity_audit_v51.py'
+      - 'action_results/v51/**'
+      - 'action_results/v55/ACTION_V55_STATUS.json'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+      - 'download_spanish_motor_2022_2024.py'
+      - 'discover_spanish_motor_2022_2024.py'
+      - 'requirements.txt'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/rating_context_sensitivity_protocol_v56.json'
+      - 'governance/rating_context_repeat_evidence_v56.json'
+      - 'run_rating_context_sensitivity_audit_v56.py'
+      - 'tests/test_rating_context_sensitivity_v56.py'
+      - 'tests/test_rating_context_repeat_evidence_v56.py'
+      - 'scripts/migrate_evidence_registry_v56.py'
+      - 'RESULTS_V56.md'
+      - '.github/workflows/v56-rating-context-sensitivity.yml'
+      - 'run_rating_factor_relativity_audit_v51.py'
+      - 'action_results/v51/**'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rating-context-sensitivity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Discover Spanish source
+        run: python discover_spanish_motor_2022_2024.py
+      - name: Download or reuse and verify source
+        run: python download_spanish_motor_2022_2024.py
+      - name: Verify v0.56 protocol is locked before scoring
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('governance/rating_context_sensitivity_protocol_v56.json').read_text())
+          assert p['status'] == 'V56_DEVELOPMENT_RATING_CONTEXT_SENSITIVITY_PROTOCOL_LOCKED'
+          assert p['protocol_locked_before_first_v56_execution'] is True
+          assert p['base_repository_commit'] == 'fe4f0d1638068879de40e1f76b5f2ebdaad2d894'
+          assert list(p['target_features']) == ['driver_age', 'vehicle_age']
+          assert [c['context_id'] for c in p['context_selection']['contexts']] == [
+              'BASE', 'BUSINESS_TYPE_P', 'POLICY_TYPE_COMP_E', 'FUEL_TYPE_G', 'CIRCULATION_AREA_R'
+          ]
+          assert p['context_selection']['context_profiles_are_synthetic_reference_profiles'] is True
+          assert p['context_selection']['observed_joint_cells_claimed'] is False
+          assert p['interpretation_rules']['context_stability_acceptance_threshold_created'] is False
+          assert p['interpretation_rules']['predictive_validation_evidence_created'] is False
+          PY
+      - name: Run 2022 development-only context sensitivity audit
+        env:
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+          MKL_NUM_THREADS: '1'
+        run: python run_rating_context_sensitivity_audit_v56.py
+      - name: Run v0.56 contracts
+        run: |
+          python -m unittest -v tests/test_rating_context_sensitivity_v56.py
+          python -m unittest -v tests/test_rating_context_repeat_evidence_v56.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v56.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v56.once.md
+          python scripts/migrate_evidence_registry_v56.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v56.once.md
+      - name: Assert synthetic-context and non-validation boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s = json.loads(Path('results_v56/rating_context_sensitivity_summary_v56.json').read_text())
+          r = json.loads(Path('governance/rating_context_repeat_evidence_v56.json').read_text())
+          assert s['analysis_role'] == 'DEVELOPMENT_ONLY_REFERENCE_PROFILE_CONTEXT_SENSITIVITY'
+          assert s['source']['years_read'] == [2022]
+          assert s['source']['2023_rows_read'] is False
+          assert s['source']['2024_rows_read'] is False
+          assert s['contexts_are_synthetic_reference_profiles'] is True
+          assert s['marginal_exposure_share_is_not_joint_profile_prevalence'] is True
+          assert s['context_count'] == 5
+          assert s['registered_curve_point_count'] == 110
+          assert s['computational_contracts']['glm_context_invariance_contract_pass'] is True
+          b = s['interpretation_boundary']
+          assert b['context_stability_acceptance_threshold_created'] is False
+          assert b['predictive_validation_evidence_created'] is False
+          assert b['causal_interaction_claimed'] is False
+          assert b['observed_segment_effect_claimed'] is False
+          assert b['customer_premium_effect_claimed'] is False
+          assert b['candidate_selection_allowed'] is False
+          assert b['model_promotion_evidence_created'] is False
+          assert b['customer_pricing_authorised'] is False
+          assert s['persisted_row_level_data'] is False
+          assert r['comparison']['byte_identical_outputs'] is False
+          assert r['comparison']['xgb_frequency_relativity_exactly_equal'] is True
+          assert r['comparison']['driver_age_q95_same_sign_fraction_both_attempts'] == 1.0
+          assert r['comparison']['vehicle_age_q95_same_sign_fraction_both_attempts'] == 1.0
+          assert r['comparison']['vehicle_age_q05_context_sign_pattern_unchanged'] is True
+          assert r['interpretation']['claim_bitwise_reproducibility'] is False
+          assert r['interpretation']['predictive_validation_evidence_created'] is False
+          assert r['interpretation']['customer_pricing_authorised'] is False
+          PY
+          test ! -e results_v56/predictions.csv
+          test ! -e results_v56/raw_rows.csv
+      - name: Persist v0.56 rolling and immutable aggregate evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v56
+          cp results_v56/rating_context_curve_points_v56.csv action_results/v56/
+          cp results_v56/rating_context_feature_summary_v56.csv action_results/v56/
+          cp results_v56/rating_context_cross_context_summary_v56.csv action_results/v56/
+          cp results_v56/rating_context_sensitivity_summary_v56.json action_results/v56/
+          cp governance/rating_context_repeat_evidence_v56.json action_results/v56/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          s = json.loads(Path('results_v56/rating_context_sensitivity_summary_v56.json').read_text())
+          repeat = json.loads(Path('governance/rating_context_repeat_evidence_v56.json').read_text())
+          prior = json.loads(Path('action_results/v55/ACTION_V55_STATUS.json').read_text())
+          cc = s['cross_context_summary']
+          points = {p['feature']: p for p in s['preselected_review_points']}
+          status = {
+              'workflow': 'Rating-context sensitivity audit v0.56',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'analysis_role': s['analysis_role'],
+              'protocol_sha256': s['protocol']['sha256'],
+              'development_years_read': s['source']['years_read'],
+              'development_rows': s['source']['rows'],
+              'context_count': s['context_count'],
+              'contexts_are_synthetic_reference_profiles': True,
+              'driver_age_q95_context_min_log_gap': points['driver_age']['context_min_log_gap'],
+              'driver_age_q95_context_max_log_gap': points['driver_age']['context_max_log_gap'],
+              'driver_age_q95_context_range': points['driver_age']['context_log_gap_range'],
+              'driver_age_q95_same_sign_fraction': points['driver_age']['fraction_contexts_same_sign_as_base'],
+              'driver_age_max_context_minus_base_log_gap': cc['driver_age']['max_absolute_context_minus_base_log_gap_over_registered_grid'],
+              'vehicle_age_q95_context_min_log_gap': points['vehicle_age']['context_min_log_gap'],
+              'vehicle_age_q95_context_max_log_gap': points['vehicle_age']['context_max_log_gap'],
+              'vehicle_age_q95_context_range': points['vehicle_age']['context_log_gap_range'],
+              'vehicle_age_q95_same_sign_fraction': points['vehicle_age']['fraction_contexts_same_sign_as_base'],
+              'vehicle_age_max_context_minus_base_log_gap': cc['vehicle_age']['max_absolute_context_minus_base_log_gap_over_registered_grid'],
+              'vehicle_age_max_context_delta_location': f"{cc['vehicle_age']['max_context_minus_base_context']}@q{cc['vehicle_age']['max_context_minus_base_quantile']:.2f}",
+              'glm_context_invariance_max_log_relativity_range': s['computational_contracts']['max_glm_log_relativity_range_across_contexts'],
+              'hosted_repeat_cross_region_recorded': True,
+              'hosted_repeat_byte_identical': repeat['comparison']['byte_identical_outputs'],
+              'hosted_repeat_xgb_relativity_exact': repeat['comparison']['xgb_frequency_relativity_exactly_equal'],
+              'hosted_repeat_max_abs_glm_relativity_diff': repeat['comparison']['max_absolute_difference_glm_frequency_relativity'],
+              'hosted_repeat_max_abs_log_gap_diff': repeat['comparison']['max_absolute_difference_log_xgb_over_glm_relativity'],
+              'vehicle_age_q05_context_sign_pattern_repeat_unchanged': repeat['comparison']['vehicle_age_q05_context_sign_pattern_unchanged'],
+              'predictive_validation_evidence_created': False,
+              'causal_interaction_claimed': False,
+              'observed_segment_effect_claimed': False,
+              'candidate_selection_allowed': False,
+              'model_promotion_evidence_created': False,
+              'context_stability_acceptance_threshold_created': False,
+              'customer_pricing_authorised': False,
+              'committee_status': prior['committee_status'],
+              'committee_gate_pass_count': prior['committee_gate_pass_count'],
+              'committee_gate_count': prior['committee_gate_count'],
+              'external_target_gates': prior['external_target_gates'],
+              'model_family_decision': prior['model_family_decision'],
+              'serving_status': prior['serving_status'],
+              'promotion_review_status': prior['promotion_review_status'],
+              'evidence_role': 'ROLLING_DEVELOPMENT_RATING_CONTEXT_SENSITIVITY_AUDIT',
+          }
+          Path('action_results/v56/ACTION_V56_STATUS.json').write_text(json.dumps(status, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v56/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.56 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v56/rating_context_curve_points_v56.csv "$origin_dir/"
+          cp action_results/v56/rating_context_feature_summary_v56.csv "$origin_dir/"
+          cp action_results/v56/rating_context_cross_context_summary_v56.csv "$origin_dir/"
+          cp action_results/v56/rating_context_sensitivity_summary_v56.json "$origin_dir/"
+          cp action_results/v56/rating_context_repeat_evidence_v56.json "$origin_dir/"
+          cp action_results/v56/ACTION_V56_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          d = Path('action_results/v56/origin') / os.environ['GITHUB_RUN_ID']
+          p = d / 'ACTION_V56_STATUS.json'
+          s = json.loads(p.read_text(encoding='utf-8'))
+          s['evidence_role'] = 'IMMUTABLE_DEVELOPMENT_RATING_CONTEXT_SENSITIVITY_AUDIT_SNAPSHOT'
+          p.write_text(json.dumps(s, indent=2), encoding='utf-8')
+          manifest = {'run_id': os.environ['GITHUB_RUN_ID'], 'source_sha': os.environ['GITHUB_SHA'], 'files': {}}
+          for f in sorted(d.iterdir()):
+              if f.name != 'ORIGIN_MANIFEST.json':
+                  manifest['files'][f.name] = hashlib.sha256(f.read_bytes()).hexdigest()
+          (d / 'ORIGIN_MANIFEST.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md action_results/v56
+          if git diff --cached --quiet; then
+            echo 'No v0.56 aggregate evidence changes'
+          else
+            git commit -m "Persist v0.56 rating-context sensitivity evidence ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.56 aggregate context sensitivity audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-rating-context-sensitivity-v56
+          path: results_v56/
+          if-no-files-found: error

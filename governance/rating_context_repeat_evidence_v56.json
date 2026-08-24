@@ -1,0 +1,83 @@
+{
+  "status": "V56_HOSTED_REPEAT_NUMERICAL_REVIEW_COMPLETE",
+  "scope": "same_locked_head_development_rating_context_sensitivity_repeat",
+  "locked_scoring_head_sha": "a1d4dbe60e79bf4f1967a4bf6e34d00fcaa122e1",
+  "protocol_commit_sha": "5bf450c1fcca8cd65d349d2ed3ba649ff1da813b",
+  "protocol_sha256": "fc4b1f228c260f5480bb12be8f559e17faa3ade3cd3e61830fecfad905cb504d",
+  "workflow_run_id": 32776747130,
+  "attempts": [
+    {
+      "attempt": 1,
+      "job_id": 97589429492,
+      "azure_region": "centralus",
+      "runner_image": "ubuntu-24.04",
+      "runner_image_version": "20260816.277.1",
+      "python": "3.12.14",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "scikit_learn": "1.9.0",
+      "xgboost": "3.4.1",
+      "artifact_id": 9538241826,
+      "artifact_zip_sha256": "26bff08e23b4d4f0e3f4b8e8b331c93ad994f33fe35dc538d7699e8338628dee",
+      "inner_sha256": {
+        "rating_context_curve_points_v56.csv": "8610060ed6a3e4f7422dd4d95975569ad47d8da53a800bcb782bb97a701eb3a6",
+        "rating_context_feature_summary_v56.csv": "477c54de4c7562c2cf7db6967044b959b442d8abeb299093912cf0c2c02c1afe",
+        "rating_context_cross_context_summary_v56.csv": "7754d87a77d5e3f3b033421c779afc48d7a2c01445cf86685e1c317f9d2e896c",
+        "rating_context_sensitivity_summary_v56.json": "3d50a656a869f08695085bf34b63c5f29ff29b7e7652a7917a1ccd66f20d7299"
+      }
+    },
+    {
+      "attempt": 2,
+      "job_id": 97590009549,
+      "azure_region": "northcentralus",
+      "runner_image": "ubuntu-24.04",
+      "runner_image_version": "20260816.277.1",
+      "python": "3.12.14",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "scikit_learn": "1.9.0",
+      "xgboost": "3.4.1",
+      "artifact_id": 9538308743,
+      "artifact_zip_sha256": "229ad24bc6f02ba552ee4dfa6ce3458c845af9eea5eae130548b8eda84b9e5b3",
+      "inner_sha256": {
+        "rating_context_curve_points_v56.csv": "ea9f0caeb30d9f5c5beeffa2e886f7d61250c1ce029615f077d74f6a0a289209",
+        "rating_context_feature_summary_v56.csv": "9ebe0a2e81b41ae81f662c51c976d4f699c7ce58438bbc389fc2c58ccac77495",
+        "rating_context_cross_context_summary_v56.csv": "8c428254d294d737826af6d891d7b5132e6ed1dc3c8c4e72a5f4df6c561b0c9c",
+        "rating_context_sensitivity_summary_v56.json": "a4bc899688189cb9e4f2d205c665de5553daceed46b7fc3ea96bc96b6d768f19"
+      }
+    }
+  ],
+  "comparison": {
+    "byte_identical_outputs": false,
+    "non_numeric_keys_and_rows_equal": true,
+    "xgb_frequency_relativity_exactly_equal": true,
+    "max_absolute_difference_glm_frequency_relativity": 8.02364328311711e-08,
+    "max_absolute_difference_log_xgb_over_glm_relativity": 6.922571993417392e-08,
+    "max_absolute_difference_feature_context_q95_log_gap": 6.922571993417392e-08,
+    "max_absolute_difference_cross_context_q95_range": 5.967448757360216e-16,
+    "driver_age_q95_same_sign_fraction_both_attempts": 1.0,
+    "vehicle_age_q95_same_sign_fraction_both_attempts": 1.0,
+    "driver_age_q95_min_context_both_attempts": "FUEL_TYPE_G",
+    "driver_age_q95_max_context_both_attempts": "POLICY_TYPE_COMP_E",
+    "vehicle_age_q95_min_context_both_attempts": "FUEL_TYPE_G",
+    "vehicle_age_q95_max_context_both_attempts": "CIRCULATION_AREA_R",
+    "driver_age_max_context_delta_location_both_attempts": "POLICY_TYPE_COMP_E@q0.90",
+    "vehicle_age_max_context_delta_location_both_attempts": "POLICY_TYPE_COMP_E@q0.05",
+    "vehicle_age_q05_context_sign_pattern_unchanged": true,
+    "vehicle_age_q05_positive_contexts_both_attempts": ["BASE", "BUSINESS_TYPE_P"],
+    "vehicle_age_q05_negative_contexts_both_attempts": ["POLICY_TYPE_COMP_E", "FUEL_TYPE_G", "CIRCULATION_AREA_R"],
+    "interpretive_conclusion_changed": false
+  },
+  "interpretation": {
+    "claim_bitwise_reproducibility": false,
+    "claim_exact_metric_reproducibility": false,
+    "context_effect_interpretation_numerically_robust_across_two_hosted_regions": true,
+    "numerical_drift_is_material_relative_to_observed_context_ranges": false,
+    "reason": "The two hosted executions preserve all rows, contexts, XGBoost relativities, q95 sign persistence, context ordering and the vehicle-age q05 sign-reversal pattern. Iterative GLM rebuilding differs at approximately 1e-8 to 1e-7 scale, whereas registered context-dependent log-gap ranges are approximately 0.053 to 0.142. No v0.56 context-stability acceptance threshold exists; this is descriptive numerical evidence only.",
+    "predictive_validation_evidence_created": false,
+    "causal_interaction_evidence_created": false,
+    "observed_segment_effect_created": false,
+    "model_promotion_evidence_created": false,
+    "customer_pricing_authorised": false
+  }
+}
