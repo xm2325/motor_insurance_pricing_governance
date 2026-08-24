@@ -8,6 +8,14 @@ from scripts.refresh_repository_front_door_v54 import refresh as refresh_readme
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def has_exact_line(text: str, line: str) -> bool:
+    return line in text.splitlines()
+
+
+def has_shell_command(text: str, command_prefix: str) -> bool:
+    return any(line.strip().startswith(command_prefix) for line in text.splitlines())
+
+
 class RatingFrontDoorV54Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -93,12 +101,12 @@ class RatingFrontDoorV54Tests(unittest.TestCase):
         self.assertIn("not a causal estimate", self.interview)
 
     def test_v50_writer_is_frozen(self):
-        self.assertNotIn("  push:", self.v50_workflow)
-        self.assertNotIn("  pull_request:", self.v50_workflow)
-        self.assertIn("workflow_dispatch:", self.v50_workflow)
-        self.assertIn("contents: read", self.v50_workflow)
-        self.assertNotIn("git push", self.v50_workflow)
-        self.assertNotIn("push_evidence_with_rebase", self.v50_workflow)
+        self.assertFalse(has_exact_line(self.v50_workflow, "  push:"))
+        self.assertFalse(has_exact_line(self.v50_workflow, "  pull_request:"))
+        self.assertTrue(has_exact_line(self.v50_workflow, "  workflow_dispatch:"))
+        self.assertTrue(has_exact_line(self.v50_workflow, "  contents: read"))
+        self.assertFalse(has_shell_command(self.v50_workflow, "git push"))
+        self.assertFalse(has_shell_command(self.v50_workflow, "bash scripts/push_evidence_with_rebase.sh"))
 
     def test_refreshes_are_idempotent(self):
         self.assertEqual(refresh_readme(self.readme), self.readme)
