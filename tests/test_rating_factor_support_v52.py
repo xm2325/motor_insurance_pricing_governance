@@ -27,15 +27,16 @@ class RatingFactorSupportV52Tests(unittest.TestCase):
         self.assertEqual(s["status"], "V52_LABEL_FREE_RATING_FACTOR_SUPPORT_AUDIT_COMPLETE")
         self.assertEqual(s["analysis_role"], "POST_HOC_LABEL_FREE_FEATURE_SUPPORT_AND_MIX_AUDIT")
         source = s["source"]
+        self.assertEqual(source["source_file_sha256"], "6a47d19d5278a049ea0aeaf39c955cc26068639bdc58cb4523b201e740f0faf4")
         self.assertEqual(source["years_read"], [2022, 2024])
+        self.assertEqual(source["development_rows"], 67171)
+        self.assertEqual(source["current_rows"], 168085)
         self.assertFalse(source["2023_rows_read"])
         self.assertFalse(source["claim_outcomes_read"])
         self.assertFalse(source["incurred_loss_read"])
         self.assertFalse(source["actual_premium_read"])
         self.assertFalse(source["customer_id_read"])
         self.assertFalse(source["policy_status_read"])
-        self.assertGreater(source["development_rows"], 0)
-        self.assertGreater(source["current_rows"], 0)
         self.assertGreater(source["development_exposure"], 0)
         self.assertGreater(source["current_exposure"], 0)
 
@@ -112,6 +113,26 @@ class RatingFactorSupportV52Tests(unittest.TestCase):
                 ].iloc[0]
             )
             self.assertAlmostEqual(expected_tv, observed_tv, places=12)
+
+    def test_descriptive_regression_separates_shape_support_and_mix(self):
+        numeric = self.summary["numeric_features"]
+        categorical = self.summary["categorical_features"]
+        self.assertAlmostEqual(numeric["driver_age"]["v51_max_absolute_log_relativity_gap"], 0.26865990121735667, places=12)
+        self.assertAlmostEqual(numeric["driver_age"]["current_outside_development_observed_range_exposure_share"], 1.5871206507159884e-05, places=12)
+        self.assertAlmostEqual(numeric["vehicle_age"]["current_outside_development_observed_range_exposure_share"], 7.935603253579942e-06, places=12)
+        self.assertAlmostEqual(numeric["vehicle_value"]["current_outside_development_q05_q95_exposure_share"], 0.09574485778888048, places=12)
+        self.assertAlmostEqual(categorical["business_type"]["v51_max_absolute_log_relativity_gap"], 0.02571338968862851, places=12)
+        self.assertAlmostEqual(categorical["business_type"]["total_variation_distance_2022_vs_2024"], 0.48595824222641637, places=12)
+        self.assertEqual(categorical["business_type"]["current_unseen_nonmissing_level_count"], 0)
+        self.assertAlmostEqual(categorical["vehicle_brand"]["current_unseen_nonmissing_exposure_share"], 3.452530949776697e-05, places=12)
+        self.assertEqual(categorical["vehicle_brand"]["current_unseen_nonmissing_level_count"], 6)
+
+    def test_business_type_mix_reconciles_under_v52_filter(self):
+        rows = self.levels[self.levels["feature"] == "business_type"].set_index("level")
+        self.assertAlmostEqual(float(rows.loc["NB", "development_share"]), 0.9677561751126499, places=12)
+        self.assertAlmostEqual(float(rows.loc["P", "development_share"]), 0.0322438248873501, places=12)
+        self.assertAlmostEqual(float(rows.loc["NB", "current_share"]), 0.4817979328862335, places=12)
+        self.assertAlmostEqual(float(rows.loc["P", "current_share"]), 0.5182020671137666, places=12)
 
     def test_v51_shape_gap_is_lineage_not_composite_score(self):
         lineage = self.summary["v51_lineage"]
