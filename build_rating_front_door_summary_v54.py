@@ -12,6 +12,14 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def has_exact_line(text: str, line: str) -> bool:
+    return line in text.splitlines()
+
+
+def has_shell_command(text: str, command_prefix: str) -> bool:
+    return any(line.strip().startswith(command_prefix) for line in text.splitlines())
+
+
 def main() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     interview = (ROOT / "INTERVIEW_EVIDENCE_PACK.md").read_text(encoding="utf-8")
@@ -41,11 +49,11 @@ def main() -> None:
         "rating_pack_has_same_business_tv": "48.60%" in rating_pack,
         "v53_main_evidence_success": v53.get("status") == "success",
         "v53_main_scope_aggregate": v53.get("scope") == "aggregate_rating_structure_support_mix_and_impact_synthesis",
-        "v50_push_listener_removed": "  push:" not in v50_workflow,
-        "v50_pr_listener_removed": "  pull_request:" not in v50_workflow,
-        "v50_manual_read_only": "workflow_dispatch:" in v50_workflow and "contents: read" in v50_workflow,
-        "v50_has_no_push_command": "git push" not in v50_workflow and "push_evidence_with_rebase" not in v50_workflow,
-        "v45_still_manual_read_only": "  push:" not in v45_workflow and "  pull_request:" not in v45_workflow and "contents: read" in v45_workflow,
+        "v50_push_listener_removed": not has_exact_line(v50_workflow, "  push:"),
+        "v50_pr_listener_removed": not has_exact_line(v50_workflow, "  pull_request:"),
+        "v50_manual_read_only": has_exact_line(v50_workflow, "  workflow_dispatch:") and has_exact_line(v50_workflow, "  contents: read"),
+        "v50_has_no_push_command": not has_shell_command(v50_workflow, "git push") and not has_shell_command(v50_workflow, "bash scripts/push_evidence_with_rebase.sh"),
+        "v45_still_manual_read_only": not has_exact_line(v45_workflow, "  push:") and not has_exact_line(v45_workflow, "  pull_request:") and has_exact_line(v45_workflow, "  contents: read"),
     }
     failed = [k for k, v in checks.items() if not v]
     if failed:
