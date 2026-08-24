@@ -1,0 +1,111 @@
+name: Rating-shape stability audit v0.55
+
+on:
+  pull_request:
+    paths:
+      - 'governance/rating_shape_stability_protocol_v55.json'
+      - 'run_rating_shape_stability_audit_v55.py'
+      - 'tests/test_rating_shape_stability_v55.py'
+      - '.github/workflows/v55-rating-shape-stability.yml'
+      - 'run_rating_factor_relativity_audit_v51.py'
+      - 'action_results/v51/**'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+      - 'download_spanish_motor_2022_2024.py'
+      - 'discover_spanish_motor_2022_2024.py'
+      - 'requirements.txt'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/rating_shape_stability_protocol_v55.json'
+      - 'run_rating_shape_stability_audit_v55.py'
+      - 'tests/test_rating_shape_stability_v55.py'
+      - '.github/workflows/v55-rating-shape-stability.yml'
+      - 'run_rating_factor_relativity_audit_v51.py'
+      - 'action_results/v51/**'
+      - 'build_deployment_bundle_v21.py'
+      - 'deployment/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rating-shape-stability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Discover Spanish source
+        run: python discover_spanish_motor_2022_2024.py
+      - name: Download or reuse and verify source
+        run: python download_spanish_motor_2022_2024.py
+      - name: Verify v0.55 protocol is locked
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('governance/rating_shape_stability_protocol_v55.json').read_text())
+          assert p['status'] == 'V55_DEVELOPMENT_RATING_SHAPE_STABILITY_PROTOCOL_LOCKED'
+          assert p['fold_design']['fold_count'] == 5
+          assert p['fold_design']['seed'] == 20260824
+          assert p['fold_design']['outcome_stratification'] is False
+          assert p['evaluation_grid']['grid_reestimated_per_fold'] is False
+          assert p['evaluation_grid']['reference_profile_reestimated_per_fold'] is False
+          assert p['interpretation_rules']['stability_acceptance_threshold_created'] is False
+          assert p['interpretation_rules']['predictive_validation_evidence_created'] is False
+          PY
+      - name: Run 2022 development-only shape stability audit
+        env:
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+          MKL_NUM_THREADS: '1'
+        run: python run_rating_shape_stability_audit_v55.py
+      - name: Run v0.55 contracts
+        run: python -m unittest -v tests/test_rating_shape_stability_v55.py
+      - name: Assert development-only non-validation boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s = json.loads(Path('results_v55/rating_shape_stability_summary_v55.json').read_text())
+          assert s['analysis_role'] == 'DEVELOPMENT_ONLY_FIXED_FOLD_RESPONSE_SHAPE_STABILITY_AUDIT'
+          assert s['source']['years_read'] == [2022]
+          assert s['source']['2023_rows_read'] is False
+          assert s['source']['2024_rows_read'] is False
+          assert s['source']['incurred_loss_read'] is False
+          assert s['source']['actual_premium_read'] is False
+          assert s['source']['customer_id_read'] is False
+          assert s['source']['policy_status_read'] is False
+          assert s['models']['model_fit_executed'] is True
+          assert s['fold_design']['held_out_performance_metric_computed'] is False
+          b = s['interpretation_boundary']
+          assert b['confidence_interval_claimed'] is False
+          assert b['predictive_validation_evidence_created'] is False
+          assert b['candidate_selection_allowed'] is False
+          assert b['model_promotion_evidence_created'] is False
+          assert b['customer_pricing_authorised'] is False
+          assert b['stability_acceptance_threshold_created'] is False
+          assert b['composite_score_created'] is False
+          assert s['persisted_row_level_data'] is False
+          PY
+          test ! -e results_v55/predictions.csv
+          test ! -e results_v55/raw_rows.csv
+      - name: Upload v0.55 aggregate shape-stability audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-rating-shape-stability-v55
+          path: results_v55/
+          if-no-files-found: error
