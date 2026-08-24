@@ -1,0 +1,183 @@
+{
+  "status": "V56_DEVELOPMENT_RATING_CONTEXT_SENSITIVITY_AUDIT_COMPLETE",
+  "analysis_role": "DEVELOPMENT_ONLY_REFERENCE_PROFILE_CONTEXT_SENSITIVITY",
+  "protocol": {
+    "path": "governance/rating_context_sensitivity_protocol_v56.json",
+    "sha256": "fc4b1f228c260f5480bb12be8f559e17faa3ade3cd3e61830fecfad905cb504d",
+    "locked_before_first_execution": true
+  },
+  "source": {
+    "dataset": "Mendeley sw4jmdb2sm v1",
+    "years_read": [
+      2022
+    ],
+    "rows": 67171,
+    "exposure": 41912.495890410966,
+    "2023_rows_read": false,
+    "2024_rows_read": false,
+    "incurred_loss_read": false,
+    "actual_premium_read": false,
+    "customer_id_read": false,
+    "policy_status_read": false
+  },
+  "models": {
+    "models": [
+      "poisson_glm_frequency",
+      "xgb_poisson_frequency"
+    ],
+    "model_fit_executed": true,
+    "model_refit_per_context": false,
+    "calibration_applied": false,
+    "hyperparameter_search": false
+  },
+  "contexts": [
+    {
+      "context_id": "BASE",
+      "change_from_v51_reference": {},
+      "v51_marginal_exposure_share_of_changed_level": 1.0,
+      "observed_joint_cell_claimed": false
+    },
+    {
+      "context_id": "BUSINESS_TYPE_P",
+      "change_from_v51_reference": {
+        "business_type": "P"
+      },
+      "v51_marginal_exposure_share_of_changed_level": 0.0322438248873501,
+      "observed_joint_cell_claimed": false
+    },
+    {
+      "context_id": "POLICY_TYPE_COMP_E",
+      "change_from_v51_reference": {
+        "policy_type": "COMP_E"
+      },
+      "v51_marginal_exposure_share_of_changed_level": 0.2375225200108693,
+      "observed_joint_cell_claimed": false
+    },
+    {
+      "context_id": "FUEL_TYPE_G",
+      "change_from_v51_reference": {
+        "fuel_type": "G"
+      },
+      "v51_marginal_exposure_share_of_changed_level": 0.36069678525926124,
+      "observed_joint_cell_claimed": false
+    },
+    {
+      "context_id": "CIRCULATION_AREA_R",
+      "change_from_v51_reference": {
+        "circulation_area": "R"
+      },
+      "v51_marginal_exposure_share_of_changed_level": 0.45981696634625785,
+      "observed_joint_cell_claimed": false
+    }
+  ],
+  "context_count": 5,
+  "contexts_are_synthetic_reference_profiles": true,
+  "marginal_exposure_share_is_not_joint_profile_prevalence": true,
+  "target_features": [
+    "driver_age",
+    "vehicle_age"
+  ],
+  "registered_curve_point_count": 110,
+  "registered_feature_context_summary_count": 10,
+  "preselected_review_points": [
+    {
+      "feature": "driver_age",
+      "quantile": 0.95,
+      "value": 68.0,
+      "base_log_gap": -0.26865990121735667,
+      "context_min_log_gap": -0.278505377728304,
+      "context_max_log_gap": -0.18724502443127294,
+      "context_log_gap_range": 0.09126035329703108,
+      "fraction_contexts_same_sign_as_base": 1.0,
+      "by_context": {
+        "BASE": -0.26865990121735667,
+        "BUSINESS_TYPE_P": -0.2686598434297975,
+        "POLICY_TYPE_COMP_E": -0.18724502443127294,
+        "FUEL_TYPE_G": -0.278505377728304,
+        "CIRCULATION_AREA_R": -0.24480291300221182
+      }
+    },
+    {
+      "feature": "vehicle_age",
+      "quantile": 0.95,
+      "value": 44.0,
+      "base_log_gap": 0.26770589446186105,
+      "context_min_log_gap": 0.2638795848183454,
+      "context_max_log_gap": 0.31666173175999923,
+      "context_log_gap_range": 0.05278214694165384,
+      "fraction_contexts_same_sign_as_base": 1.0,
+      "by_context": {
+        "BASE": 0.26770589446186105,
+        "BUSINESS_TYPE_P": 0.2677059113698528,
+        "POLICY_TYPE_COMP_E": 0.3078039695719854,
+        "FUEL_TYPE_G": 0.2638795848183454,
+        "CIRCULATION_AREA_R": 0.31666173175999923
+      }
+    }
+  ],
+  "cross_context_summary": {
+    "driver_age": {
+      "base_q95_log_gap": -0.26865990121735667,
+      "v51_registered_base_q95_log_gap": -0.26865990121735667,
+      "base_q95_minus_v51_registered": 0.0,
+      "q95_log_gap_min": -0.278505377728304,
+      "q95_log_gap_min_context": "FUEL_TYPE_G",
+      "q95_log_gap_max": -0.18724502443127294,
+      "q95_log_gap_max_context": "POLICY_TYPE_COMP_E",
+      "q95_log_gap_range": 0.09126035329703108,
+      "fraction_contexts_same_q95_sign_as_base": 1.0,
+      "max_absolute_context_minus_base_log_gap_over_registered_grid": 0.0814148921031389,
+      "max_context_minus_base_context": "POLICY_TYPE_COMP_E",
+      "max_context_minus_base_quantile": 0.9,
+      "max_xgb_log_relativity_range_across_contexts_over_registered_grid": 0.09126035329703067,
+      "max_glm_log_relativity_range_across_contexts_over_registered_grid": 4.0245584642661925e-16
+    },
+    "vehicle_age": {
+      "base_q95_log_gap": 0.26770589446186105,
+      "v51_registered_base_q95_log_gap": 0.26770589446186105,
+      "base_q95_minus_v51_registered": 0.0,
+      "q95_log_gap_min": 0.2638795848183454,
+      "q95_log_gap_min_context": "FUEL_TYPE_G",
+      "q95_log_gap_max": 0.31666173175999923,
+      "q95_log_gap_max_context": "CIRCULATION_AREA_R",
+      "q95_log_gap_range": 0.05278214694165384,
+      "fraction_contexts_same_q95_sign_as_base": 1.0,
+      "max_absolute_context_minus_base_log_gap_over_registered_grid": 0.14179274853893947,
+      "max_context_minus_base_context": "POLICY_TYPE_COMP_E",
+      "max_context_minus_base_quantile": 0.05,
+      "max_xgb_log_relativity_range_across_contexts_over_registered_grid": 0.14179283663957043,
+      "max_glm_log_relativity_range_across_contexts_over_registered_grid": 4.2327252813834093e-16
+    }
+  },
+  "computational_contracts": {
+    "normalised_reference_points_equal_one_within_registered_tolerance": true,
+    "max_glm_log_relativity_range_across_contexts": 4.2327252813834093e-16,
+    "glm_context_invariance_tolerance": 1e-08,
+    "glm_context_invariance_contract_pass": true
+  },
+  "interpretation_boundary": {
+    "context_stability_acceptance_threshold_created": false,
+    "composite_score_created": false,
+    "confidence_interval_claimed": false,
+    "predictive_validation_evidence_created": false,
+    "causal_interaction_claimed": false,
+    "observed_segment_effect_claimed": false,
+    "customer_premium_effect_claimed": false,
+    "candidate_selection_allowed": false,
+    "model_promotion_evidence_created": false,
+    "customer_pricing_authorised": false,
+    "first_central_or_current_uk_transport_claimed": false,
+    "required_language": "Report whether response-shape disagreement changes across these fixed synthetic reference-profile contexts. Do not call the contexts observed customer cells, do not infer causal interactions, and do not use the result to clear existing validation blockers."
+  },
+  "governance_state_unchanged": {
+    "committee_status": "EVIDENCE_GAP_HOLD",
+    "committee_gate_pass_count": 5,
+    "committee_gate_count": 8,
+    "external_target_gates": "0/4",
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false
+  },
+  "persisted_row_level_data": false
+}
