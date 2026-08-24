@@ -1,0 +1,96 @@
+name: Rating-factor support audit v0.52
+
+on:
+  pull_request:
+    paths:
+      - 'run_rating_factor_support_audit_v52.py'
+      - 'tests/test_rating_factor_support_v52.py'
+      - '.github/workflows/v52-rating-factor-support-audit.yml'
+      - 'deployment/contracts.py'
+      - 'download_spanish_motor_2022_2024.py'
+      - 'discover_spanish_motor_2022_2024.py'
+      - 'action_results/v51/**'
+  push:
+    branches: [main]
+    paths:
+      - 'run_rating_factor_support_audit_v52.py'
+      - 'tests/test_rating_factor_support_v52.py'
+      - '.github/workflows/v52-rating-factor-support-audit.yml'
+      - 'deployment/contracts.py'
+      - 'action_results/v51/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rating-factor-support:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore verified public-data cache
+        uses: actions/cache@v4
+        with:
+          path: data_spanish_2022_2024
+          key: spanish-motor-sw4jmdb2sm-v1-${{ runner.os }}
+      - name: Install support-audit dependencies only
+        run: pip install pandas==3.0.5 numpy==2.5.2 pydantic==2.13.4
+      - name: Verify support audit does not import ML stack
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          source = Path('run_rating_factor_support_audit_v52.py').read_text(encoding='utf-8')
+          for forbidden in ['sklearn', 'xgboost', 'model_definitions', '.fit(']:
+              assert forbidden not in source, forbidden
+          PY
+      - name: Discover Spanish source
+        run: python discover_spanish_motor_2022_2024.py
+      - name: Download or reuse and verify source
+        run: python download_spanish_motor_2022_2024.py
+      - name: Run label-free 2022-to-2024 support audit
+        run: python run_rating_factor_support_audit_v52.py
+      - name: Run v0.52 contracts
+        run: python -m unittest -v tests/test_rating_factor_support_v52.py
+      - name: Assert no outcomes, model fit, subjective score or row-level persistence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s = json.loads(Path('results_v52/rating_factor_support_summary_v52.json').read_text())
+          assert s['analysis_role'] == 'POST_HOC_LABEL_FREE_FEATURE_SUPPORT_AND_MIX_AUDIT'
+          assert s['source']['years_read'] == [2022, 2024]
+          assert s['source']['2023_rows_read'] is False
+          assert s['source']['claim_outcomes_read'] is False
+          assert s['source']['incurred_loss_read'] is False
+          assert s['source']['actual_premium_read'] is False
+          assert s['source']['customer_id_read'] is False
+          assert s['source']['policy_status_read'] is False
+          assert s['definitions']['no_composite_score'] is True
+          assert s['definitions']['no_alert_or_acceptance_threshold_created'] is True
+          b = s['interpretation_boundary']
+          assert b['validation_performance_evidence_created'] is False
+          assert b['candidate_selection_allowed'] is False
+          assert b['model_fit_executed'] is False
+          assert b['model_promotion_evidence_created'] is False
+          assert b['customer_pricing_authorised'] is False
+          assert s['persisted_row_level_data'] is False
+          PY
+          test ! -e results_v52/predictions.csv
+          test ! -e results_v52/raw_rows.csv
+          if find results_v52 -type f \( -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' -o -name '*.parquet' \) | grep -q .; then
+            echo 'v0.52 must persist aggregate support diagnostics only' >&2
+            exit 1
+          fi
+      - name: Upload v0.52 aggregate support audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-rating-factor-support-v52
+          path: results_v52/
+          if-no-files-found: error
