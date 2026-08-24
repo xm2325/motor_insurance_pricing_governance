@@ -1,0 +1,21 @@
+{
+  "workflow": "Prospective evidence programme template v0.60",
+  "run_id": "32782575096",
+  "sha": "6c3eedc394846e3220c32627e50bea14f0d3e34f",
+  "status": "success",
+  "validation_status": "V60_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_VALIDATED",
+  "active_change_request_created": false,
+  "historical_parent_request": "MCR-XGB-MOTOR-001",
+  "minimum_pairwise_distinct_fresh_source_identities": 3,
+  "sealed_reserve_required": true,
+  "failed_stage_replacement_allowed": false,
+  "selected_scope_mode": null,
+  "fresh_source_identity_selected": false,
+  "external_row_data_accessed": false,
+  "candidate_selection_performed": false,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false,
+  "evidence_role": "ROLLING_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_VALIDATION"
+}

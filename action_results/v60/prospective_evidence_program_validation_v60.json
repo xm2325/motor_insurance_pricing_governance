@@ -1,0 +1,33 @@
+{
+  "status": "V60_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_VALIDATED",
+  "active_change_request_created": false,
+  "historical_parent_request": "MCR-XGB-MOTOR-001",
+  "historical_parent_terminal_state_required": "TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST",
+  "allowed_future_scope_modes": [
+    "FREQUENCY_ONLY",
+    "PURE_PREMIUM_ONLY",
+    "GLOBAL_TWO_TARGET"
+  ],
+  "selected_scope_mode": null,
+  "fresh_evidence_stage_ids": [
+    "S1_LOCKED_TEMPORAL_QUALIFICATION",
+    "S2_INDEPENDENT_EXTERNAL_REPLICATION",
+    "S3_SEALED_RESERVE_CONFIRMATION"
+  ],
+  "minimum_pairwise_distinct_fresh_source_identities": 3,
+  "sealed_reserve_required": true,
+  "failed_stage_replacement_allowed": false,
+  "inherited_gate": {
+    "minimum_relative_deviance_improvement": 0.005,
+    "bootstrap_ci_lower_bound_must_exceed": 0.0,
+    "maximum_additional_abs_log_calibration_error": 0.01,
+    "paired_bootstrap_draws": 500
+  },
+  "external_row_data_accessed": false,
+  "outcome_values_inspected": false,
+  "candidate_selection_performed": false,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false
+}

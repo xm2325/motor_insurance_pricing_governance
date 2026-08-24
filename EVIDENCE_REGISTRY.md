@@ -199,7 +199,16 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.59 committee-gate reachability audit | machine audit of existing request `MCR-XGB-MOTOR-001` shows G2 is structurally unreachable because its registered v0.44 definition requires the **original** locked temporal evaluation to support the global family change, while both Spanish 2024 locked targets are already registered HOLD; even assuming future G3/G4 success, the existing request has a 7/8 ceiling and cannot reach `READY_FOR_HUMAN_COMMITTEE_REVIEW` without redefining its historical gate | `governance/model_change_reachability_policy_v59.json`, `audit_model_change_reachability_v59.py`, `action_results/v59/committee_gate_reachability_audit_v59.json` |
 | v0.59 stop rule | do not consume additional fresh external outcomes solely to try to make `MCR-XGB-MOTOR-001` reach 8/8; future external evidence may still be valuable only under a distinct prospectively registered scientific question or a new change request whose temporal criterion is frozen before fresh outcome access, while the failed MCR-001 history remains visible | `RESULTS_V59.md`, `action_results/v59/ACTION_V59_STATUS.json` |
 
+
+| v0.60 prospective evidence-programme template | non-active template for a future change request after terminal MCR-001; requires three pairwise-distinct fresh source identities — S1 locked temporal qualification, S2 independent external replication, and S3 sealed reserve — with target scope fixed before fresh outcome access and no source replacement after a registered S1/S2 failure | `governance/prospective_evidence_program_template_v60.json`, `validate_prospective_evidence_program_v60.py`, `action_results/v60/prospective_evidence_program_validation_v60.json` |
+| v0.60 evidence budget | one source identity per S1/S2/S3; failed S1/S2 cannot be replaced, S3 cannot rescue them, target scope and performance gates cannot be changed after failure, and a later attempt requires a new prospectively registered request ID | `RESULTS_V60.md`, `action_results/v60/ACTION_V60_STATUS.json` |
+
 ## Interpretation rules
+
+- Qualification evidence, independent replication evidence and a still-sealed reserve are different evidence roles; one portfolio must not be relabelled to satisfy all three roles.
+- A prospective evidence budget is part of the anti-data-shopping contract: a failed registered source is evidence, not permission to keep replacing sources until one passes.
+- Target-specific and global-family questions must be separated prospectively. A global two-target request cannot be rescued by whichever target looks better after outcomes are observed.
+- A template is not an active model-change request. Source selection, row-level access or candidate evaluation requires a separately registered request whose scope is already fixed.
 
 - A failed gate tied explicitly to a completed historical event cannot be repaired by unrelated future evidence without changing that existing gate's semantics.
 - New evidence can support a **new prospectively registered request**, but must not be used to rewrite, delete or relabel the failed historical request.
