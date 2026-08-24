@@ -6,6 +6,7 @@ on:
       - 'run_rating_factor_relativity_audit_v51.py'
       - 'tests/test_rating_factor_relativity_v51.py'
       - 'scripts/migrate_evidence_registry_v51.py'
+      - 'governance/v51_repeat_run_audit.json'
       - 'RESULTS_V51.md'
       - '.github/workflows/v51-rating-factor-relativity-audit.yml'
       - 'build_deployment_bundle_v21.py'
@@ -19,6 +20,7 @@ on:
       - 'run_rating_factor_relativity_audit_v51.py'
       - 'tests/test_rating_factor_relativity_v51.py'
       - 'scripts/migrate_evidence_registry_v51.py'
+      - 'governance/v51_repeat_run_audit.json'
       - 'RESULTS_V51.md'
       - '.github/workflows/v51-rating-factor-relativity-audit.yml'
       - 'build_deployment_bundle_v21.py'
@@ -88,6 +90,11 @@ jobs:
           assert b['customer_pricing_authorised'] is False
           assert b['actual_premium_or_quote'] is False
           assert s['persisted_row_level_data'] is False
+          repeat = json.loads(Path('governance/v51_repeat_run_audit.json').read_text())
+          assert repeat['status'] == 'V51_DEVELOPMENT_INTERPRETABILITY_REPEAT_RUN_AUDIT_PASS'
+          assert repeat['interpretation']['validation_reproducibility_claimed'] is False
+          assert repeat['interpretation']['performance_reproducibility_claimed'] is False
+          assert repeat['customer_pricing_authorised'] is False
           PY
           test ! -e results_v51/predictions.csv
           test ! -e results_v51/raw_rows.csv
@@ -102,10 +109,12 @@ jobs:
           cp results_v51/rating_factor_relativity_summary_v51.json action_results/v51/
           cp results_v51/numeric_rating_factor_relativities_v51.csv action_results/v51/
           cp results_v51/categorical_rating_factor_relativities_v51.csv action_results/v51/
+          cp governance/v51_repeat_run_audit.json action_results/v51/
           python - <<'PY'
           import json, os
           from pathlib import Path
           s = json.loads(Path('results_v51/rating_factor_relativity_summary_v51.json').read_text())
+          repeat = json.loads(Path('governance/v51_repeat_run_audit.json').read_text())
           Path('action_results/v51/ACTION_V51_STATUS.json').write_text(json.dumps({
               'workflow': 'Rating-factor relativity audit v0.51',
               'run_id': os.environ.get('GITHUB_RUN_ID'),
@@ -124,6 +133,7 @@ jobs:
               'persisted_row_level_data': False,
               'top_numeric_shape_gap_feature': s['ranked_numeric_shape_gaps'][0]['feature'],
               'top_numeric_shape_gap': s['ranked_numeric_shape_gaps'][0]['max_absolute_log_relativity_gap'],
+              'repeat_run_conclusion': repeat['interpretation']['conclusion'],
               'model_family_decision': 'HOLD',
               'serving_status': 'HOLD_SHADOW_ONLY',
               'committee_readiness': 'EVIDENCE_GAP_HOLD',
@@ -139,6 +149,7 @@ jobs:
           cp action_results/v51/rating_factor_relativity_summary_v51.json "$origin_dir/"
           cp action_results/v51/numeric_rating_factor_relativities_v51.csv "$origin_dir/"
           cp action_results/v51/categorical_rating_factor_relativities_v51.csv "$origin_dir/"
+          cp action_results/v51/v51_repeat_run_audit.json "$origin_dir/"
           cp action_results/v51/ACTION_V51_STATUS.json "$origin_dir/"
           python - <<'PY'
           import json, os
