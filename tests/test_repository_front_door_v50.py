@@ -79,11 +79,12 @@ class RepositoryFrontDoorV50Tests(unittest.TestCase):
         lower = self.interview.lower()
         for marker in [
             "not customer-price changes",
-            "not realised premium changes",
+            "realised premium changes",
             "78.26% of customers would receive a >10% premium change",
             "impact results do not override the failed evidence gates",
         ]:
             self.assertIn(marker.lower(), lower)
+        self.assertIn("they are **not** realised premium changes", lower)
         self.assertIn("it is **not** a statement", lower)
 
     def test_interview_star_is_current(self):
