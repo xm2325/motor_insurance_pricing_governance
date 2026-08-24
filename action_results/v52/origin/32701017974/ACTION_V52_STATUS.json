@@ -1,0 +1,29 @@
+{
+  "workflow": "Rating-factor support audit v0.52",
+  "run_id": "32701017974",
+  "sha": "3cc64fa57c382c14a0a77062959cb0ad72580f16",
+  "status": "success",
+  "analysis_role": "POST_HOC_LABEL_FREE_FEATURE_SUPPORT_AND_MIX_AUDIT",
+  "source_years_read": [
+    2022,
+    2024
+  ],
+  "development_rows": 67171,
+  "current_rows": 168085,
+  "claim_outcomes_read": false,
+  "model_fit_executed": false,
+  "validation_performance_evidence_created": false,
+  "candidate_selection_allowed": false,
+  "model_promotion_evidence_created": false,
+  "customer_pricing_authorised": false,
+  "persisted_row_level_data": false,
+  "max_numeric_strict_extrapolation_feature": "power_to_weight_ratio",
+  "max_numeric_strict_extrapolation_exposure_share": 2.2741482200670172e-05,
+  "top_categorical_mix_shift_feature": "business_type",
+  "top_categorical_mix_tv": 0.48595824222641637,
+  "business_type_unseen_exposure_share": 0.0,
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "committee_readiness": "EVIDENCE_GAP_HOLD",
+  "evidence_role": "IMMUTABLE_LABEL_FREE_FEATURE_SUPPORT_AUDIT_SNAPSHOT"
+}

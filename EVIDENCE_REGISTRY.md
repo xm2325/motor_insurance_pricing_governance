@@ -153,7 +153,22 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.51 repeat-run numerical audit | two successful hosted executions preserve identical grid keys and factor rankings; XGBoost relativities are exact across runs, while maximum GLM absolute relativity drift is **8.03e-08 numeric / 3.86e-08 categorical** | `action_results/v51/v51_repeat_run_audit.json`, `governance/v51_repeat_run_audit.json`, `RESULTS_V51.md` |
 | v0.51 interpretation boundary | reference-profile development sensitivity only; no 2023/2024 rows, incurred loss, actual premium, customer ID or policy status read; not a population-average PDP, validation result, causal effect, customer premium or promotion gate | `action_results/v51/rating_factor_relativity_summary_v51.json`, `tests/test_rating_factor_relativity_v51.py` |
 
+
+| v0.52 label-free rating-factor support audit | compares 2022 development and 2024 positive-exposure rating-feature populations using features/year/exposure only; **67,171 / 168,085 rows**, with no 2024 outcomes, premium, ID, policy-status or model fit | `action_results/v52/rating_factor_support_summary_v52.json`, `RESULTS_V52.md` |
+| v0.52 strict numeric support | 2024 exposure outside the actual 2022 observed numeric range is negligible: maximum **0.00227%** for `power_to_weight_ratio`; `driver_age` **0.00159%**, `vehicle_age` **0.00079%** | `action_results/v52/numeric_feature_support_v52.csv`, `RESULTS_V52.md` |
+| v0.52 central numeric tails | outside the development q05–q95 interval is **9.57% vehicle_value / 9.41% power_to_weight_ratio / 9.28% vehicle_age / 8.75% driver_age**; this is tail/mix shift, not strict extrapolation | `action_results/v52/numeric_feature_support_v52.csv`, `RESULTS_V52.md` |
+| v0.52 business-type mix shift | under the exact v0.52 positive-exposure filter, `NB` **96.78% -> 48.18%** and `P` **3.22% -> 51.82%**; total-variation distance **48.60%**, while both categories remain seen | `action_results/v52/categorical_feature_support_v52.csv`, `action_results/v52/categorical_level_shift_v52.csv`, `RESULTS_V52.md` |
+| v0.52 categorical unseen support | only `vehicle_brand` has non-missing 2024 levels absent from 2022: **6 brands / 0.00345% exposure**; all other registered categorical factors have zero unseen non-missing exposure under this audit | `action_results/v52/categorical_feature_support_v52.csv`, `action_results/v52/categorical_level_shift_v52.csv` |
+| v0.52 shape-vs-support separation | `driver_age` has large v0.51 model-family shape gap **0.26866** but only **0.00159%** strict extrapolation; `business_type` has small frequency shape gap **0.02571** but **48.60%** mix TV; no composite score is created | `action_results/v51/rating_factor_relativity_summary_v51.json`, `action_results/v52/rating_factor_support_summary_v52.json`, `RESULTS_V52.md` |
+| v0.52 governance boundary | post-hoc consumed-validation feature audit only; no performance evidence, candidate selection, model fit, promotion/pricing authority, causal/fairness conclusion or FIRST CENTRAL/current UK transport claim | `action_results/v52/ACTION_V52_STATUS.json`, `tests/test_rating_factor_support_v52.py` |
+
 ## Interpretation rules
+
+- v0.52 defines **strict numeric extrapolation** only as values outside the observed 2022 min/max. Exposure outside q01-q99 or q05-q95 is a central-support/tail diagnostic and must not be relabelled as unseen numeric space.
+- Categorical **unseen exposure** and **mix shift among seen levels** are separate diagnostics. A large total-variation distance does not imply new categories are present.
+- v0.51 response-shape gap and v0.52 support/mix evidence are shown side by side and must not be combined into a subjective model-risk, promotion or pricing score.
+- The v0.52 business-type shares use the exact v0.52 positive-exposure filter and should not be substituted mechanically for older monitoring percentages produced by different replay/baseline constructions.
+- v0.52 uses no outcome labels and cannot clear G2/G3/G4, create fresh validation evidence or reopen model-family promotion review.
 
 - v0.51 is **development interpretability evidence**, not fresh temporal/external validation. It cannot clear G2/G3/G4, open promotion review or authorise customer pricing.
 - One-factor reference-profile sweeps hold every other feature at the common 2022 reference profile. They are not population-average PDPs, causal effects, actuarial rating recommendations or realised premium impacts.
