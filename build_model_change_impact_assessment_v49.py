@@ -48,15 +48,35 @@ def build_assessment() -> dict:
     current = inventory["current_decision"]
     if gate["status"] != "EVIDENCE_GAP_HOLD":
         raise RuntimeError("v0.49 expects the current committee gate to remain EVIDENCE_GAP_HOLD")
+    if gate["required_gate_pass_count"] != 5 or gate["required_gate_count"] != 8:
+        raise RuntimeError("v0.49 decision-critical committee gate count changed")
+    if gate["blocker_ids"] != [
+        "G2_LOCKED_TEMPORAL_SUPPORT",
+        "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+        "G4_FRESH_INDEPENDENT_EVIDENCE",
+    ]:
+        raise RuntimeError("v0.49 decision-critical blocker set changed")
+    if inventory["evidence_summary"]["preregistered_external_target_gates_passed"] != 0:
+        raise RuntimeError("v0.49 external-support state changed")
+    if inventory["evidence_summary"]["preregistered_external_target_gates_evaluated"] != 4:
+        raise RuntimeError("v0.49 external gate denominator changed")
+    if inventory["evidence_summary"]["current_fresh_independent_validation_dataset_available"]:
+        raise RuntimeError("v0.49 fresh-validation state changed")
     if current["model_family_decision"] != "HOLD":
         raise RuntimeError("v0.49 cannot synthesise a non-HOLD decision from this evidence snapshot")
     if current["pricing_change_authorised"]:
         raise RuntimeError("Pricing authority must remain false")
+    if disagreement["promotion_evidence_created"] or relativity["promotion_evidence_created"]:
+        raise RuntimeError("Post-hoc diagnostics must not become promotion evidence")
 
     freq = relativity["targets"]["frequency"]["relativity_change_distribution"]
     pp = relativity["targets"]["pure_premium"]["relativity_change_distribution"]
     f_top = disagreement["top_features_by_disagreement_reduction"]["frequency"][:3]
     p_top = disagreement["top_features_by_disagreement_reduction"]["pure_premium"][:3]
+    if [x["feature"] for x in f_top] != ["vehicle_brand", "policy_type", "vehicle_value"]:
+        raise RuntimeError("v0.49 frequency disagreement headline changed")
+    if [x["feature"] for x in p_top] != ["business_type", "power_to_weight_ratio", "vehicle_value"]:
+        raise RuntimeError("v0.49 pure-premium disagreement headline changed")
 
     selected_segments = []
     for dimension, group in [
@@ -231,7 +251,7 @@ def render_markdown(a: dict) -> str:
         "",
         "The current decision remains **`HOLD / HOLD_SHADOW_ONLY / EVIDENCE_GAP_HOLD`**. This pack does not reopen model-family promotion, authorise a serving change, estimate a customer premium, claim commercial uplift, or establish transfer to FIRST CENTRAL / the current UK motor market.",
         "",
-        "Source hashes are recorded in `results_v49/model_change_impact_assessment_v49.json` so this document fails closed if the persisted evidence it summarises changes.",
+        "Source hashes are recorded in `results_v49/model_change_impact_assessment_v49.json` for lineage. CI separately pins the decision-critical status, gate counts, blocker set and impact headlines used by this pack.",
     ]
     return "\n".join(lines) + "\n"
 
