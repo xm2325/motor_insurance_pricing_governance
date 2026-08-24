@@ -7,10 +7,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from build_deployment_bundle_v21 import canonicalise_features
 from deployment.contracts import CATEGORICAL_FEATURES, FEATURES, NUMERIC_FEATURES, feature_contract_hash
-from run_spanish_oot_2024 import DATA_PATH
 
+DATA_PATH = Path("data_spanish_2022_2024/Dataset_of_motor_insurance_portfolio.csv")
 OUTDIR = Path("results_v52")
 V51_SUMMARY = Path("action_results/v51/rating_factor_relativity_summary_v51.json")
 MISSING_LEVEL = "<MISSING>"
@@ -22,6 +21,16 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def canonicalise_support_features(frame: pd.DataFrame) -> pd.DataFrame:
+    out = frame[FEATURES].copy()
+    for feature in NUMERIC_FEATURES:
+        out[feature] = pd.to_numeric(out[feature], errors="coerce")
+    for feature in CATEGORICAL_FEATURES:
+        values = out[feature]
+        out[feature] = values.map(lambda value: str(value) if pd.notna(value) else np.nan)
+    return out
 
 
 def weighted_quantile(values: np.ndarray, weights: np.ndarray, q: float) -> float:
@@ -46,7 +55,7 @@ def read_feature_populations() -> tuple[pd.DataFrame, pd.DataFrame]:
     frame["total_exposure"] = pd.to_numeric(frame["total_exposure"], errors="coerce")
     valid = frame["total_exposure"].notna() & (frame["total_exposure"] > 0) & frame["year"].isin([2022, 2024])
     frame = frame.loc[valid].copy()
-    features = canonicalise_features(frame)
+    features = canonicalise_support_features(frame)
     features["year"] = frame["year"].astype(int).to_numpy()
     features["total_exposure"] = frame["total_exposure"].to_numpy(float)
     development = features.loc[features["year"] == 2022].reset_index(drop=True)
