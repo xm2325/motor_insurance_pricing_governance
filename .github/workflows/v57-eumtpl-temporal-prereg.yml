@@ -1,0 +1,137 @@
+name: euMTPL external temporal preregistration v0.57
+
+on:
+  pull_request:
+    paths:
+      - 'governance/external_temporal_prereg_v57.json'
+      - 'validate_external_temporal_prereg_v57.py'
+      - 'tests/test_external_temporal_prereg_v57.py'
+      - '.github/workflows/v57-eumtpl-temporal-prereg.yml'
+      - 'governance/external_validation_prereg_v40.json'
+      - 'action_results/v56/ACTION_V56_STATUS.json'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/external_temporal_prereg_v57.json'
+      - 'validate_external_temporal_prereg_v57.py'
+      - 'tests/test_external_temporal_prereg_v57.py'
+      - '.github/workflows/v57-eumtpl-temporal-prereg.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  external-temporal-preregistration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify v0.57 no-data preregistration contracts
+        run: python -m unittest -v tests/test_external_temporal_prereg_v57.py
+      - name: Seal v0.57 external-temporal protocol without row access
+        run: python validate_external_temporal_prereg_v57.py
+      - name: Assert preregistration-only boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('governance/external_temporal_prereg_v57.json').read_text())
+          r = json.loads(Path('results_v57/eumtpl_external_temporal_prereg_lock.json').read_text())
+          assert p['status'] == 'V57_EUMTPL_EXTERNAL_TEMPORAL_PREREGISTRATION_LOCKED'
+          assert p['pre_access_firewall']['row_level_access_allowed_in_v57'] is False
+          assert p['pre_access_firewall']['rda_download_allowed_in_v57'] is False
+          assert p['pre_access_firewall']['rda_decode_allowed_in_v57'] is False
+          assert r['registered_before_row_level_access'] is True
+          assert r['row_level_external_data_accessed'] is False
+          assert r['outcomes_inspected'] is False
+          assert r['source_dataset'] == 'euMTPL'
+          assert r['known_public_rows'] == 2373197
+          assert r['known_public_columns'] == 19
+          assert r['documented_year_count'] == 3
+          assert r['split']['source_group_used'] is False
+          assert r['split']['actual_year_labels_inspected'] is False
+          assert r['frequency_outcome'] == 'num_nc + num_cg + num_cd + num_fcd'
+          assert r['pure_premium_outcome'] == 'cost_nc + cost_cg + cost_cd + cost_fcd'
+          assert r['minimum_reproducibility_runs_for_positive_support'] == 2
+          assert r['committee_gate_pass_count'] == 5
+          assert r['committee_gate_count'] == 8
+          assert r['model_family_decision'] == 'HOLD'
+          assert r['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert r['promotion_review_status'] == 'NOT_OPEN'
+          PY
+      - name: Persist v0.57 rolling and immutable preregistration evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          RUN_DIR="action_results/v57/origin/${GITHUB_RUN_ID}"
+          mkdir -p action_results/v57 "$RUN_DIR"
+          cp governance/external_temporal_prereg_v57.json action_results/v57/
+          cp results_v57/eumtpl_external_temporal_prereg_lock.json action_results/v57/
+          cp governance/external_temporal_prereg_v57.json "$RUN_DIR/"
+          cp results_v57/eumtpl_external_temporal_prereg_lock.json "$RUN_DIR/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          run_id = os.environ['GITHUB_RUN_ID']
+          sha = os.environ['GITHUB_SHA']
+          rolling = Path('action_results/v57')
+          origin = rolling / 'origin' / run_id
+          base = {
+              'workflow': 'euMTPL external temporal preregistration v0.57',
+              'run_id': run_id,
+              'sha': sha,
+              'status': 'success',
+              'protocol_status': 'V57_EUMTPL_EXTERNAL_TEMPORAL_PREREGISTRATION_LOCKED',
+              'source_dataset': 'euMTPL',
+              'row_level_external_data_accessed': False,
+              'outcomes_inspected': False,
+              'actual_year_labels_inspected': False,
+              'chronological_split_registered': True,
+              'future_execution_requires_this_main_lock': True,
+              'future_row_level_execution_allowed_only_in_v58_or_later': True,
+              'committee_status': 'EVIDENCE_GAP_HOLD',
+              'committee_gate_pass_count': 5,
+              'committee_gate_count': 8,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+          }
+          rolling_status = dict(base, evidence_role='ROLLING_FRESH_EXTERNAL_TEMPORAL_PREREGISTRATION')
+          origin_status = dict(base, evidence_role='IMMUTABLE_FRESH_EXTERNAL_TEMPORAL_PREREGISTRATION_SNAPSHOT')
+          (rolling / 'ACTION_V57_STATUS.json').write_text(json.dumps(rolling_status, indent=2) + '\n')
+          (origin / 'ACTION_V57_STATUS.json').write_text(json.dumps(origin_status, indent=2) + '\n')
+
+          files = {}
+          for name in [
+              'ACTION_V57_STATUS.json',
+              'external_temporal_prereg_v57.json',
+              'eumtpl_external_temporal_prereg_lock.json',
+          ]:
+              files[name] = hashlib.sha256((origin / name).read_bytes()).hexdigest()
+          manifest = {'run_id': run_id, 'source_sha': sha, 'files': files}
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v57
+          if git diff --cached --quiet; then
+            echo 'No v0.57 preregistration evidence changes'
+          else
+            git commit -m "Persist v0.57 euMTPL temporal preregistration ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload v0.57 preregistration lock
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-eumtpl-temporal-prereg-v57
+          path: results_v57/
+          if-no-files-found: error
