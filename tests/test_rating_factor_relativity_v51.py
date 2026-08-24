@@ -110,8 +110,11 @@ class RatingFactorRelativityV51Tests(unittest.TestCase):
         self.assertFalse(b["customer_pricing_authorised"])
         self.assertFalse(b["actual_premium_or_quote"])
         lower = b["interpretation"].lower()
-        for phrase in ["not a population-average pdp", "not a customer premium", "not a model-promotion gate"]:
-            self.assertIn(phrase, lower)
+        self.assertIn("not a population-average pdp", lower)
+        self.assertIn("customer premium", lower)
+        self.assertIn("model-promotion gate", lower)
+        # The shared leading negation must govern the listed validation/causal/pricing/promotion concepts.
+        self.assertIn("not a population-average pdp, validation result, causal effect, customer premium or model-promotion gate", lower)
 
     def test_outputs_are_aggregate_reference_profiles_only(self):
         forbidden = {"insured_id", "total_claims", "total_exposure", "total_premium", "total_incurred"}
