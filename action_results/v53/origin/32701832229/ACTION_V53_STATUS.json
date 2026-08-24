@@ -1,0 +1,23 @@
+{
+  "workflow": "Rating-factor review pack v0.53",
+  "run_id": "32701832229",
+  "sha": "60b8049755ca738d7190ab1573e85acf9e7742fd",
+  "status": "success",
+  "scope": "aggregate_rating_structure_support_mix_and_impact_synthesis",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "driver_age_shape_gap": 0.26865990121735667,
+  "driver_age_strict_extrapolation_exposure_share": 1.5871206507159884e-05,
+  "business_type_mix_tv": 0.48595824222641637,
+  "business_type_unseen_exposure_share": 0.0,
+  "frequency_mean_absolute_portfolio_neutral_relativity_change": 0.10181561928799863,
+  "pure_premium_mean_absolute_portfolio_neutral_relativity_change": 0.322801992361319,
+  "committee_gate_pass_count": 5,
+  "committee_gate_count": 8,
+  "external_target_gates": "0/4",
+  "model_family_decision": "HOLD",
+  "serving_status": "HOLD_SHADOW_ONLY",
+  "promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false,
+  "evidence_role": "IMMUTABLE_AGGREGATE_RATING_FACTOR_REVIEW_PACK_SNAPSHOT"
+}

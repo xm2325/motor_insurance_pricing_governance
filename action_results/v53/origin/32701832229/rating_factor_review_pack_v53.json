@@ -1,0 +1,185 @@
+{
+  "status": "V53_RATING_FACTOR_REVIEW_PACK_COMPLETE",
+  "scope": "aggregate_rating_structure_support_mix_and_impact_synthesis",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_decisions_changed": false,
+  "new_performance_gate_created": false,
+  "new_support_threshold_created": false,
+  "composite_risk_score_created": false,
+  "customer_pricing_authorised": false,
+  "source_lineage": {
+    "v51_summary": {
+      "path": "action_results/v51/rating_factor_relativity_summary_v51.json",
+      "sha256": "5e3301de275acc5a85c7ad1567f0dd5b60a5c4ccfd66ed6ad2462f86a2009685"
+    },
+    "v51_numeric": {
+      "path": "action_results/v51/numeric_rating_factor_relativities_v51.csv",
+      "sha256": "d05189c2fa4ae0bfb995a7ee7d50ea320af7789c60356f9837b385fc404a091c"
+    },
+    "v51_categorical": {
+      "path": "action_results/v51/categorical_rating_factor_relativities_v51.csv",
+      "sha256": "548b17109d4cc2e84ee8c954108103ba55eff8a4fa50526979f2293df36b3fb6"
+    },
+    "v52_summary": {
+      "path": "action_results/v52/rating_factor_support_summary_v52.json",
+      "sha256": "74e91b779e30638085e56bffabb0cf501608bf8c338115e5524175a02e07a5ed"
+    },
+    "v52_numeric": {
+      "path": "action_results/v52/numeric_feature_support_v52.csv",
+      "sha256": "790ac716d36542db4b60fa1a9c6b7057dc563744b607401b8ae2c3189d78d677"
+    },
+    "v52_categorical": {
+      "path": "action_results/v52/categorical_feature_support_v52.csv",
+      "sha256": "5dac2f6b9c5ba9a85bd2958dfd2031c8dce81a7155e119980e2536faeeed6c2c"
+    },
+    "v52_levels": {
+      "path": "action_results/v52/categorical_level_shift_v52.csv",
+      "sha256": "dbe4a850d0cea082699582fbc31e1208207c8285cc7aa049583a101c3b7ea6ad"
+    },
+    "v49_impact": {
+      "path": "action_results/v49/model_change_impact_assessment_v49.json",
+      "sha256": "2dc3e2f703e12ee660c8229ec6ca76756a844a6dc41aa1a5563956d186decbdc"
+    }
+  },
+  "review_sequence": [
+    "RATING_STRUCTURE__WHAT_SHAPE_DID_EACH_MODEL_LEARN",
+    "FEATURE_SUPPORT__IS_CURRENT_BOOK_OUTSIDE_DEVELOPMENT_SUPPORT",
+    "PORTFOLIO_MIX__HAVE_KNOWN_RATING_CELLS_REWEIGHTED",
+    "PORTFOLIO_IMPACT__HOW_DIFFERENTLY_DO_FROZEN_MODEL_FAMILIES_REDISTRIBUTE_TECHNICAL_RISK",
+    "EVIDENCE_ADEQUACY__DO_VALIDATION_GATES_ALLOW_PROMOTION_REVIEW",
+    "PRICING_GOVERNANCE__SEPARATE_AUTHORISATION_REQUIRED"
+  ],
+  "rating_structure_and_support": {
+    "driver_age": {
+      "shape_gap": 0.26865990121735667,
+      "points": [
+        {
+          "quantile": 0.05,
+          "value": 30.0,
+          "glm_relativity": 0.8796810286266358,
+          "xgb_relativity": 1.0130138438545593,
+          "xgb_over_glm": 1.1515695017728,
+          "log_xgb_over_glm": 0.14112579605403006
+        },
+        {
+          "quantile": 0.5,
+          "value": 47.0,
+          "glm_relativity": 1.0,
+          "xgb_relativity": 1.0,
+          "xgb_over_glm": 1.0,
+          "log_xgb_over_glm": 0.0
+        },
+        {
+          "quantile": 0.95,
+          "value": 68.0,
+          "glm_relativity": 1.1715874768282517,
+          "xgb_relativity": 0.8955651976658229,
+          "xgb_over_glm": 0.764403184037369,
+          "log_xgb_over_glm": -0.26865990121735667
+        }
+      ],
+      "strict_extrapolation_share": 1.5871206507159884e-05,
+      "q05_q95_tail_share": 0.08748372087087354,
+      "development_median": 47.0,
+      "current_median": 49.0
+    },
+    "vehicle_age": {
+      "shape_gap": 0.26770589446186105,
+      "points": [
+        {
+          "quantile": 0.05,
+          "value": 7.0,
+          "glm_relativity": 1.30915813004366,
+          "xgb_relativity": 1.3384124928875694,
+          "xgb_over_glm": 1.0223459352789823,
+          "log_xgb_over_glm": 0.02209992303848774
+        },
+        {
+          "quantile": 0.5,
+          "value": 23.0,
+          "glm_relativity": 1.0,
+          "xgb_relativity": 1.0,
+          "xgb_over_glm": 1.0,
+          "log_xgb_over_glm": 0.0
+        },
+        {
+          "quantile": 0.95,
+          "value": 44.0,
+          "glm_relativity": 0.7021790363986598,
+          "xgb_relativity": 0.9177218082534805,
+          "xgb_over_glm": 1.3069626985167455,
+          "log_xgb_over_glm": 0.26770589446186105
+        }
+      ],
+      "strict_extrapolation_share": 7.935603253579942e-06,
+      "q05_q95_tail_share": 0.0927884216200358,
+      "development_median": 23.0,
+      "current_median": 26.0
+    },
+    "vehicle_value_counterexample": {
+      "shape_gap": 0.03393746743310981,
+      "strict_extrapolation_share": 1.4001447932343788e-05,
+      "q05_q95_tail_share": 0.09574485778888048
+    },
+    "business_type": {
+      "frequency_shape_gap": 0.02571338968862851,
+      "total_variation": 0.48595824222641637,
+      "unseen_exposure_share": 0.0,
+      "nb_development_share": 0.9677561751126499,
+      "nb_current_share": 0.4817979328862335,
+      "p_development_share": 0.0322438248873501,
+      "p_current_share": 0.5182020671137665
+    },
+    "vehicle_brand": {
+      "bmw_development_exposure_share_v51": 0.04144015375543345,
+      "bmw_glm_relativity": 1.3283456456215432,
+      "bmw_xgb_relativity": 1.1743947742520435,
+      "unseen_2024_level_count": 6,
+      "unseen_2024_exposure_share": 3.452530949776697e-05,
+      "mix_total_variation": 0.02041399489234728
+    }
+  },
+  "portfolio_neutral_impact": {
+    "frequency_mean_absolute_relativity_change": 0.10181561928799863,
+    "frequency_exposure_share_abs_change_gt_10pct": 0.36806017091811,
+    "frequency_exposure_share_abs_change_gt_20pct": 0.10979322361662487,
+    "pure_premium_mean_absolute_relativity_change": 0.322801992361319,
+    "pure_premium_exposure_share_abs_change_gt_10pct": 0.782600691988952,
+    "pure_premium_exposure_share_abs_change_gt_20pct": 0.5816832188493929,
+    "business_type_nb_pure_premium_total_relativity_change": 0.08665482206107122,
+    "business_type_p_pure_premium_total_relativity_change": -0.06530695889848193,
+    "technical_risk_not_customer_premium": true
+  },
+  "evidence_adequacy": {
+    "status": "EVIDENCE_GAP_HOLD",
+    "gate_pass_count": 5,
+    "gate_count": 8,
+    "blocker_ids": [
+      "G2_LOCKED_TEMPORAL_SUPPORT",
+      "G3_PREREGISTERED_EXTERNAL_SUPPORT",
+      "G4_FRESH_INDEPENDENT_EVIDENCE"
+    ],
+    "external_target_gates": "0/4",
+    "fresh_independent_validation_available": false
+  },
+  "current_disposition": {
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "model_promotion_authorised": false,
+    "pricing_change_authorised": false,
+    "impact_pack_disposition": "DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN"
+  },
+  "interpretation_boundaries": {
+    "v51_is_development_interpretability_not_validation": true,
+    "v52_is_label_free_support_mix_not_performance": true,
+    "strict_support_and_tail_shift_are_distinct": true,
+    "shape_gap_and_mix_shift_are_not_combined_into_score": true,
+    "portfolio_neutral_impact_is_not_customer_price": true,
+    "impact_and_monitoring_do_not_clear_validation_blockers": true,
+    "first_central_or_current_uk_transport_claimed": false,
+    "fairness_or_causal_conclusion_claimed": false,
+    "commercial_uplift_claimed": false
+  }
+}
