@@ -1,176 +1,33 @@
-name: Recruiter front-door sync v0.50
+name: Historical recruiter front-door audit v0.50
 
 on:
-  pull_request:
-    paths:
-      - 'scripts/refresh_repository_front_door_v50.py'
-      - 'scripts/refresh_interview_evidence_pack_v50.py'
-      - 'build_repository_front_door_summary_v50.py'
-      - 'tests/test_repository_front_door_v50.py'
-      - 'scripts/migrate_evidence_registry_v50.py'
-      - 'RESULTS_V50.md'
-      - '.github/workflows/v50-recruiter-front-door.yml'
-      - '.github/workflows/v45-repository-front-door.yml'
-      - 'MODEL_CHANGE_IMPACT_ASSESSMENT.md'
-      - 'action_results/v49/ACTION_V49_STATUS.json'
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/refresh_repository_front_door_v50.py'
-      - 'scripts/refresh_interview_evidence_pack_v50.py'
-      - 'build_repository_front_door_summary_v50.py'
-      - 'tests/test_repository_front_door_v50.py'
-      - 'scripts/migrate_evidence_registry_v50.py'
-      - 'RESULTS_V50.md'
-      - '.github/workflows/v50-recruiter-front-door.yml'
-      - '.github/workflows/v45-repository-front-door.yml'
-      - 'MODEL_CHANGE_IMPACT_ASSESSMENT.md'
-      - 'action_results/v49/ACTION_V49_STATUS.json'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  recruiter-front-door:
+  historical-front-door-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Preserve pre-refresh historical README body
-        run: cp README.md /tmp/README.before-v50.md
-      - name: Refresh README and interview pack idempotently
+      - name: Reproduce historical v0.50 front door in ephemeral worktree
         run: |
           python scripts/refresh_repository_front_door_v50.py
-          python scripts/refresh_repository_front_door_v50.py
           python scripts/refresh_interview_evidence_pack_v50.py
-          python scripts/refresh_interview_evidence_pack_v50.py
-      - name: Build v0.50 documentation audit
-        run: python build_repository_front_door_summary_v50.py
-      - name: Run v0.50 recruiter front-door contracts
-        run: python -m unittest -v tests/test_repository_front_door_v50.py
-      - name: Apply and verify evidence-registry migration
-        run: |
-          python scripts/migrate_evidence_registry_v50.py
-          python scripts/migrate_evidence_registry_v50.py
-      - name: Verify historical README body is byte-identical
+          python build_repository_front_door_summary_v50.py
+          python -m unittest -v tests/test_repository_front_door_v50.py
+      - name: Assert historical audit cannot write repository state
         run: |
           python - <<'PY'
           from pathlib import Path
-          before = Path('/tmp/README.before-v50.md').read_text(encoding='utf-8')
-          after = Path('README.md').read_text(encoding='utf-8')
-          marker = '\n---\n'
-          assert before.count(marker) == 1
-          assert after.count(marker) == 1
-          assert before.split(marker, 1)[1] == after.split(marker, 1)[1]
+          workflow = Path('.github/workflows/v50-recruiter-front-door.yml').read_text(encoding='utf-8')
+          assert '  push:' not in workflow
+          assert '  pull_request:' not in workflow
+          assert 'contents: read' in workflow
+          assert 'git push' not in workflow
+          assert 'push_evidence_with_rebase' not in workflow
           PY
-      - name: Verify documentation-only boundary and stale-writer retirement
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          s = json.loads(Path('results_v50/repository_front_door_summary_v50.json').read_text())
-          assert s['status'] == 'V50_RECRUITER_FRONT_DOOR_SYNC_PASS'
-          assert s['scope'] == 'documentation_and_evidence_navigation_only'
-          assert s['front_door_current_through'] == 'v0.49'
-          assert s['row_level_data_accessed'] is False
-          assert s['model_fit_executed'] is False
-          assert s['historical_model_or_validation_decisions_changed'] is False
-          assert s['v45_rolling_writer_frozen'] is True
-          assert all(s['checks'].values())
-          b = s['headline_boundaries']
-          assert b['benchmark_is_not_pricing_uplift'] is True
-          assert b['consumed_validation_not_relabelled_fresh'] is True
-          assert b['impact_diagnostics_not_new_performance_evidence'] is True
-          assert b['technical_relativity_not_customer_premium'] is True
-          assert b['tweedie_limitation_visible'] is True
-          assert b['first_central_or_current_uk_transfer_claimed'] is False
-          assert b['commercial_uplift_claimed'] is False
-          d = s['current_decision']
-          assert d['committee_status'] == 'EVIDENCE_GAP_HOLD'
-          assert (d['committee_gate_pass_count'], d['committee_gate_count']) == (5, 8)
-          assert d['external_target_gates'] == '0/4'
-          assert d['impact_pack_disposition'] == 'DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN'
-          assert d['model_family_decision'] == 'HOLD'
-          assert d['serving_status'] == 'HOLD_SHADOW_ONLY'
-          assert d['promotion_review_status'] == 'NOT_OPEN'
-          assert d['customer_pricing_authorised'] is False
-          v45 = Path('.github/workflows/v45-repository-front-door.yml').read_text(encoding='utf-8')
-          assert '  push:' not in v45
-          assert '  pull_request:' not in v45
-          assert 'contents: read' in v45
-          assert 'git push' not in v45
-          PY
-      - name: Persist v0.50 rolling front door and immutable audit
-        if: github.event_name == 'push' && github.ref_name == 'main'
-        run: |
-          mkdir -p action_results/v50
-          cp results_v50/repository_front_door_summary_v50.json action_results/v50/
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          s = json.loads(Path('results_v50/repository_front_door_summary_v50.json').read_text())
-          d = s['current_decision']
-          status = {
-              'workflow': 'Recruiter front-door sync v0.50',
-              'run_id': os.environ.get('GITHUB_RUN_ID'),
-              'sha': os.environ.get('GITHUB_SHA'),
-              'status': 'success',
-              'scope': s['scope'],
-              'front_door_current_through': s['front_door_current_through'],
-              'row_level_data_accessed': False,
-              'model_fit_executed': False,
-              'historical_model_or_validation_decisions_changed': False,
-              'v45_rolling_writer_frozen': True,
-              'readme_historical_body_sha256': s['readme_historical_body_sha256'],
-              'committee_status': d['committee_status'],
-              'committee_gate_pass_count': d['committee_gate_pass_count'],
-              'committee_gate_count': d['committee_gate_count'],
-              'external_target_gates': d['external_target_gates'],
-              'impact_pack_disposition': d['impact_pack_disposition'],
-              'model_family_decision': d['model_family_decision'],
-              'serving_status': d['serving_status'],
-              'promotion_review_status': d['promotion_review_status'],
-              'customer_pricing_authorised': d['customer_pricing_authorised'],
-              'evidence_role': 'ROLLING_RECRUITER_FRONT_DOOR_SYNC',
-          }
-          Path('action_results/v50/ACTION_V50_STATUS.json').write_text(
-              json.dumps(status, indent=2), encoding='utf-8'
-          )
-          PY
-          origin_dir="action_results/v50/origin/${GITHUB_RUN_ID}"
-          if [ -e "$origin_dir" ]; then
-            echo "Refusing to overwrite immutable v0.50 origin snapshot: $origin_dir" >&2
-            exit 1
-          fi
-          mkdir -p "$origin_dir"
-          cp action_results/v50/repository_front_door_summary_v50.json "$origin_dir/"
-          cp action_results/v50/ACTION_V50_STATUS.json "$origin_dir/"
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          p = Path('action_results/v50/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V50_STATUS.json'
-          s = json.loads(p.read_text(encoding='utf-8'))
-          s['evidence_role'] = 'IMMUTABLE_RECRUITER_FRONT_DOOR_SYNC_SNAPSHOT'
-          p.write_text(json.dumps(s, indent=2), encoding='utf-8')
-          PY
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- README.md INTERVIEW_EVIDENCE_PACK.md EVIDENCE_REGISTRY.md action_results/v50
-          if git diff --cached --quiet; then
-            echo 'No v0.50 front-door changes'
-          else
-            git commit -m "Persist v0.50 recruiter front-door sync ${GITHUB_RUN_ID}"
-            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
-          fi
-      - name: Upload v0.50 documentation audit
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: motor-pricing-recruiter-front-door-v50
-          path: results_v50/
-          if-no-files-found: error
