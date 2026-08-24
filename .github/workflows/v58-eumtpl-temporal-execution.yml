@@ -6,6 +6,8 @@ on:
       - 'download_eumtpl_motor_v58.py'
       - 'record_eumtpl_schema_contract_incident_v58.py'
       - 'tests/test_eumtpl_external_temporal_v58.py'
+      - 'scripts/migrate_evidence_registry_v58.py'
+      - 'RESULTS_V58.md'
       - '.github/workflows/v58-eumtpl-temporal-execution.yml'
       - 'governance/external_temporal_prereg_v57.json'
       - 'action_results/v57/**'
@@ -15,6 +17,8 @@ on:
       - 'download_eumtpl_motor_v58.py'
       - 'record_eumtpl_schema_contract_incident_v58.py'
       - 'tests/test_eumtpl_external_temporal_v58.py'
+      - 'scripts/migrate_evidence_registry_v58.py'
+      - 'RESULTS_V58.md'
       - '.github/workflows/v58-eumtpl-temporal-execution.yml'
       - 'governance/external_temporal_prereg_v57.json'
   workflow_dispatch:
@@ -46,6 +50,14 @@ jobs:
         run: python download_eumtpl_motor_v58.py
       - name: Record schema mismatch without outcome-value or model inspection
         run: python record_eumtpl_schema_contract_incident_v58.py
+      - name: Apply and verify v0.57-v0.58 evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v58.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v58_once.md
+          python scripts/migrate_evidence_registry_v58.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v58_once.md
+          grep -F '| v0.58 euMTPL source-contract incident |' EVIDENCE_REGISTRY.md
+          grep -F 'Decoding a fresh external object consumes fresh-confirmatory eligibility' EVIDENCE_REGISTRY.md
       - name: Assert fail-closed incident boundary
         run: |
           python - <<'PY'
@@ -149,7 +161,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- action_results/v58
+          git add -- action_results/v58 EVIDENCE_REGISTRY.md
           if git diff --cached --quiet; then
             echo 'No v0.58 incident evidence changes'
           else
