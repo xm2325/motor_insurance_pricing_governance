@@ -1,0 +1,49 @@
+{
+  "status": "V50_RECRUITER_FRONT_DOOR_SYNC_PASS",
+  "scope": "documentation_and_evidence_navigation_only",
+  "front_door_current_through": "v0.49",
+  "row_level_data_accessed": false,
+  "model_fit_executed": false,
+  "historical_model_or_validation_decisions_changed": false,
+  "v45_rolling_writer_frozen": true,
+  "readme_historical_body_sha256": "fa5c9fa71a268d7beceedabc284b8f745ab8b3a3f87ac0080707186fd9bc9ee7",
+  "checks": {
+    "readme_has_v47_disagreement": true,
+    "readme_has_v48_frequency_impact": true,
+    "readme_has_v48_pure_premium_impact": true,
+    "readme_has_v49_disposition": true,
+    "readme_links_impact_pack": true,
+    "readme_keeps_consumed_validation": true,
+    "interview_has_v47_section": true,
+    "interview_has_v48_section": true,
+    "interview_has_v49_section": true,
+    "interview_explains_78pct_not_premium": true,
+    "impact_pack_current_disposition": true,
+    "v49_main_evidence_success": true,
+    "v49_committee_still_hold": true,
+    "v49_pricing_still_unauthorised": true,
+    "historical_v45_push_listener_removed": true,
+    "historical_v45_pr_listener_removed": true,
+    "historical_v45_is_manual_audit": true
+  },
+  "headline_boundaries": {
+    "benchmark_is_not_pricing_uplift": true,
+    "consumed_validation_not_relabelled_fresh": true,
+    "impact_diagnostics_not_new_performance_evidence": true,
+    "technical_relativity_not_customer_premium": true,
+    "tweedie_limitation_visible": true,
+    "first_central_or_current_uk_transfer_claimed": false,
+    "commercial_uplift_claimed": false
+  },
+  "current_decision": {
+    "committee_status": "EVIDENCE_GAP_HOLD",
+    "committee_gate_pass_count": 5,
+    "committee_gate_count": 8,
+    "external_target_gates": "0/4",
+    "impact_pack_disposition": "DO_NOT_OPEN_PROMOTION_REVIEW__EVIDENCE_BLOCKERS_REMAIN",
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false
+  }
+}
