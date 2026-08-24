@@ -1,0 +1,171 @@
+name: Rating-factor review pack v0.53
+
+on:
+  pull_request:
+    paths:
+      - 'build_rating_factor_review_pack_v53.py'
+      - 'tests/test_rating_factor_review_pack_v53.py'
+      - 'scripts/migrate_evidence_registry_v53.py'
+      - 'RESULTS_V53.md'
+      - '.github/workflows/v53-rating-factor-review-pack.yml'
+      - 'action_results/v49/**'
+      - 'action_results/v51/**'
+      - 'action_results/v52/**'
+  push:
+    branches: [main]
+    paths:
+      - 'build_rating_factor_review_pack_v53.py'
+      - 'tests/test_rating_factor_review_pack_v53.py'
+      - 'scripts/migrate_evidence_registry_v53.py'
+      - 'RESULTS_V53.md'
+      - '.github/workflows/v53-rating-factor-review-pack.yml'
+      - 'action_results/v49/**'
+      - 'action_results/v51/**'
+      - 'action_results/v52/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rating-factor-review-pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify aggregate-only generator boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          source = Path('build_rating_factor_review_pack_v53.py').read_text(encoding='utf-8')
+          for forbidden in [
+              'run_spanish_oot_2024', 'DATA_PATH', 'pandas', 'sklearn', 'xgboost', '.fit(',
+              'total_claims', 'total_incurred', 'total_premium', 'insured_id'
+          ]:
+              assert forbidden not in source, forbidden
+          PY
+
+      - name: Build rating-factor review pack
+        run: python build_rating_factor_review_pack_v53.py
+
+      - name: Run v0.53 contracts
+        run: python -m unittest -v tests/test_rating_factor_review_pack_v53.py
+
+      - name: Verify deterministic generation
+        run: |
+          cp results_v53/rating_factor_review_pack_v53.json /tmp/rating_factor_review_pack_v53.once.json
+          cp RATING_FACTOR_REVIEW_PACK.md /tmp/RATING_FACTOR_REVIEW_PACK.once.md
+          python build_rating_factor_review_pack_v53.py
+          cmp results_v53/rating_factor_review_pack_v53.json /tmp/rating_factor_review_pack_v53.once.json
+          cmp RATING_FACTOR_REVIEW_PACK.md /tmp/RATING_FACTOR_REVIEW_PACK.once.md
+
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v53.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v53.once.md
+          python scripts/migrate_evidence_registry_v53.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v53.once.md
+
+      - name: Assert evidence-first non-promotional boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a = json.loads(Path('results_v53/rating_factor_review_pack_v53.json').read_text())
+          assert a['scope'] == 'aggregate_rating_structure_support_mix_and_impact_synthesis'
+          assert a['row_level_data_accessed'] is False
+          assert a['model_fit_executed'] is False
+          assert a['historical_decisions_changed'] is False
+          assert a['new_performance_gate_created'] is False
+          assert a['new_support_threshold_created'] is False
+          assert a['composite_risk_score_created'] is False
+          assert a['customer_pricing_authorised'] is False
+          assert a['evidence_adequacy']['status'] == 'EVIDENCE_GAP_HOLD'
+          assert (a['evidence_adequacy']['gate_pass_count'], a['evidence_adequacy']['gate_count']) == (5, 8)
+          assert a['evidence_adequacy']['external_target_gates'] == '0/4'
+          assert a['current_disposition']['model_family_decision'] == 'HOLD'
+          assert a['current_disposition']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert a['current_disposition']['promotion_review_status'] == 'NOT_OPEN'
+          assert a['current_disposition']['pricing_change_authorised'] is False
+          PY
+          test ! -e results_v53/predictions.csv
+          test ! -e results_v53/raw_rows.csv
+
+      - name: Persist v0.53 review evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v53
+          cp results_v53/rating_factor_review_pack_v53.json action_results/v53/
+          cp RATING_FACTOR_REVIEW_PACK.md action_results/v53/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          a = json.loads(Path('results_v53/rating_factor_review_pack_v53.json').read_text())
+          rs = a['rating_structure_and_support']
+          impact = a['portfolio_neutral_impact']
+          Path('action_results/v53/ACTION_V53_STATUS.json').write_text(json.dumps({
+              'workflow': 'Rating-factor review pack v0.53',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'scope': a['scope'],
+              'row_level_data_accessed': False,
+              'model_fit_executed': False,
+              'driver_age_shape_gap': rs['driver_age']['shape_gap'],
+              'driver_age_strict_extrapolation_exposure_share': rs['driver_age']['strict_extrapolation_share'],
+              'business_type_mix_tv': rs['business_type']['total_variation'],
+              'business_type_unseen_exposure_share': rs['business_type']['unseen_exposure_share'],
+              'frequency_mean_absolute_portfolio_neutral_relativity_change': impact['frequency_mean_absolute_relativity_change'],
+              'pure_premium_mean_absolute_portfolio_neutral_relativity_change': impact['pure_premium_mean_absolute_relativity_change'],
+              'committee_gate_pass_count': a['evidence_adequacy']['gate_pass_count'],
+              'committee_gate_count': a['evidence_adequacy']['gate_count'],
+              'external_target_gates': a['evidence_adequacy']['external_target_gates'],
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+              'evidence_role': 'ROLLING_AGGREGATE_RATING_FACTOR_REVIEW_PACK',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v53/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.53 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v53/rating_factor_review_pack_v53.json "$origin_dir/"
+          cp action_results/v53/RATING_FACTOR_REVIEW_PACK.md "$origin_dir/"
+          cp action_results/v53/ACTION_V53_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path('action_results/v53/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V53_STATUS.json'
+          s = json.loads(p.read_text(encoding='utf-8'))
+          s['evidence_role'] = 'IMMUTABLE_AGGREGATE_RATING_FACTOR_REVIEW_PACK_SNAPSHOT'
+          p.write_text(json.dumps(s, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md RATING_FACTOR_REVIEW_PACK.md action_results/v53
+          if git diff --cached --quiet; then
+            echo 'No v0.53 evidence changes'
+          else
+            git commit -m "Persist v0.53 rating-factor review pack ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+
+      - name: Upload v0.53 review pack
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-rating-factor-review-pack-v53
+          path: |
+            results_v53/rating_factor_review_pack_v53.json
+            RATING_FACTOR_REVIEW_PACK.md
+          if-no-files-found: error
