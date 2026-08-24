@@ -28,13 +28,11 @@ def main() -> None:
 
     # Freeze the numerical/model question to the already-preregistered v0.40
     # model family rather than tuning to the new portfolio.
-    assert p["models"] == v40["models"] | {
-        "post_result_solver_or_parameter_change_allowed": False
-    } if False else p["models"]
     for key in ("frequency_glm", "frequency_xgb", "pure_premium_glm", "pure_premium_xgb"):
         assert p["models"][key] == v40["models"][key]
     assert p["models"]["hyperparameter_search_allowed"] is False
     assert p["models"]["early_stopping_allowed"] is False
+    assert p["models"]["post_result_solver_or_parameter_change_allowed"] is False
     assert p["calibration"]["scale_guardrails"] == v40["calibration"]["scale_guardrails"]
     gate = p["registered_external_temporal_gate"]
     old_gate = v40["registered_external_replication_gate"]
@@ -43,6 +41,8 @@ def main() -> None:
     assert gate["maximum_additional_abs_log_aggregate_calibration_error"] == old_gate["maximum_additional_abs_log_aggregate_calibration_error"]
     assert p["paired_bootstrap"]["draws"] == v40["paired_bootstrap"]["draws"] == 500
     assert p["runtime_reproducibility"]["minimum_independent_actions_executions_for_positive_external_support"] == 2
+    assert p["runtime_reproducibility"]["point_metric_relative_tolerance"] == v40["runtime_reproducibility"]["point_metric_relative_tolerance"]
+    assert p["runtime_reproducibility"]["point_metric_absolute_tolerance"] == v40["runtime_reproducibility"]["point_metric_absolute_tolerance"]
 
     # The preregistration does not rewrite governance readiness.
     assert v56["committee_status"] == "EVIDENCE_GAP_HOLD"
