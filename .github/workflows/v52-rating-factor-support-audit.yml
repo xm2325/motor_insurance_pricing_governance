@@ -5,6 +5,8 @@ on:
     paths:
       - 'run_rating_factor_support_audit_v52.py'
       - 'tests/test_rating_factor_support_v52.py'
+      - 'scripts/migrate_evidence_registry_v52.py'
+      - 'RESULTS_V52.md'
       - '.github/workflows/v52-rating-factor-support-audit.yml'
       - 'deployment/contracts.py'
       - 'download_spanish_motor_2022_2024.py'
@@ -15,6 +17,8 @@ on:
     paths:
       - 'run_rating_factor_support_audit_v52.py'
       - 'tests/test_rating_factor_support_v52.py'
+      - 'scripts/migrate_evidence_registry_v52.py'
+      - 'RESULTS_V52.md'
       - '.github/workflows/v52-rating-factor-support-audit.yml'
       - 'deployment/contracts.py'
       - 'action_results/v51/**'
@@ -57,6 +61,12 @@ jobs:
         run: python run_rating_factor_support_audit_v52.py
       - name: Run v0.52 contracts
         run: python -m unittest -v tests/test_rating_factor_support_v52.py
+      - name: Apply and verify evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v52.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v52.once.md
+          python scripts/migrate_evidence_registry_v52.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY.v52.once.md
       - name: Assert no outcomes, model fit, subjective score or row-level persistence
         run: |
           python - <<'PY'
@@ -86,6 +96,75 @@ jobs:
           if find results_v52 -type f \( -name '*.joblib' -o -name '*.ubj' -o -name '*.pkl' -o -name '*.parquet' \) | grep -q .; then
             echo 'v0.52 must persist aggregate support diagnostics only' >&2
             exit 1
+          fi
+      - name: Persist v0.52 support and mix evidence
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          mkdir -p action_results/v52
+          cp results_v52/rating_factor_support_summary_v52.json action_results/v52/
+          cp results_v52/numeric_feature_support_v52.csv action_results/v52/
+          cp results_v52/categorical_feature_support_v52.csv action_results/v52/
+          cp results_v52/categorical_level_shift_v52.csv action_results/v52/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          s = json.loads(Path('results_v52/rating_factor_support_summary_v52.json').read_text())
+          numeric = s['numeric_features']
+          categorical = s['categorical_features']
+          Path('action_results/v52/ACTION_V52_STATUS.json').write_text(json.dumps({
+              'workflow': 'Rating-factor support audit v0.52',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'analysis_role': s['analysis_role'],
+              'source_years_read': s['source']['years_read'],
+              'development_rows': s['source']['development_rows'],
+              'current_rows': s['source']['current_rows'],
+              'claim_outcomes_read': False,
+              'model_fit_executed': False,
+              'validation_performance_evidence_created': False,
+              'candidate_selection_allowed': False,
+              'model_promotion_evidence_created': False,
+              'customer_pricing_authorised': False,
+              'persisted_row_level_data': False,
+              'max_numeric_strict_extrapolation_feature': s['rankings']['numeric_strict_extrapolation'][0],
+              'max_numeric_strict_extrapolation_exposure_share': numeric[s['rankings']['numeric_strict_extrapolation'][0]]['current_outside_development_observed_range_exposure_share'],
+              'top_categorical_mix_shift_feature': s['rankings']['categorical_mix_shift'][0],
+              'top_categorical_mix_tv': categorical[s['rankings']['categorical_mix_shift'][0]]['total_variation_distance_2022_vs_2024'],
+              'business_type_unseen_exposure_share': categorical['business_type']['current_unseen_nonmissing_exposure_share'],
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'committee_readiness': 'EVIDENCE_GAP_HOLD',
+              'evidence_role': 'ROLLING_LABEL_FREE_FEATURE_SUPPORT_AUDIT',
+          }, indent=2), encoding='utf-8')
+          PY
+          origin_dir="action_results/v52/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.52 origin snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v52/rating_factor_support_summary_v52.json "$origin_dir/"
+          cp action_results/v52/numeric_feature_support_v52.csv "$origin_dir/"
+          cp action_results/v52/categorical_feature_support_v52.csv "$origin_dir/"
+          cp action_results/v52/categorical_level_shift_v52.csv "$origin_dir/"
+          cp action_results/v52/ACTION_V52_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path('action_results/v52/origin') / os.environ['GITHUB_RUN_ID'] / 'ACTION_V52_STATUS.json'
+          s = json.loads(p.read_text(encoding='utf-8'))
+          s['evidence_role'] = 'IMMUTABLE_LABEL_FREE_FEATURE_SUPPORT_AUDIT_SNAPSHOT'
+          p.write_text(json.dumps(s, indent=2), encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- EVIDENCE_REGISTRY.md action_results/v52
+          if git diff --cached --quiet; then
+            echo 'No v0.52 evidence changes'
+          else
+            git commit -m "Persist v0.52 rating-factor support audit ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
           fi
       - name: Upload v0.52 aggregate support audit
         if: always()
