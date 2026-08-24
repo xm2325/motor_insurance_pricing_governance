@@ -1,42 +1,35 @@
-name: euMTPL external temporal replication v0.58
+name: euMTPL source-contract incident v0.58
 
 on:
   pull_request:
     paths:
       - 'download_eumtpl_motor_v58.py'
-      - 'run_eumtpl_external_temporal_replication_v58.py'
+      - 'record_eumtpl_schema_contract_incident_v58.py'
       - 'tests/test_eumtpl_external_temporal_v58.py'
       - '.github/workflows/v58-eumtpl-temporal-execution.yml'
       - 'governance/external_temporal_prereg_v57.json'
       - 'action_results/v57/**'
-      - 'external_validation/**'
   push:
     branches: [main]
     paths:
       - 'download_eumtpl_motor_v58.py'
-      - 'run_eumtpl_external_temporal_replication_v58.py'
+      - 'record_eumtpl_schema_contract_incident_v58.py'
       - 'tests/test_eumtpl_external_temporal_v58.py'
       - '.github/workflows/v58-eumtpl-temporal-execution.yml'
       - 'governance/external_temporal_prereg_v57.json'
-      - 'external_validation/**'
   workflow_dispatch:
 
 concurrency:
-  group: v58-eumtpl-temporal-${{ github.workflow }}-${{ github.ref }}
+  group: v58-eumtpl-schema-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
-env:
-  OMP_NUM_THREADS: '1'
-  OPENBLAS_NUM_THREADS: '1'
-  MKL_NUM_THREADS: '1'
-
 jobs:
-  eumtpl-external-temporal-first-execution:
+  eumtpl-source-contract-incident:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,92 +38,97 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Install frozen modelling and R-data dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyreadr==0.5.3
-      - name: Verify v0.57 main lock and v0.58 contracts before data access
+      - name: Install frozen R-data reader
+        run: pip install pyreadr==0.5.3
+      - name: Verify fail-closed v0.58 contracts before repeated decode
         run: python -m unittest -v tests/test_eumtpl_external_temporal_v58.py
-      - name: Fetch and verify pinned euMTPL binary before decode
+      - name: Fetch and verify the same pinned euMTPL binary before decode
         run: python download_eumtpl_motor_v58.py
-      - name: Execute frozen chronological euMTPL replication once
-        run: python run_eumtpl_external_temporal_replication_v58.py
-      - name: Verify first-execution temporal and governance boundary
+      - name: Record schema mismatch without outcome-value or model inspection
+        run: python record_eumtpl_schema_contract_incident_v58.py
+      - name: Assert fail-closed incident boundary
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          r = json.loads(Path('results_v58/eumtpl_external_temporal_first_execution.json').read_text())
-          assert r['status'] == 'V58_EUMTPL_EXTERNAL_TEMPORAL_FIRST_EXECUTION_COMPLETE'
-          assert r['preregistration']['sha256'] == 'a2b49e26aeca619323129ee4b56ff39d110cf68a08bfe0064fbd3f5886f74ff5'
-          assert r['preregistration']['v57_main_sha'] == 'cacb55a039c6132b7c2466f6356903250dc624d3'
-          assert r['preregistration']['registered_before_row_level_access'] is True
-          assert r['preregistration']['rules_changed_after_registration'] is False
-          assert len(r['source']['year_labels']) == 3
-          assert r['source']['row_level_data_accessed'] is True
-          assert r['source']['outcomes_inspected'] is True
-          assert r['source']['raw_data_persisted_to_repository'] is False
-          assert r['split']['train_year'] < r['split']['calibration_year'] < r['split']['locked_test_year']
-          assert r['split']['source_group_used'] is False
-          assert r['split']['outcome_stratified'] is False
-          assert r['split']['resplit_after_outcome_inspection'] is False
-          assert r['features']['preprocessor_fit_on_train_year_only'] is True
-          assert r['features']['policy_id_used_as_predictor'] is False
-          assert r['features']['year_used_as_predictor'] is False
-          assert r['features']['source_group_used_as_predictor'] is False
-          assert r['reproducibility']['registered_minimum_independent_executions_for_positive_support'] == 2
-          assert r['reproducibility']['executions_completed_for_this_new_portfolio'] == 1
-          assert r['reproducibility']['positive_external_support_authorised'] is False
-          assert r['decision']['model_family_decision'] == 'HOLD'
-          assert r['decision']['serving_status'] == 'HOLD_SHADOW_ONLY'
-          assert r['decision']['promotion_review_status'] == 'NOT_OPEN'
-          assert r['decision']['model_promotion_authorised'] is False
-          assert r['decision']['pricing_change_authorised'] is False
-          assert r['persisted_row_level_data'] is False
+          r = json.loads(Path('results_v58/eumtpl_schema_contract_incident_v58.json').read_text())
+          assert r['status'] == 'V58_FAIL_CLOSED_SOURCE_SCHEMA_PREREGISTRATION_MISMATCH'
+          assert r['v57_protocol_sha256'] == 'a2b49e26aeca619323129ee4b56ff39d110cf68a08bfe0064fbd3f5886f74ff5'
+          assert r['v57_main_sha'] == 'cacb55a039c6132b7c2466f6356903250dc624d3'
+          assert r['source_identity']['git_blob_sha1'] == '4bb386d89606eb5b529206d0835e11074103042b'
+          assert r['source_identity']['binary_identity_passed_before_decode'] is True
+          assert r['registered_only_columns'] == ['cost_fcd', 'num_fcd']
+          assert r['decoded_only_columns'] == ['cost_fcg', 'num_fcg']
+          assert r['same_column_set'] is False
+          assert r['same_column_order'] is False
+          a = r['access_boundary']
+          assert a['row_level_dataset_access_occurred'] is True
+          assert a['outcome_values_inspected'] is False
+          assert a['year_values_inspected'] is False
+          assert a['model_fit_executed'] is False
+          assert a['calibration_executed'] is False
+          assert a['locked_test_performance_metrics_computed'] is False
+          assert a['registered_gate_evaluated'] is False
+          g = r['governance']
+          assert g['confirmatory_external_temporal_evidence_created'] is False
+          assert g['euMTPL_still_eligible_as_fresh_confirmatory_dataset'] is False
+          assert g['post_access_schema_amendment_used_for_confirmatory_claim'] is False
+          assert g['committee_gate_pass_count'] == 5
+          assert g['committee_gate_count'] == 8
+          assert g['model_family_decision'] == 'HOLD'
+          assert g['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert g['promotion_review_status'] == 'NOT_OPEN'
+          assert g['customer_pricing_authorised'] is False
           print(json.dumps({
-              'years': r['source']['year_labels'],
-              'split_rows': {k: r['split'][k]['rows'] for k in ('train','calibration','locked_test')},
-              'frequency_decision': r['frequency']['registered_gate']['decision'],
-              'frequency_relative_improvement': r['frequency']['registered_gate']['relative_deviance_improvement'],
-              'frequency_bootstrap_q025': r['frequency']['paired_bootstrap_relative_deviance_improvement']['q025'],
-              'pure_premium_decision': r['pure_premium']['registered_gate']['decision'],
-              'pure_premium_relative_improvement': r['pure_premium']['registered_gate']['relative_deviance_improvement'],
-              'pure_premium_bootstrap_q025': r['pure_premium']['paired_bootstrap_relative_deviance_improvement']['q025'],
-              'positive_support_authorised': False,
+              'status': r['status'],
+              'file_sha256': r['source_identity']['file_sha256'],
+              'registered_only_columns': r['registered_only_columns'],
+              'decoded_only_columns': r['decoded_only_columns'],
+              'model_fit_executed': a['model_fit_executed'],
+              'performance_metrics_computed': a['locked_test_performance_metrics_computed'],
+              'fresh_confirmatory_eligible': g['euMTPL_still_eligible_as_fresh_confirmatory_dataset'],
           }, indent=2))
           PY
-      - name: Persist aggregate v0.58 first-execution evidence only
+      - name: Persist aggregate v0.58 incident evidence only
         if: github.event_name == 'push' && github.ref_name == 'main'
         run: |
           set -euo pipefail
           mkdir -p action_results/v58
           cp results_v58/eumtpl_source_binary_audit.json action_results/v58/
-          cp results_v58/eumtpl_external_temporal_first_execution.json action_results/v58/
+          cp results_v58/eumtpl_schema_contract_incident_v58.json action_results/v58/
           python - <<'PY'
           import json, os
           from pathlib import Path
           Path('action_results/v58/ACTION_V58_STATUS.json').write_text(json.dumps({
-              'workflow': 'euMTPL external temporal replication v0.58',
+              'workflow': 'euMTPL source-contract incident v0.58',
               'run_id': os.environ.get('GITHUB_RUN_ID'),
               'sha': os.environ.get('GITHUB_SHA'),
               'status': 'success',
+              'incident_status': 'V58_FAIL_CLOSED_SOURCE_SCHEMA_PREREGISTRATION_MISMATCH',
+              'row_level_dataset_access_occurred': True,
+              'outcome_values_inspected': False,
+              'year_values_inspected': False,
+              'model_fit_executed': False,
+              'performance_metrics_computed': False,
+              'confirmatory_external_temporal_evidence_created': False,
+              'eumtpl_fresh_confirmatory_eligible': False,
               'raw_external_data_persisted': False,
-              'positive_external_support_authorised': False,
-              'execution_ordinal': 1,
+              'committee_gate_pass_count': 5,
+              'committee_gate_count': 8,
               'model_family_decision': 'HOLD',
               'serving_status': 'HOLD_SHADOW_ONLY',
               'promotion_review_status': 'NOT_OPEN',
-              'evidence_role': 'ROLLING_LATEST_EUMTPL_TEMPORAL_FIRST_EXECUTION',
+              'evidence_role': 'ROLLING_EUMTPL_SOURCE_CONTRACT_INCIDENT',
           }, indent=2) + '\n', encoding='utf-8')
           PY
           origin_dir="action_results/v58/origin/${GITHUB_RUN_ID}"
           if [ -e "$origin_dir" ]; then
-            echo "Refusing to overwrite immutable v0.58 origin snapshot: $origin_dir" >&2
+            echo "Refusing to overwrite immutable v0.58 incident snapshot: $origin_dir" >&2
             exit 1
           fi
           mkdir -p "$origin_dir"
           cp action_results/v58/eumtpl_source_binary_audit.json "$origin_dir/"
-          cp action_results/v58/eumtpl_external_temporal_first_execution.json "$origin_dir/"
+          cp action_results/v58/eumtpl_schema_contract_incident_v58.json "$origin_dir/"
           cp action_results/v58/ACTION_V58_STATUS.json "$origin_dir/"
           python - <<'PY'
           import hashlib, json, os
@@ -138,10 +136,10 @@ jobs:
           origin = Path('action_results/v58/origin') / os.environ['GITHUB_RUN_ID']
           status_path = origin / 'ACTION_V58_STATUS.json'
           status = json.loads(status_path.read_text())
-          status['evidence_role'] = 'IMMUTABLE_EUMTPL_TEMPORAL_FIRST_EXECUTION_SNAPSHOT'
+          status['evidence_role'] = 'IMMUTABLE_EUMTPL_SOURCE_CONTRACT_INCIDENT_SNAPSHOT'
           status_path.write_text(json.dumps(status, indent=2) + '\n')
           files = {}
-          for name in ['ACTION_V58_STATUS.json','eumtpl_source_binary_audit.json','eumtpl_external_temporal_first_execution.json']:
+          for name in ['ACTION_V58_STATUS.json','eumtpl_source_binary_audit.json','eumtpl_schema_contract_incident_v58.json']:
               files[name] = hashlib.sha256((origin / name).read_bytes()).hexdigest()
           (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
               'run_id': os.environ['GITHUB_RUN_ID'],
@@ -153,9 +151,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- action_results/v58
           if git diff --cached --quiet; then
-            echo 'No v0.58 aggregate evidence changes'
+            echo 'No v0.58 incident evidence changes'
           else
-            git commit -m "Persist v0.58 euMTPL temporal first execution ${GITHUB_RUN_ID}"
+            git commit -m "Persist v0.58 euMTPL schema incident ${GITHUB_RUN_ID}"
             bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
           fi
       - name: Assert raw euMTPL data are not staged
@@ -165,10 +163,10 @@ jobs:
             echo 'Raw euMTPL external data must never be tracked' >&2
             exit 1
           fi
-      - name: Upload aggregate euMTPL temporal first-execution evidence
+      - name: Upload aggregate euMTPL schema-incident evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: motor-pricing-eumtpl-temporal-replication-v58
+          name: motor-pricing-eumtpl-schema-incident-v58
           path: results_v58/
-          if-no-files-found: warn
+          if-no-files-found: error
