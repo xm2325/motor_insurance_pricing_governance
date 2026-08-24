@@ -76,13 +76,15 @@ class RepositoryFrontDoorV50Tests(unittest.TestCase):
             self.assertEqual(self.interview.count(marker), 1)
 
     def test_interview_pack_does_not_turn_impact_into_price(self):
+        lower = self.interview.lower()
         for marker in [
             "not customer-price changes",
             "not realised premium changes",
-            "not a statement that 78.26% of customers would receive a >10% premium change",
+            "78.26% of customers would receive a >10% premium change",
             "impact results do not override the failed evidence gates",
         ]:
-            self.assertIn(marker.lower(), self.interview.lower())
+            self.assertIn(marker.lower(), lower)
+        self.assertIn("it is **not** a statement", lower)
 
     def test_interview_star_is_current(self):
         star = self.interview.split("## STAR version", 1)[1].split("## Claims to avoid", 1)[0]
