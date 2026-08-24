@@ -78,8 +78,27 @@ Nothing in v0.55 clears or modifies the existing evidence blockers. Current proj
 
 This is project evidence about development response-shape sensitivity, not a FIRST CENTRAL/current-UK transport claim or insurer/regulatory standard.
 
-## Reproducibility evidence
+## Cross-region numerical repeat
 
-First locked-head GitHub Actions execution: **run 32703117264, attempt 1 — SUCCESS**. Protocol locking, five-fold audit, ten contracts and the development-only/non-validation boundary all passed.
+The exact computational head `cc6babb828680fef050a1267055373e3cc8ae455` was executed twice before closeout:
 
-A second hosted execution of the exact same locked head was requested before closeout so numerical reproducibility can be separated from the intentionally induced fold-to-fold sample perturbation. Its comparison is recorded in the final PR/main evidence rather than being used to change the protocol or interpretation rule.
+- GitHub Actions run **32703117264**, attempt 1 / job **97358535042**, Azure **westus** — SUCCESS;
+- the same run/head was explicitly re-run as attempt 2 / job **97585065220**, Azure **eastus2** — SUCCESS.
+
+Both used Ubuntu 24.04 image `20260816.277.1`, Python 3.12.14, NumPy 2.5.2, SciPy 1.18.0, scikit-learn 1.9.0 and XGBoost 3.4.1 with `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1` and `MKL_NUM_THREADS=1` for the audit execution.
+
+The three aggregate files are **not byte-identical**, so v0.55 does not claim bitwise or exact-metric reproducibility. The observed hosted numerical differences are instead extremely small:
+
+- maximum absolute GLM frequency-relativity difference: **3.50×10⁻⁹**;
+- maximum absolute `log(XGB/GLM)` relativity-gap difference: **3.47×10⁻⁹**;
+- maximum absolute difference in a point-summary fold-gap range: **2.73×10⁻⁹**;
+- XGBoost fold frequency relativities: **exactly equal** across the two artifacts;
+- all row/key structure and all preselected same-sign fractions are unchanged.
+
+The registered fold perturbation ranges are approximately **0.087–0.234** at the three preselected points and reach **0.342** elsewhere, so the hosted GLM numerical drift is many orders of magnitude smaller than the sample-perturbation variation being audited. This is descriptive numerical context, not a newly invented acceptance threshold.
+
+The repeat therefore supports a narrower claim: **the qualitative v0.55 interpretation is numerically robust across these two hosted regions, while the persisted floating-point outputs are not bitwise identical.** Exact provenance, artifact IDs, hashes and comparison values are recorded in `governance/rating_shape_repeat_evidence_v55.json`.
+
+## CI evidence
+
+The first and second locked-head executions both passed protocol locking, the five-fold audit, **10 contracts**, and the development-only/non-validation boundary. No protocol, fold rule, evaluation grid, model specification or interpretation rule was changed between the two attempts.
