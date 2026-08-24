@@ -1,0 +1,132 @@
+{
+  "schema_version": "0.60",
+  "status": "V60_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_NOT_ACTIVE_REQUEST",
+  "purpose": "Define a reachable, non-data-shopping evidence architecture that any future model-change request after terminal MCR-XGB-MOTOR-001 must instantiate before accessing fresh outcomes.",
+  "historical_parent": {
+    "request_id": "MCR-XGB-MOTOR-001",
+    "required_state": "TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST",
+    "history_must_remain_visible": true,
+    "old_gate_results_may_not_be_relabelled": true,
+    "old_request_is_not_reopened_by_this_template": true
+  },
+  "future_request_registration": {
+    "active_request_id": null,
+    "template_does_not_authorise_MCR_XGB_MOTOR_002": true,
+    "future_request_id_must_be_unique": true,
+    "scope_must_be_selected_before_fresh_outcome_access": true,
+    "allowed_scope_modes": [
+      "FREQUENCY_ONLY",
+      "PURE_PREMIUM_ONLY",
+      "GLOBAL_TWO_TARGET"
+    ],
+    "selected_scope_mode": null,
+    "reference_family": "GLM",
+    "challenger_family": "XGBoost",
+    "source_model_feature_and_hyperparameter_contract_must_be_frozen_before_row_level_access": true,
+    "target_scope_cannot_change_after_first_fresh_outcome_access": true
+  },
+  "fresh_evidence_stages": [
+    {
+      "stage_id": "S1_LOCKED_TEMPORAL_QUALIFICATION",
+      "role": "qualification evidence",
+      "minimum_distinct_source_identities": 1,
+      "fresh_at_registration_required": true,
+      "row_level_outcomes_unseen_at_registration_required": true,
+      "genuine_temporal_order_required": true,
+      "development_calibration_and_locked_test_rule_frozen_before_access": true,
+      "can_be_used_for_candidate_selection": false,
+      "positive_result_requires_registered_target_gate": true,
+      "positive_result_requires_two_independent_actions_executions": true
+    },
+    {
+      "stage_id": "S2_INDEPENDENT_EXTERNAL_REPLICATION",
+      "role": "independent replication evidence",
+      "minimum_distinct_source_identities": 1,
+      "fresh_at_registration_required": true,
+      "row_level_outcomes_unseen_at_registration_required": true,
+      "must_be_distinct_from": [
+        "S1_LOCKED_TEMPORAL_QUALIFICATION"
+      ],
+      "can_be_used_for_candidate_selection": false,
+      "positive_result_requires_registered_target_gate": true,
+      "positive_result_requires_two_independent_actions_executions": true
+    },
+    {
+      "stage_id": "S3_SEALED_RESERVE_CONFIRMATION",
+      "role": "fresh reserve available when human-review readiness is evaluated",
+      "minimum_distinct_source_identities": 1,
+      "fresh_at_registration_required": true,
+      "row_level_outcomes_unseen_at_registration_required": true,
+      "must_be_distinct_from": [
+        "S1_LOCKED_TEMPORAL_QUALIFICATION",
+        "S2_INDEPENDENT_EXTERNAL_REPLICATION"
+      ],
+      "must_remain_row_level_unaccessed_until_separate_authorised_release": true,
+      "can_be_used_for_candidate_selection": false,
+      "can_be_used_to_rescue_failed_S1_or_S2": false
+    }
+  ],
+  "independence_contract": {
+    "minimum_pairwise_distinct_fresh_source_identities": 3,
+    "one_dataset_cannot_simultaneously_count_as_qualification_replication_and_reserve": true,
+    "same_portfolio_random_resplits_do_not_create_independent_source_identities": true,
+    "same_upstream_portfolio_alternate_files_do_not_automatically_create_independent_source_identities": true,
+    "independence_rationale_must_be_registered_from_metadata_before_outcome_access": true
+  },
+  "registered_default_performance_gate": {
+    "minimum_relative_deviance_improvement": 0.005,
+    "bootstrap_relative_improvement_ci_lower_bound_must_exceed": 0.0,
+    "maximum_additional_abs_log_aggregate_calibration_error": 0.01,
+    "calibration_scale_guardrails": [
+      0.5,
+      2.0
+    ],
+    "calibration_scale_clipping_allowed": false,
+    "paired_bootstrap_draws": 500,
+    "thresholds_are_project_review_rules_not_insurer_or_regulatory_standards": true
+  },
+  "reproducibility_contract": {
+    "minimum_independent_actions_executions_for_positive_support": 2,
+    "matching_registered_decision_required": true,
+    "registered_metric_tolerance_required": true,
+    "single_thread_numerical_defaults_required": true,
+    "iterative_solver_and_tolerance_must_be_explicit": true,
+    "post_result_solver_or_hyperparameter_change_allowed": false
+  },
+  "scope_gate_logic": {
+    "FREQUENCY_ONLY": "only the prospectively selected frequency target may count; pure-premium results are not used to rescue or invalidate the target-specific request unless separately preregistered",
+    "PURE_PREMIUM_ONLY": "only the prospectively selected pure-premium target may count; frequency results are not used to rescue or invalidate the target-specific request unless separately preregistered",
+    "GLOBAL_TWO_TARGET": "both frequency and pure-premium registered gates must pass at S1 and S2; one target cannot compensate for failure of the other"
+  },
+  "evidence_budget_and_stop_rules": {
+    "maximum_fresh_source_identities_registered_for_S1": 1,
+    "maximum_fresh_source_identities_registered_for_S2": 1,
+    "maximum_fresh_source_identities_registered_for_S3": 1,
+    "replace_failed_S1_with_another_dataset_allowed": false,
+    "replace_failed_S2_with_another_dataset_allowed": false,
+    "promote_S3_to_rescue_failed_S1_or_S2_allowed": false,
+    "change_target_scope_after_failure_allowed": false,
+    "weaken_performance_gate_after_failure_allowed": false,
+    "if_S1_or_S2_registered_gate_fails": "TERMINAL_HOLD_FOR_THAT_FUTURE_REQUEST",
+    "if_source_contract_fails_after_row_level_decode": "CONSUME_SOURCE_AND_FAIL_CLOSED_NO_REPLACEMENT_FOR_THAT_STAGE_WITHIN_REQUEST",
+    "new_attempt_after_terminal_failure_requires_new_request_id_and_new_prospective_registration": true
+  },
+  "human_review_boundary": {
+    "passing_evidence_program_can_only_open_human_review": true,
+    "automatic_model_promotion_allowed": false,
+    "automatic_customer_pricing_change_allowed": false,
+    "human_review_opening_is_not_model_approval": true,
+    "separate_authorised_governance_decision_required_for_any_serving_change": true
+  },
+  "current_state": {
+    "template_only": true,
+    "fresh_source_identity_selected": false,
+    "row_level_external_data_accessed": false,
+    "outcome_values_inspected": false,
+    "candidate_selection_performed": false,
+    "model_family_decision": "HOLD",
+    "serving_status": "HOLD_SHADOW_ONLY",
+    "promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false
+  }
+}
