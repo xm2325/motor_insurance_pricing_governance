@@ -1,0 +1,164 @@
+name: Prospective evidence programme template v0.60
+
+on:
+  pull_request:
+    paths:
+      - 'governance/prospective_evidence_program_template_v60.json'
+      - 'validate_prospective_evidence_program_v60.py'
+      - 'tests/test_prospective_evidence_program_v60.py'
+      - 'scripts/migrate_evidence_registry_v60.py'
+      - 'RESULTS_V60.md'
+      - '.github/workflows/v60-prospective-evidence-program.yml'
+      - 'governance/external_temporal_prereg_v57.json'
+      - 'governance/model_change_reachability_policy_v59.json'
+      - 'audit_model_change_reachability_v59.py'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/prospective_evidence_program_template_v60.json'
+      - 'validate_prospective_evidence_program_v60.py'
+      - 'tests/test_prospective_evidence_program_v60.py'
+      - 'scripts/migrate_evidence_registry_v60.py'
+      - 'RESULTS_V60.md'
+      - '.github/workflows/v60-prospective-evidence-program.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: v60-evidence-program-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  prospective-evidence-programme:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute v0.59 terminal-parent reachability state
+        run: |
+          python audit_model_change_reachability_v59.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results_v59/committee_gate_reachability_audit_v59.json').read_text())
+          assert r['status'] == 'V59_EXISTING_MODEL_CHANGE_REQUEST_STRUCTURALLY_UNREACHABLE'
+          assert r['reachability']['terminal_existing_request_state'] == 'TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST'
+          assert r['reachability']['ready_for_human_committee_review_reachable_for_existing_request'] is False
+          PY
+      - name: Verify v0.60 template contracts
+        run: python -m unittest -v tests/test_prospective_evidence_program_v60.py
+      - name: Validate prospective evidence programme
+        run: python validate_prospective_evidence_program_v60.py
+      - name: Assert three-stage anti-data-shopping architecture
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results_v60/prospective_evidence_program_validation_v60.json').read_text())
+          assert r['status'] == 'V60_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_VALIDATED'
+          assert r['active_change_request_created'] is False
+          assert r['historical_parent_request'] == 'MCR-XGB-MOTOR-001'
+          assert r['historical_parent_terminal_state_required'] == 'TERMINAL_EVIDENCE_GAP_HOLD_FOR_EXISTING_REQUEST'
+          assert r['minimum_pairwise_distinct_fresh_source_identities'] == 3
+          assert r['sealed_reserve_required'] is True
+          assert r['failed_stage_replacement_allowed'] is False
+          assert r['selected_scope_mode'] is None
+          assert r['external_row_data_accessed'] is False
+          assert r['outcome_values_inspected'] is False
+          assert r['candidate_selection_performed'] is False
+          assert r['model_family_decision'] == 'HOLD'
+          assert r['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert r['promotion_review_status'] == 'NOT_OPEN'
+          assert r['customer_pricing_authorised'] is False
+          print(json.dumps(r, indent=2))
+          PY
+      - name: Apply and verify v0.59-v0.60 registry migrations
+        run: |
+          python scripts/migrate_evidence_registry_v59.py
+          python scripts/migrate_evidence_registry_v60.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v60_once.md
+          python scripts/migrate_evidence_registry_v59.py
+          python scripts/migrate_evidence_registry_v60.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v60_once.md
+          grep -F '| v0.59 committee-gate reachability audit |' EVIDENCE_REGISTRY.md
+          grep -F '| v0.60 prospective evidence-programme template |' EVIDENCE_REGISTRY.md
+          grep -F 'A prospective evidence budget is part of the anti-data-shopping contract' EVIDENCE_REGISTRY.md
+      - name: Persist aggregate v0.60 template evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          mkdir -p action_results/v60
+          cp results_v60/prospective_evidence_program_validation_v60.json action_results/v60/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          r = json.loads(Path('results_v60/prospective_evidence_program_validation_v60.json').read_text())
+          Path('action_results/v60/ACTION_V60_STATUS.json').write_text(json.dumps({
+              'workflow': 'Prospective evidence programme template v0.60',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'validation_status': r['status'],
+              'active_change_request_created': False,
+              'historical_parent_request': r['historical_parent_request'],
+              'minimum_pairwise_distinct_fresh_source_identities': 3,
+              'sealed_reserve_required': True,
+              'failed_stage_replacement_allowed': False,
+              'selected_scope_mode': None,
+              'fresh_source_identity_selected': False,
+              'external_row_data_accessed': False,
+              'candidate_selection_performed': False,
+              'model_family_decision': 'HOLD',
+              'serving_status': 'HOLD_SHADOW_ONLY',
+              'promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+              'evidence_role': 'ROLLING_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_VALIDATION',
+          }, indent=2) + '\n', encoding='utf-8')
+          PY
+          origin_dir="action_results/v60/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.60 snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v60/prospective_evidence_program_validation_v60.json "$origin_dir/"
+          cp action_results/v60/ACTION_V60_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          origin = Path('action_results/v60/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V60_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['evidence_role'] = 'IMMUTABLE_PROSPECTIVE_EVIDENCE_PROGRAM_TEMPLATE_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2) + '\n')
+          files = {}
+          for name in ['ACTION_V60_STATUS.json', 'prospective_evidence_program_validation_v60.json']:
+              files[name] = hashlib.sha256((origin / name).read_bytes()).hexdigest()
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'files': files,
+          }, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v60 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.60 evidence-programme changes'
+          else
+            git commit -m "Persist v0.60 evidence programme ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload aggregate v0.60 template validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-prospective-evidence-program-v60
+          path: results_v60/
+          if-no-files-found: error
