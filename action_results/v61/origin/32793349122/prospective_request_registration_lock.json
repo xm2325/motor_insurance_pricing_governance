@@ -1,0 +1,35 @@
+{
+  "evidence_role": "PROSPECTIVE_REQUEST_REGISTRATION_ONLY_NOT_VALIDATION",
+  "historical_committee_gate_count": 8,
+  "historical_committee_gate_pass_count": 5,
+  "historical_model_family_decision": "HOLD",
+  "historical_promotion_review_status": "NOT_OPEN",
+  "historical_serving_status": "HOLD_SHADOW_ONLY",
+  "model_fit_executed": false,
+  "new_outcome_values_accessed": false,
+  "new_rda_decoded": false,
+  "new_rda_downloaded": false,
+  "performance_metrics_computed": false,
+  "programme_scope": "GLOBAL_TWO_TARGET",
+  "protocol_canonical_sha256": "80533141f88b042a02618d609f77d355f32c9d81ce53569aece27aab207a58c9",
+  "registration_status": "REGISTERED_SEALED_BEFORE_S1",
+  "request_id": "MCR-XGB-MOTOR-002",
+  "row_level_new_source_accessed": false,
+  "s1_cross_year_policy_removal_pre_outcome": true,
+  "s1_temporal_years": [
+    2009,
+    2010
+  ],
+  "s2_sealed": true,
+  "s3_sealed": true,
+  "source_identities_pairwise_distinct": true,
+  "source_identity_count": 3,
+  "source_roles": {
+    "S1_TEMPORAL_QUALIFICATION": "pg15training",
+    "S2_EXTERNAL_REPLICATION": "swmotorcycle",
+    "S3_SEALED_CONFIRMATION": "brvehins1"
+  },
+  "status": "V61_PROSPECTIVE_THREE_SOURCE_REGISTRATION_LOCK_PASS",
+  "v60_template_canonical_sha256": "6c377b9b52869e31e871b1a31518582db2e976cc1405844160057d2f668055c7",
+  "version": "v0.61"
+}
