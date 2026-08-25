@@ -1,0 +1,426 @@
+{
+  "version": "v0.61",
+  "request_id": "MCR-XGB-MOTOR-002",
+  "title": "Prospective three-source motor model-family evidence request",
+  "status": "REGISTERED_SEALED_BEFORE_S1",
+  "registration_role": "ATOMIC_PRE_OUTCOME_SOURCE_AND_DESIGN_LOCK",
+  "inherits": {
+    "programme_template": "governance/prospective_evidence_program_template_v60.json",
+    "historical_request": "MCR-XGB-MOTOR-001",
+    "historical_request_state": "STRUCTURALLY_BLOCKED_MAX_7_OF_8",
+    "historical_committee_gate_pass_count": 5,
+    "historical_committee_gate_count": 8,
+    "historical_model_family_decision": "HOLD",
+    "historical_serving_status": "HOLD_SHADOW_ONLY",
+    "historical_promotion_review_status": "NOT_OPEN",
+    "historical_request_is_not_modified_by_v61": true
+  },
+  "activation": {
+    "programme_scope": "GLOBAL_TWO_TARGET",
+    "frequency_required": true,
+    "pure_premium_required": true,
+    "targets_may_not_compensate_for_each_other": true,
+    "three_source_identities_registered_atomically": true,
+    "minimum_pairwise_distinct_underlying_source_identities": 3,
+    "stage_sequence": [
+      "S1_TEMPORAL_QUALIFICATION",
+      "S2_EXTERNAL_REPLICATION",
+      "S3_SEALED_CONFIRMATION"
+    ],
+    "s2_may_open_only_after_reproducible_s1_pass": true,
+    "s3_may_open_only_after_reproducible_s1_and_s2_pass": true,
+    "failed_or_source_contract_incident_consumes_stage": true,
+    "source_substitution_after_stage_access_forbidden": true,
+    "alternate_files_or_splits_from_same_underlying_portfolio_do_not_create_new_source_identity": true,
+    "reserve_cannot_rescue_s1_or_s2_failure": true
+  },
+  "distribution_channel": {
+    "repository": "dutangc/CASdatasets",
+    "pinned_commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+    "independence_note": "A shared distribution package is not treated as a shared underlying insurance portfolio. Pairwise source independence is justified by distinct original portfolios/providers, countries and products; this registration does not claim statistical independence beyond those source-identity boundaries."
+  },
+  "source_identity_rules": {
+    "primary_identity_controls": [
+      "pinned_repository_commit",
+      "registered_rda_path_or_paths",
+      "registered_git_blob_sha1",
+      "registered_byte_size"
+    ],
+    "schema_contract": "REQUIRED_COLUMN_NAME_SET_AND_SEMANTICS_NOT_COLUMN_ORDER",
+    "column_order_is_not_identity_or_schema_gate": true,
+    "public_row_counts_are_provenance_expectations_not_binary_identity_gates": true,
+    "reason": "v0.58 demonstrated that authenticated bytes can disagree with public documentation. v0.61 therefore freezes semantic column names while avoiding brittle documentation-order and prose-count assumptions; any missing or renamed required semantic field at stage opening is still a fail-closed source-contract incident and consumes that stage."
+  },
+  "sources": {
+    "S1_TEMPORAL_QUALIFICATION": {
+      "dataset": "pg15training",
+      "underlying_source_identity": "PRICING_GAME_2015_FRENCH_PRIVATE_MOTOR_TPL_2009_2010",
+      "country": "France",
+      "product": "private motor third-party liability",
+      "role": "fresh_external_temporal_qualification",
+      "rda_files": [
+        {
+          "path": "data/pg15training.rda",
+          "git_blob_sha1": "9e670d214c05a7454d558ab32de5df96a6b0aba6",
+          "bytes": 1934161
+        }
+      ],
+      "documentation": {
+        "path": "man-md/pg15training.md",
+        "git_blob_sha1": "9c0f44bd6bc2b24c760917398c6c0783b916d1f5",
+        "bytes": 12679,
+        "provenance_expectations_not_identity_gates": {
+          "unique_policies": 100000,
+          "rows": 100021,
+          "cross_year_policy_ids": 21,
+          "calendar_years": [2009, 2010]
+        }
+      },
+      "required_columns": [
+        "PolNum",
+        "CalYear",
+        "Gender",
+        "Type",
+        "Category",
+        "Occupation",
+        "Age",
+        "Group1",
+        "Bonus",
+        "Poldur",
+        "Value",
+        "Adind",
+        "SubGroup2",
+        "Group2",
+        "Density",
+        "Expdays",
+        "Numtppd",
+        "Numtpbi",
+        "Indtppd",
+        "Indtpbi"
+      ],
+      "pre_outcome_leakage_control": {
+        "allowed_fields_before_outcome_access_after_schema_validation": ["PolNum", "CalYear"],
+        "cross_year_definition": "any PolNum observed in more than one distinct CalYear",
+        "action": "remove every row for every cross-year PolNum before any outcome field is accessed",
+        "observed_cross_year_count_is_descriptive_not_a_tuning_or_validity_target": true,
+        "no_outcome_stratification": true
+      },
+      "time_contract": {
+        "required_calendar_year_set": [2009, 2010],
+        "development_year": 2009,
+        "locked_temporal_test_year": 2010,
+        "train_calibration_split": {
+          "key": "PolNum",
+          "hash": "SHA256",
+          "salt": "v61|S1|20260825|",
+          "bucket_modulus": 10000,
+          "train_rule": "hash_integer_mod_10000 < 8000",
+          "calibration_rule": "hash_integer_mod_10000 >= 8000",
+          "expected_fraction_train": 0.8,
+          "expected_fraction_calibration": 0.2,
+          "no_outcome_stratification": true,
+          "no_resplit_after_access": true
+        }
+      },
+      "exposure": {
+        "source_field": "Expdays",
+        "model_exposure": "Expdays / 365.0",
+        "required": "finite_and_strictly_positive",
+        "upper_bound_is_not_a_preregistered_validity_gate": true,
+        "nonpositive_or_nonfinite_consumes_stage_as_source_contract_failure": true
+      },
+      "targets": {
+        "frequency_claim_count": "Numtppd + Numtpbi",
+        "loss_amount": "Indtppd + Indtpbi",
+        "requirements": [
+          "claim_count_finite_nonnegative_integer",
+          "loss_amount_finite_nonnegative"
+        ]
+      },
+      "features": {
+        "numeric": ["Age", "Bonus", "Poldur", "Value", "Density"],
+        "categorical": ["Type", "Category", "Occupation", "Group1", "Adind", "Group2"],
+        "excluded": {
+          "Gender": "project design exclusion, not a legal conclusion",
+          "SubGroup2": "exclude finer-grained/high-cardinality geography from the primary registered design",
+          "PolNum": "split/leakage-control key only",
+          "CalYear": "temporal split only",
+          "Expdays": "exposure only",
+          "Numtppd": "outcome",
+          "Numtpbi": "outcome",
+          "Indtppd": "outcome",
+          "Indtpbi": "outcome"
+        },
+        "encoding": "train_only_one_hot_handle_unknown_ignore"
+      },
+      "stage_seed": 20260827,
+      "sealed_at_v61": true,
+      "row_level_accessed_at_v61": false,
+      "outcomes_accessed_at_v61": false
+    },
+    "S2_EXTERNAL_REPLICATION": {
+      "dataset": "swmotorcycle",
+      "underlying_source_identity": "SWEDISH_MOTORCYCLE_PARTIAL_CASCO_1994_1998",
+      "country": "Sweden",
+      "product": "motorcycle partial casco",
+      "role": "fresh_external_model_family_replication",
+      "transport_boundary": "model-family replication only; not direct MTPL, UK or First Central transport evidence",
+      "rda_files": [
+        {
+          "path": "data/swmotorcycle.rda",
+          "git_blob_sha1": "d48b2e78a94939f57d389110814037410a18c13c",
+          "bytes": 148543
+        }
+      ],
+      "documentation": {
+        "path": "man-md/swmotorcycle.md",
+        "git_blob_sha1": "392f8c63c7e74420b8172d8d4272db6ce2a24849",
+        "bytes": 1996,
+        "provenance_expectations_not_identity_gates": {
+          "observations": 64548,
+          "calendar_period": "1994-1998"
+        }
+      },
+      "required_columns": [
+        "OwnerAge",
+        "Gender",
+        "Area",
+        "VehAge",
+        "MCClass",
+        "BonusClass",
+        "ClaimNb",
+        "Exposure",
+        "ClaimAmount"
+      ],
+      "split": {
+        "method": "pinned_source_order_random_permutation",
+        "seed": 20260828,
+        "train_fraction": 0.6,
+        "calibration_fraction": 0.2,
+        "locked_test_fraction": 0.2,
+        "no_outcome_stratification": true,
+        "no_resplit_after_access": true
+      },
+      "exposure": {
+        "source_field": "Exposure",
+        "required": "finite_and_strictly_positive"
+      },
+      "targets": {
+        "frequency_claim_count": "ClaimNb",
+        "loss_amount": "ClaimAmount",
+        "requirements": [
+          "claim_count_finite_nonnegative_integer",
+          "loss_amount_finite_nonnegative"
+        ]
+      },
+      "features": {
+        "numeric": ["VehAge"],
+        "categorical": ["OwnerAge", "Area", "MCClass", "BonusClass"],
+        "excluded": {
+          "Gender": "project design exclusion, not a legal conclusion",
+          "ClaimNb": "outcome",
+          "Exposure": "exposure only",
+          "ClaimAmount": "outcome"
+        },
+        "encoding": "train_only_one_hot_handle_unknown_ignore"
+      },
+      "stage_seed": 20260828,
+      "sealed_at_v61": true,
+      "may_open_at_v61": false,
+      "row_level_accessed_at_v61": false,
+      "outcomes_accessed_at_v61": false
+    },
+    "S3_SEALED_CONFIRMATION": {
+      "dataset": "brvehins1",
+      "underlying_source_identity": "BRAZIL_SUSEP_AUTOSEG_VEHICLE_INSURANCE_2011",
+      "country": "Brazil",
+      "product": "vehicle insurance / AUTOSEG",
+      "role": "fresh_sealed_confirmation_reserve",
+      "transport_boundary": "model-family confirmation only; not direct MTPL, UK or First Central transport evidence",
+      "five_files_form_one_underlying_source_identity": true,
+      "rda_files": [
+        {"path": "data/brvehins1a.rda", "git_blob_sha1": "65132d163702f169d7932eba81cb4038f320acd7", "bytes": 6382756},
+        {"path": "data/brvehins1b.rda", "git_blob_sha1": "5e6a7a91863dfa3b0d4cc0af8a26b2e68f4bd33b", "bytes": 6368080},
+        {"path": "data/brvehins1c.rda", "git_blob_sha1": "6e60324ccf8fb6654cf97ff907efb15ea733d5d3", "bytes": 6373304},
+        {"path": "data/brvehins1d.rda", "git_blob_sha1": "efba95dcb82022a15d80929e9969fce6db3f2907", "bytes": 6377408},
+        {"path": "data/brvehins1e.rda", "git_blob_sha1": "4e7270940edd7d7c6e31cd7bd98399a15d90d8ce", "bytes": 6382460}
+      ],
+      "documentation": {
+        "path": "man-md/brvehins1.md",
+        "git_blob_sha1": "5152ddf92dbc83b6a7e58bd94e4f4b34d87e82c7",
+        "bytes": 3148,
+        "provenance_expectations_not_identity_gates": {
+          "policies": 1965355,
+          "random_chunks": 5,
+          "policies_per_documented_chunk": 393071,
+          "calendar_year": 2011
+        }
+      },
+      "required_columns": [
+        "Gender", "DrivAge", "VehYear", "VehCode", "Area", "StateAb",
+        "ExposTotal", "ExposFireRob",
+        "ClaimNbRob", "ClaimNbPartColl", "ClaimNbTotColl", "ClaimNbFire", "ClaimNbOther", "ClaimNbPeopl", "ClaimNbUnknown",
+        "ClaimAmountRob", "ClaimAmountPartColl", "ClaimAmountTotColl", "ClaimAmountFire", "ClaimAmountOther", "ClaimAmountPeopl", "ClaimAmountUnknown",
+        "PremTotal", "PremFireRob", "SumInsAvg", "ClaimAvg"
+      ],
+      "split": {
+        "concatenation_order": ["brvehins1a", "brvehins1b", "brvehins1c", "brvehins1d", "brvehins1e"],
+        "method": "fixed_concatenation_then_source_order_random_permutation",
+        "seed": 20260829,
+        "train_fraction": 0.6,
+        "calibration_fraction": 0.2,
+        "locked_test_fraction": 0.2,
+        "no_outcome_stratification": true,
+        "no_resplit_after_access": true
+      },
+      "exposure": {
+        "source_field": "ExposTotal",
+        "required": "finite_and_strictly_positive"
+      },
+      "targets": {
+        "frequency_claim_count": "ClaimNbRob + ClaimNbPartColl + ClaimNbTotColl + ClaimNbFire + ClaimNbOther + ClaimNbPeopl + ClaimNbUnknown",
+        "loss_amount": "ClaimAmountRob + ClaimAmountPartColl + ClaimAmountTotColl + ClaimAmountFire + ClaimAmountOther + ClaimAmountPeopl + ClaimAmountUnknown",
+        "requirements": [
+          "component_claim_counts_finite_nonnegative_integer",
+          "component_claim_amounts_finite_nonnegative"
+        ]
+      },
+      "features": {
+        "numeric": ["VehYear", "SumInsAvg"],
+        "categorical": ["DrivAge", "VehCode", "Area", "StateAb"],
+        "excluded": {
+          "Gender": "project design exclusion, not a legal conclusion",
+          "ExposTotal": "exposure only",
+          "ExposFireRob": "alternative coverage exposure excluded from primary design",
+          "PremTotal": "premium/financial leakage",
+          "PremFireRob": "premium/financial leakage",
+          "ClaimAvg": "derived outcome leakage",
+          "ClaimNb*": "outcomes",
+          "ClaimAmount*": "outcomes"
+        },
+        "encoding": "train_only_one_hot_handle_unknown_ignore"
+      },
+      "stage_seed": 20260829,
+      "sealed_at_v61": true,
+      "may_open_at_v61": false,
+      "row_level_accessed_at_v61": false,
+      "outcomes_accessed_at_v61": false
+    }
+  },
+  "registered_model_family": {
+    "frequency_reference": {
+      "estimator": "PoissonRegressor",
+      "alpha": 1e-08,
+      "solver": "newton-cholesky",
+      "tol": 1e-10,
+      "max_iter": 2000
+    },
+    "frequency_challenger": {
+      "estimator": "XGBRegressor",
+      "objective": "count:poisson",
+      "n_estimators": 400,
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "min_child_weight": 20,
+      "reg_lambda": 5,
+      "random_state": 20260823,
+      "n_jobs": 1
+    },
+    "pure_premium_reference": {
+      "estimator": "TweedieRegressor",
+      "power": 1.5,
+      "link": "log",
+      "alpha": 1e-06,
+      "solver": "newton-cholesky",
+      "tol": 1e-10,
+      "max_iter": 3000
+    },
+    "pure_premium_challenger": {
+      "estimator": "XGBRegressor",
+      "objective": "reg:tweedie",
+      "tweedie_variance_power": 1.5,
+      "n_estimators": 400,
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "min_child_weight": 20,
+      "reg_lambda": 5,
+      "random_state": 20260823,
+      "n_jobs": 1
+    },
+    "thread_environment": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "training_formulation": {
+      "frequency_response": "claim_count / exposure",
+      "frequency_sample_weight": "exposure",
+      "pure_premium_response": "loss_amount / exposure",
+      "pure_premium_sample_weight": "exposure"
+    },
+    "hyperparameter_search": false,
+    "early_stopping": false
+  },
+  "calibration": {
+    "method": "single_multiplicative_scale_on_calibration_partition_only",
+    "lower_guard": 0.5,
+    "upper_guard": 2.0,
+    "prediction_clipping": false,
+    "invalid_or_out_of_guard_scale_fails_target": true
+  },
+  "metrics": {
+    "frequency": ["poisson_deviance", "aggregate_calibration_ratio", "top10_exposure_claim_capture"],
+    "pure_premium": ["tweedie_deviance_power_1_5", "aggregate_calibration_ratio", "top10_exposure_loss_capture"]
+  },
+  "bootstrap": {
+    "draws": 500,
+    "paired_locked_test_row_resampling": true,
+    "stage_seeds": {
+      "S1_TEMPORAL_QUALIFICATION": 20260827,
+      "S2_EXTERNAL_REPLICATION": 20260828,
+      "S3_SEALED_CONFIRMATION": 20260829
+    },
+    "reported_relative_deviance_improvement_quantiles": [0.025, 0.5, 0.975]
+  },
+  "target_gate": {
+    "point_relative_deviance_improvement_min": 0.005,
+    "bootstrap_relative_deviance_improvement_q025_must_be_strictly_greater_than": 0.0,
+    "challenger_absolute_log_calibration_error_must_be_lte_reference_plus": 0.01,
+    "calibration_scale_must_be_valid": true,
+    "all_conditions_required": true
+  },
+  "stage_gate": {
+    "GLOBAL_TWO_TARGET_requires_frequency_and_pure_premium_both_pass": true,
+    "no_target_compensation": true,
+    "positive_stage_requires_two_independent_github_actions_executions": true,
+    "decision_labels_must_match": true,
+    "point_metric_relative_reproducibility_tolerance_max": 0.001,
+    "a_source_contract_failure_consumes_the_stage": true
+  },
+  "v61_access_state": {
+    "new_rda_downloaded": false,
+    "new_rda_decoded": false,
+    "row_level_new_source_accessed": false,
+    "new_outcome_values_accessed": false,
+    "model_fit_executed": false,
+    "performance_metrics_computed": false,
+    "s1_open": false,
+    "s2_open": false,
+    "s3_open": false,
+    "s3_reserve_sealed": true
+  },
+  "governance_boundary": {
+    "this_registration_does_not_modify_historical_5_of_8_committee_state": true,
+    "this_registration_does_not_reopen_MCR_XGB_MOTOR_001": true,
+    "this_registration_is_not_validation_evidence": true,
+    "this_registration_is_not_model_performance_evidence": true,
+    "this_registration_is_not_UK_or_First_Central_transport_evidence": true,
+    "this_registration_does_not_authorise_promotion": true,
+    "this_registration_does_not_authorise_customer_pricing": true,
+    "raw_external_data_must_never_be_persisted": true
+  }
+}
