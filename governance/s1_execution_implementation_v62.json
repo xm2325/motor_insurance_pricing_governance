@@ -1,0 +1,100 @@
+{
+  "version": "v0.62",
+  "request_id": "MCR-XGB-MOTOR-002",
+  "stage": "S1_TEMPORAL_QUALIFICATION",
+  "purpose": "Freeze implementation-only mechanics that were not outcome-adaptively selectable in v0.61 before the first pg15training row-level execution. This seal does not change the registered source, features, targets, model hyperparameters, gates, stage ordering or evidence budget.",
+  "parent_registration": {
+    "path": "governance/prospective_request_registration_v61.json",
+    "canonical_sha256": "80533141f88b042a02618d609f77d355f32c9d81ce53569aece27aab207a58c9",
+    "main_persistence_run_id": "32793349122",
+    "main_evidence_commit": "9a4520d9647eb7a1c51ff1d8e49345fd783def10",
+    "required_lifecycle": "REGISTERED_SEALED_BEFORE_S1"
+  },
+  "source_decode": {
+    "expected_r_object_name": "pg15training",
+    "required_column_contract": "exact_set_equality_order_ignored",
+    "binary_identity_must_pass_before_decode": true,
+    "raw_rda_must_not_be_persisted": true
+  },
+  "pre_outcome_access_barrier": {
+    "schema_names_may_be_inspected_before_key_values": true,
+    "only_value_columns_allowed_before_cross_year_removal": ["PolNum", "CalYear"],
+    "canonical_policy_id_rule": "if numeric, require finite integer-valued and render base-10 integer without decimal suffix; otherwise trim surrounding whitespace, map a text suffix .0... to the same integer representation when the entire string is signed digits plus zero-only decimal suffix, otherwise retain the trimmed string exactly",
+    "calendar_year_rule": "finite integer-valued and exact observed set {2009, 2010}",
+    "cross_year_policy_rule": "remove every row for every canonical policy id observed in more than one distinct calendar year before constructing any exposure, claim-count, claim-cost or modelling array",
+    "same_year_duplicate_policy_rows": "retain; deterministic hash split is by canonical policy id so all same-id development rows remain in the same partition",
+    "public_duplicate_count_is_not_a_gate": true
+  },
+  "post_barrier_data_quality": {
+    "required_nonmissing_fields": [
+      "Age", "Bonus", "Poldur", "Value", "Density",
+      "Type", "Category", "Occupation", "Group1", "Adind", "Group2",
+      "Expdays", "Numtppd", "Numtpbi", "Indtppd", "Indtpbi"
+    ],
+    "numeric_feature_fields_must_be_finite": ["Age", "Bonus", "Poldur", "Value", "Density"],
+    "exposure_days_must_be_finite_and_strictly_positive": true,
+    "claim_count_components_must_be_finite_nonnegative_integer": true,
+    "claim_cost_components_must_be_finite_nonnegative": true,
+    "no_row_filtering_after_pre_outcome_cross_year_removal": true,
+    "no_winsorisation_or_clipping": true
+  },
+  "split_implementation": {
+    "development_year": 2009,
+    "locked_test_year": 2010,
+    "hash_input": "UTF-8 bytes of literal salt v61|S1|20260825| followed immediately by canonical policy id",
+    "hash_function": "SHA256",
+    "bucket_rule": "integer value of full SHA256 hex digest modulo 10000",
+    "train_buckets": "0..7999",
+    "calibration_buckets": "8000..9999",
+    "same_policy_id_cannot_cross_train_and_calibration": true,
+    "outcome_stratification": false,
+    "resplit_after_access": false
+  },
+  "preprocessing": {
+    "fit_on_training_only": true,
+    "numeric_transform": "StandardScaler",
+    "categorical_transform": "OneHotEncoder(handle_unknown='ignore', sparse_output=False)",
+    "categorical_value_conversion": "nonmissing values converted to Python string after pre-outcome barrier",
+    "category_pooling": false,
+    "target_encoding": false
+  },
+  "runtime": {
+    "python_major_minor": "3.12",
+    "pandas": "3.0.5",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.9.0",
+    "xgboost": "3.4.1",
+    "pyreadr": "0.5.3",
+    "thread_environment": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    }
+  },
+  "solver_execution": {
+    "glm_convergence_warning_is_execution_failure": true,
+    "lbfgs_or_other_fallback_warning_is_execution_failure": true,
+    "nonfinite_coefficients_are_execution_failure": true,
+    "nonpositive_or_nonfinite_predictions_are_execution_failure": true,
+    "calibration_scale_is_not_clipped": true
+  },
+  "stage_decision_labels": {
+    "frequency_pass": "S1_FREQUENCY_REGISTERED_GATE_PASS",
+    "frequency_fail": "S1_FREQUENCY_REGISTERED_GATE_FAIL",
+    "pure_premium_pass": "S1_PURE_PREMIUM_REGISTERED_GATE_PASS",
+    "pure_premium_fail": "S1_PURE_PREMIUM_REGISTERED_GATE_FAIL",
+    "first_execution_both_targets_pass": "S1_BOTH_TARGETS_PASS_PENDING_INDEPENDENT_REPRODUCTION",
+    "any_target_fails": "S1_TERMINAL_REGISTERED_GATE_FAILURE_MCR_XGB_MOTOR_002",
+    "second_execution_opening_rule": "only a first execution with both target gates passing may be repeated for positive-stage reproducibility; a first-execution target failure is terminal for this request"
+  },
+  "access_state_at_seal": {
+    "pg15training_downloaded": false,
+    "pg15training_decoded": false,
+    "pg15training_row_values_accessed": false,
+    "pg15training_outcome_values_accessed": false,
+    "model_fit_executed": false,
+    "s2_open": false,
+    "s3_open": false
+  }
+}
