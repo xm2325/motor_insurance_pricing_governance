@@ -1,0 +1,180 @@
+name: Prospective three-source registration v0.61
+
+on:
+  pull_request:
+    paths:
+      - 'governance/prospective_request_registration_v61.json'
+      - 'validate_prospective_request_registration_v61.py'
+      - 'tests/test_prospective_request_registration_v61.py'
+      - 'scripts/migrate_evidence_registry_v61.py'
+      - 'RESULTS_V61.md'
+      - '.github/workflows/v61-prospective-source-registration.yml'
+      - 'governance/prospective_evidence_program_template_v60.json'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/prospective_request_registration_v61.json'
+      - 'validate_prospective_request_registration_v61.py'
+      - 'tests/test_prospective_request_registration_v61.py'
+      - 'scripts/migrate_evidence_registry_v61.py'
+      - 'RESULTS_V61.md'
+      - '.github/workflows/v61-prospective-source-registration.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: v61-source-registration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  prospective-source-registration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Revalidate inherited prospective programme template
+        run: |
+          python -m unittest -v tests/test_prospective_evidence_program_v60.py
+          python validate_prospective_evidence_program_v60.py
+      - name: Verify v0.61 registration contracts
+        run: python -m unittest -v tests/test_prospective_request_registration_v61.py
+      - name: Validate three-source registration without source access
+        run: python validate_prospective_request_registration_v61.py
+      - name: Assert registration-only state
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results/v61/prospective_request_registration_lock.json').read_text())
+          assert r['status'] == 'V61_PROSPECTIVE_THREE_SOURCE_REGISTRATION_LOCK_PASS'
+          assert r['request_id'] == 'MCR-XGB-MOTOR-002'
+          assert r['registration_status'] == 'REGISTERED_SEALED_BEFORE_S1'
+          assert r['programme_scope'] == 'GLOBAL_TWO_TARGET'
+          assert r['source_identity_count'] == 3
+          assert r['source_identities_pairwise_distinct'] is True
+          assert r['source_roles'] == {
+              'S1_TEMPORAL_QUALIFICATION': 'pg15training',
+              'S2_EXTERNAL_REPLICATION': 'swmotorcycle',
+              'S3_SEALED_CONFIRMATION': 'brvehins1',
+          }
+          assert r['new_rda_downloaded'] is False
+          assert r['new_rda_decoded'] is False
+          assert r['row_level_new_source_accessed'] is False
+          assert r['new_outcome_values_accessed'] is False
+          assert r['model_fit_executed'] is False
+          assert r['performance_metrics_computed'] is False
+          assert r['historical_committee_gate_pass_count'] == 5
+          assert r['historical_committee_gate_count'] == 8
+          assert r['historical_model_family_decision'] == 'HOLD'
+          assert r['historical_serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert r['historical_promotion_review_status'] == 'NOT_OPEN'
+          print(json.dumps(r, indent=2))
+          PY
+      - name: Apply and verify v0.61 evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v59.py
+          python scripts/migrate_evidence_registry_v60.py
+          python scripts/migrate_evidence_registry_v61.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v61_once.md
+          python scripts/migrate_evidence_registry_v59.py
+          python scripts/migrate_evidence_registry_v60.py
+          python scripts/migrate_evidence_registry_v61.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v61_once.md
+          grep -F '| v0.61 prospective three-source request registration |' EVIDENCE_REGISTRY.md
+          grep -F 'Cross-year policy leakage controls must execute before outcome access' EVIDENCE_REGISTRY.md
+      - name: Persist aggregate v0.61 registration evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          mkdir -p action_results/v61
+          cp results/v61/prospective_request_registration_lock.json action_results/v61/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          r = json.loads(Path('results/v61/prospective_request_registration_lock.json').read_text())
+          Path('action_results/v61/ACTION_V61_STATUS.json').write_text(json.dumps({
+              'workflow': 'Prospective three-source registration v0.61',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'registration_status': r['status'],
+              'request_id': r['request_id'],
+              'request_lifecycle': r['registration_status'],
+              'programme_scope': r['programme_scope'],
+              'protocol_canonical_sha256': r['protocol_canonical_sha256'],
+              'source_identity_count': 3,
+              'source_identities_pairwise_distinct': True,
+              's1_dataset': 'pg15training',
+              's2_dataset': 'swmotorcycle',
+              's3_dataset': 'brvehins1',
+              's1_open': False,
+              's2_open': False,
+              's3_open': False,
+              's3_reserve_sealed': True,
+              'new_rda_downloaded': False,
+              'new_rda_decoded': False,
+              'row_level_new_source_accessed': False,
+              'new_outcome_values_accessed': False,
+              'model_fit_executed': False,
+              'performance_metrics_computed': False,
+              'historical_committee_gate_pass_count': 5,
+              'historical_committee_gate_count': 8,
+              'historical_model_family_decision': 'HOLD',
+              'historical_serving_status': 'HOLD_SHADOW_ONLY',
+              'historical_promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+              'evidence_role': 'ROLLING_PROSPECTIVE_REQUEST_REGISTRATION_ONLY',
+          }, indent=2) + '\n', encoding='utf-8')
+          PY
+          origin_dir="action_results/v61/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.61 snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v61/prospective_request_registration_lock.json "$origin_dir/"
+          cp action_results/v61/ACTION_V61_STATUS.json "$origin_dir/"
+          cp governance/prospective_request_registration_v61.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          origin = Path('action_results/v61/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V61_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['evidence_role'] = 'IMMUTABLE_PROSPECTIVE_REQUEST_REGISTRATION_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2) + '\n')
+          names = [
+              'ACTION_V61_STATUS.json',
+              'prospective_request_registration_lock.json',
+              'prospective_request_registration_v61.json',
+          ]
+          files = {name: hashlib.sha256((origin / name).read_bytes()).hexdigest() for name in names}
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'protocol_canonical_sha256': status['protocol_canonical_sha256'],
+              'files': files,
+          }, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v61 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.61 registration evidence changes'
+          else
+            git commit -m "Persist v0.61 prospective request registration ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Upload aggregate v0.61 registration lock
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-prospective-source-registration-v61
+          path: results/v61/
+          if-no-files-found: error
