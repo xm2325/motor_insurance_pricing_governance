@@ -1,0 +1,118 @@
+name: Pricing Game S1 temporal qualification v0.62
+
+on:
+  pull_request:
+    paths:
+      - 'governance/prospective_request_registration_v61.json'
+      - 'governance/s1_execution_implementation_v62.json'
+      - 'download_pricing_game_motor_v62.py'
+      - 'run_pricing_game_s1_temporal_v62.py'
+      - 'tests/test_pricing_game_s1_temporal_v62.py'
+      - '.github/workflows/v62-pricing-game-s1-temporal.yml'
+      - 'external_validation/**'
+      - 'action_results/v61/**'
+      - 'requirements.txt'
+  workflow_dispatch:
+
+concurrency:
+  group: v62-pricing-game-s1-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+
+jobs:
+  pricing-game-s1-first-execution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install frozen modelling and R-data dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyreadr==0.5.3
+      - name: Verify v0.62 contracts before S1 data access
+        run: |
+          python -m unittest -v tests/test_prospective_request_registration_v61.py
+          python -m unittest -v tests/test_pricing_game_s1_temporal_v62.py
+          python validate_prospective_request_registration_v61.py --output /tmp/v61_revalidated_for_v62.json
+      - name: Fetch and verify pinned Pricing Game S1 binary
+        run: python download_pricing_game_motor_v62.py
+      - name: Execute frozen S1 temporal qualification once
+        run: python run_pricing_game_s1_temporal_v62.py
+      - name: Verify S1 first-execution boundary and expose registered metrics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results_v62/pricing_game_s1_first_execution.json').read_text())
+          assert r['status'] == 'V62_S1_FIRST_EXECUTION_COMPLETE'
+          assert r['request_id'] == 'MCR-XGB-MOTOR-002'
+          assert r['stage'] == 'S1_TEMPORAL_QUALIFICATION'
+          assert r['programme_scope'] == 'GLOBAL_TWO_TARGET'
+          assert r['registration']['protocol_canonical_sha256'] == '80533141f88b042a02618d609f77d355f32c9d81ce53569aece27aab207a58c9'
+          assert r['registration']['registered_before_s1_row_access'] is True
+          assert r['registration']['rules_changed_after_registration'] is False
+          assert r['source']['git_blob_sha1'] == '9e670d214c05a7454d558ab32de5df96a6b0aba6'
+          assert r['source']['raw_data_persisted_to_repository'] is False
+          assert r['access_sequence']['pre_outcome_value_columns'] == ['PolNum', 'CalYear']
+          assert r['access_sequence']['cross_year_removal_completed_before_outcome_access'] is True
+          assert r['access_sequence']['outcome_access_started_after_barrier'] is True
+          assert r['access_sequence']['s2_accessed'] is False
+          assert r['access_sequence']['s3_accessed'] is False
+          assert r['split']['outcome_stratified'] is False
+          assert r['split']['resplit_after_outcome_inspection'] is False
+          assert r['stage_decision']['s2_open_authorised'] is False
+          assert r['stage_decision']['s3_open_authorised'] is False
+          assert r['reproducibility']['positive_s1_support_authorised'] is False
+          assert r['governance']['project_model_family_decision'] == 'HOLD'
+          assert r['governance']['serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert r['governance']['promotion_review_status'] == 'NOT_OPEN'
+          assert r['governance']['customer_pricing_authorised'] is False
+          print(json.dumps({
+              'source_sha256': r['source']['file_sha256'],
+              'decoded_rows': r['access_sequence']['decoded_rows_before_registered_cross_year_removal'],
+              'cross_year_policy_ids': r['access_sequence']['cross_year_policy_ids_observed'],
+              'rows_removed': r['access_sequence']['rows_removed_for_cross_year_policies'],
+              'train': r['split']['train'],
+              'calibration': r['split']['calibration'],
+              'locked_temporal_test': r['split']['locked_temporal_test'],
+              'frequency_decision': r['frequency']['registered_gate']['decision'],
+              'frequency_relative_improvement': r['frequency']['registered_gate']['relative_deviance_improvement'],
+              'frequency_bootstrap_q025': r['frequency']['paired_bootstrap_relative_deviance_improvement']['q025'],
+              'pure_premium_decision': r['pure_premium']['registered_gate']['decision'],
+              'pure_premium_relative_improvement': r['pure_premium']['registered_gate']['relative_deviance_improvement'],
+              'pure_premium_bootstrap_q025': r['pure_premium']['paired_bootstrap_relative_deviance_improvement']['q025'],
+              'stage_status': r['stage_decision']['status'],
+              'request_state': r['stage_decision']['request_state'],
+          }, indent=2))
+          PY
+      - name: Assert no raw S1 or row-level prediction data are tracked
+        if: always()
+        run: |
+          if git ls-files --error-unmatch data_external_v62/pg15training.rda >/dev/null 2>&1; then
+            echo 'Raw Pricing Game RDA must never be tracked' >&2
+            exit 1
+          fi
+          if git status --porcelain | grep -E '(^|/)pg15training\.rda|row_level|predictions\.csv'; then
+            echo 'Raw S1 data or row-level predictions must not be staged/untracked for persistence' >&2
+            exit 1
+          fi
+      - name: Upload aggregate S1 first-execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-s1-temporal-v62
+          path: results_v62/
+          if-no-files-found: warn
