@@ -1,4 +1,4 @@
-name: Pricing Game S1 temporal qualification v0.62
+name: Pricing Game S1 source-contract incident v0.62
 
 on:
   pull_request:
@@ -6,30 +6,35 @@ on:
       - 'governance/prospective_request_registration_v61.json'
       - 'governance/s1_execution_implementation_v62.json'
       - 'download_pricing_game_motor_v62.py'
-      - 'run_pricing_game_s1_temporal_v62.py'
-      - 'tests/test_pricing_game_s1_temporal_v62.py'
+      - 'record_pricing_game_s1_schema_incident_v62.py'
+      - 'tests/test_pricing_game_s1_incident_v62.py'
+      - 'scripts/migrate_evidence_registry_v62.py'
+      - 'RESULTS_V62.md'
       - '.github/workflows/v62-pricing-game-s1-temporal.yml'
-      - 'external_validation/**'
       - 'action_results/v61/**'
-      - 'requirements.txt'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/s1_execution_implementation_v62.json'
+      - 'download_pricing_game_motor_v62.py'
+      - 'record_pricing_game_s1_schema_incident_v62.py'
+      - 'tests/test_pricing_game_s1_incident_v62.py'
+      - 'scripts/migrate_evidence_registry_v62.py'
+      - 'RESULTS_V62.md'
+      - '.github/workflows/v62-pricing-game-s1-temporal.yml'
   workflow_dispatch:
 
 concurrency:
-  group: v62-pricing-game-s1-${{ github.workflow }}-${{ github.ref }}
+  group: v62-pricing-game-s1-incident-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
-
-env:
-  OMP_NUM_THREADS: '1'
-  OPENBLAS_NUM_THREADS: '1'
-  MKL_NUM_THREADS: '1'
+  contents: write
 
 jobs:
-  pricing-game-s1-first-execution:
+  pricing-game-s1-source-contract-incident:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,67 +43,173 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Install frozen modelling and R-data dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyreadr==0.5.3
-      - name: Verify v0.62 contracts before S1 data access
+      - name: Install frozen R-data reader
+        run: pip install pyreadr==0.5.3
+      - name: Verify v0.61 registration and v0.62 incident contracts before repeated decode
         run: |
           python -m unittest -v tests/test_prospective_request_registration_v61.py
-          python -m unittest -v tests/test_pricing_game_s1_temporal_v62.py
-          python validate_prospective_request_registration_v61.py --output /tmp/v61_revalidated_for_v62.json
-      - name: Fetch and verify pinned Pricing Game S1 binary
+          python -m unittest -v tests/test_pricing_game_s1_incident_v62.py
+          python validate_prospective_request_registration_v61.py --output /tmp/v61_revalidated_for_v62_incident.json
+      - name: Fetch and verify the same pinned Pricing Game S1 binary
         run: python download_pricing_game_motor_v62.py
-      - name: Execute frozen S1 temporal qualification once
-        run: python run_pricing_game_s1_temporal_v62.py
-      - name: Verify S1 first-execution boundary and expose registered metrics
+      - name: Record fail-closed S1 semantic schema incident
+        run: python record_pricing_game_s1_schema_incident_v62.py
+      - name: Apply and verify v0.62 evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v62.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v62_once.md
+          python scripts/migrate_evidence_registry_v62.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v62_once.md
+          grep -F '| v0.62 Pricing Game S1 source-contract incident |' EVIDENCE_REGISTRY.md
+          grep -F 'A semantic source-contract incident in an opened prospective stage' EVIDENCE_REGISTRY.md
+      - name: Assert S1 consumed and S2/S3 remain sealed
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          r = json.loads(Path('results_v62/pricing_game_s1_first_execution.json').read_text())
-          assert r['status'] == 'V62_S1_FIRST_EXECUTION_COMPLETE'
+          r = json.loads(Path('results_v62/pricing_game_s1_schema_incident_v62.json').read_text())
+          assert r['status'] == 'V62_FAIL_CLOSED_S1_SEMANTIC_SCHEMA_CONTRACT_INCIDENT'
           assert r['request_id'] == 'MCR-XGB-MOTOR-002'
           assert r['stage'] == 'S1_TEMPORAL_QUALIFICATION'
-          assert r['programme_scope'] == 'GLOBAL_TWO_TARGET'
-          assert r['registration']['protocol_canonical_sha256'] == '80533141f88b042a02618d609f77d355f32c9d81ce53569aece27aab207a58c9'
-          assert r['registration']['registered_before_s1_row_access'] is True
-          assert r['registration']['rules_changed_after_registration'] is False
-          assert r['source']['git_blob_sha1'] == '9e670d214c05a7454d558ab32de5df96a6b0aba6'
-          assert r['source']['raw_data_persisted_to_repository'] is False
-          assert r['access_sequence']['pre_outcome_value_columns'] == ['PolNum', 'CalYear']
-          assert r['access_sequence']['cross_year_removal_completed_before_outcome_access'] is True
-          assert r['access_sequence']['outcome_access_started_after_barrier'] is True
-          assert r['access_sequence']['s2_accessed'] is False
-          assert r['access_sequence']['s3_accessed'] is False
-          assert r['split']['outcome_stratified'] is False
-          assert r['split']['resplit_after_outcome_inspection'] is False
-          assert r['stage_decision']['s2_open_authorised'] is False
-          assert r['stage_decision']['s3_open_authorised'] is False
-          assert r['reproducibility']['positive_s1_support_authorised'] is False
-          assert r['governance']['project_model_family_decision'] == 'HOLD'
-          assert r['governance']['serving_status'] == 'HOLD_SHADOW_ONLY'
-          assert r['governance']['promotion_review_status'] == 'NOT_OPEN'
-          assert r['governance']['customer_pricing_authorised'] is False
+          assert r['v61_protocol_canonical_sha256'] == '80533141f88b042a02618d609f77d355f32c9d81ce53569aece27aab207a58c9'
+          assert r['source_identity']['git_blob_sha1'] == '9e670d214c05a7454d558ab32de5df96a6b0aba6'
+          assert r['source_identity']['binary_identity_passed_before_decode'] is True
+          s = r['schema_contract']
+          assert s['registered_only_columns'] == ['Expdays']
+          assert s['decoded_only_columns'] == ['Exppdays']
+          assert s['same_column_set'] is False
+          assert s['column_order_is_not_the_failure'] is True
+          assert s['post_access_alias_or_protocol_amendment_used'] is False
+          a = r['access_boundary']
+          assert a['r_object_decoded'] is True
+          assert a['policy_id_values_inspected'] is False
+          assert a['calendar_year_values_inspected'] is False
+          assert a['exposure_values_inspected'] is False
+          assert a['outcome_values_inspected'] is False
+          assert a['rating_feature_values_inspected'] is False
+          assert a['row_count_computed'] is False
+          assert a['cross_year_filter_executed'] is False
+          assert a['model_fit_executed'] is False
+          assert a['calibration_executed'] is False
+          assert a['performance_metrics_computed'] is False
+          assert a['registered_gate_evaluated'] is False
+          assert a['s2_accessed'] is False and a['s3_accessed'] is False
+          q = r['request_lifecycle']
+          assert q['s1_stage_consumed'] is True
+          assert q['s1_pass_created'] is False
+          assert q['s1_reproduction_authorised'] is False
+          assert q['s2_open_authorised'] is False
+          assert q['s3_open_authorised'] is False
+          assert q['s2_remains_sealed'] is True
+          assert q['s3_remains_sealed'] is True
+          assert q['source_substitution_authorised'] is False
+          assert q['reserve_rescue_authorised'] is False
+          assert q['request_state'] == 'TERMINAL_S1_SOURCE_CONTRACT_INCIDENT'
+          assert q['request_can_progress_under_v61'] is False
+          g = r['governance']
+          assert g['fresh_temporal_model_evidence_created'] is False
+          assert g['fresh_external_model_evidence_created'] is False
+          assert g['committee_gate_credit_created'] is False
+          assert g['historical_committee_gate_pass_count'] == 5
+          assert g['historical_committee_gate_count'] == 8
+          assert g['historical_model_family_decision'] == 'HOLD'
+          assert g['historical_serving_status'] == 'HOLD_SHADOW_ONLY'
+          assert g['historical_promotion_review_status'] == 'NOT_OPEN'
+          assert g['customer_pricing_authorised'] is False
           print(json.dumps({
-              'source_sha256': r['source']['file_sha256'],
-              'decoded_rows': r['access_sequence']['decoded_rows_before_registered_cross_year_removal'],
-              'cross_year_policy_ids': r['access_sequence']['cross_year_policy_ids_observed'],
-              'rows_removed': r['access_sequence']['rows_removed_for_cross_year_policies'],
-              'train': r['split']['train'],
-              'calibration': r['split']['calibration'],
-              'locked_temporal_test': r['split']['locked_temporal_test'],
-              'frequency_decision': r['frequency']['registered_gate']['decision'],
-              'frequency_relative_improvement': r['frequency']['registered_gate']['relative_deviance_improvement'],
-              'frequency_bootstrap_q025': r['frequency']['paired_bootstrap_relative_deviance_improvement']['q025'],
-              'pure_premium_decision': r['pure_premium']['registered_gate']['decision'],
-              'pure_premium_relative_improvement': r['pure_premium']['registered_gate']['relative_deviance_improvement'],
-              'pure_premium_bootstrap_q025': r['pure_premium']['paired_bootstrap_relative_deviance_improvement']['q025'],
-              'stage_status': r['stage_decision']['status'],
-              'request_state': r['stage_decision']['request_state'],
+              'status': r['status'],
+              'file_sha256': r['source_identity']['file_sha256'],
+              'registered_only_columns': s['registered_only_columns'],
+              'decoded_only_columns': s['decoded_only_columns'],
+              'request_state': q['request_state'],
+              's2_open_authorised': q['s2_open_authorised'],
+              's3_open_authorised': q['s3_open_authorised'],
+              'model_fit_executed': a['model_fit_executed'],
+              'performance_metrics_computed': a['performance_metrics_computed'],
           }, indent=2))
           PY
-      - name: Assert no raw S1 or row-level prediction data are tracked
+      - name: Persist aggregate v0.62 incident evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          mkdir -p action_results/v62
+          cp results_v62/pricing_game_source_binary_audit.json action_results/v62/
+          cp results_v62/pricing_game_s1_schema_incident_v62.json action_results/v62/
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('action_results/v62/ACTION_V62_STATUS.json').write_text(json.dumps({
+              'workflow': 'Pricing Game S1 source-contract incident v0.62',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'incident_status': 'V62_FAIL_CLOSED_S1_SEMANTIC_SCHEMA_CONTRACT_INCIDENT',
+              'request_id': 'MCR-XGB-MOTOR-002',
+              'stage': 'S1_TEMPORAL_QUALIFICATION',
+              'request_state': 'TERMINAL_S1_SOURCE_CONTRACT_INCIDENT',
+              'row_level_source_access_occurred': True,
+              'schema_names_inspected': True,
+              'policy_id_values_inspected': False,
+              'calendar_year_values_inspected': False,
+              'outcome_values_inspected': False,
+              'model_fit_executed': False,
+              'performance_metrics_computed': False,
+              's1_stage_consumed': True,
+              's1_pass_created': False,
+              's2_open_authorised': False,
+              's3_open_authorised': False,
+              's2_remains_sealed': True,
+              's3_remains_sealed': True,
+              'fresh_model_evidence_created': False,
+              'committee_gate_credit_created': False,
+              'historical_committee_gate_pass_count': 5,
+              'historical_committee_gate_count': 8,
+              'historical_model_family_decision': 'HOLD',
+              'historical_serving_status': 'HOLD_SHADOW_ONLY',
+              'historical_promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+              'raw_external_data_persisted': False,
+              'evidence_role': 'ROLLING_S1_SOURCE_CONTRACT_INCIDENT',
+          }, indent=2) + '\n', encoding='utf-8')
+          PY
+          origin_dir="action_results/v62/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.62 incident snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v62/pricing_game_source_binary_audit.json "$origin_dir/"
+          cp action_results/v62/pricing_game_s1_schema_incident_v62.json "$origin_dir/"
+          cp action_results/v62/ACTION_V62_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          origin = Path('action_results/v62/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V62_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['evidence_role'] = 'IMMUTABLE_S1_SOURCE_CONTRACT_INCIDENT_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2) + '\n')
+          files = {}
+          for name in ['ACTION_V62_STATUS.json','pricing_game_source_binary_audit.json','pricing_game_s1_schema_incident_v62.json']:
+              files[name] = hashlib.sha256((origin / name).read_bytes()).hexdigest()
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'request_id': 'MCR-XGB-MOTOR-002',
+              'request_state': 'TERMINAL_S1_SOURCE_CONTRACT_INCIDENT',
+              'files': files,
+          }, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v62 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.62 incident evidence changes'
+          else
+            git commit -m "Persist v0.62 S1 schema incident ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
+      - name: Assert raw S1 data are not staged
         if: always()
         run: |
           if git ls-files --error-unmatch data_external_v62/pg15training.rda >/dev/null 2>&1; then
@@ -109,10 +220,10 @@ jobs:
             echo 'Raw S1 data or row-level predictions must not be staged/untracked for persistence' >&2
             exit 1
           fi
-      - name: Upload aggregate S1 first-execution evidence
+      - name: Upload aggregate S1 schema-incident evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: motor-pricing-s1-temporal-v62
+          name: motor-pricing-s1-schema-incident-v62
           path: results_v62/
-          if-no-files-found: warn
+          if-no-files-found: error
