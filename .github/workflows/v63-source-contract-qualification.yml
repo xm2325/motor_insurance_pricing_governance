@@ -1,0 +1,86 @@
+name: Source-contract qualification v0.63
+
+on:
+  pull_request:
+    paths:
+      - 'governance/source_contract_qualification_policy_v63.json'
+      - 'run_source_contract_qualification_v63.py'
+      - 'tests/test_source_contract_qualification_v63.py'
+      - '.github/workflows/v63-source-contract-qualification.yml'
+      - 'action_results/v58/**'
+      - 'action_results/v62/**'
+  workflow_dispatch:
+
+concurrency:
+  group: v63-source-contract-qualification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  metadata-only-source-qualification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install schema-metadata reader only
+        run: pip install pyreadr==0.5.3
+      - name: Verify prospective Q0 contracts before metadata replay
+        run: python -m unittest -v tests/test_source_contract_qualification_v63.py
+      - name: Replay metadata-only qualification on consumed historical sources
+        run: python run_source_contract_qualification_v63.py
+      - name: Assert historical incidents would have been blocked before seal
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('results_v63/source_contract_qualification_replay_v63.json').read_text())
+          assert r['status'] == 'V63_METADATA_ONLY_SOURCE_CONTRACT_QUALIFICATION_REPLAY_PASS'
+          assert r['new_fresh_source_opened'] is False
+          assert r['new_change_request_created'] is False
+          assert r['row_values_accessed'] is False
+          assert r['outcome_values_accessed'] is False
+          assert r['model_fit_executed'] is False
+          assert r['performance_metrics_computed'] is False
+          assert r['mcr_001_reopened'] is False
+          assert r['mcr_002_reopened'] is False
+          by_id = {x['case_id']: x for x in r['cases']}
+          pg = by_id['V61_S1_PG15TRAINING_RETROSPECTIVE']
+          eu = by_id['V57_EUMTPL_RETROSPECTIVE']
+          assert pg['qualification_decision'] == 'SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL'
+          assert pg['comparison']['registered_only_columns'] == ['Expdays']
+          assert pg['comparison']['binary_only_columns'] == ['Exppdays']
+          assert {'left':'Expdays','right':'Exppdays','distance':1} in pg['comparison']['schema_near_matches']
+          assert eu['qualification_decision'] == 'SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL'
+          assert eu['comparison']['registered_only_columns'] == ['cost_fcd', 'num_fcd']
+          assert eu['comparison']['binary_only_columns'] == ['cost_fcg', 'num_fcg']
+          assert all(x['metadata_access']['api'] == 'pyreadr.list_objects' for x in r['cases'])
+          assert all(x['metadata_access']['row_values_accessed'] is False for x in r['cases'])
+          assert all(x['metadata_access']['outcome_values_accessed'] is False for x in r['cases'])
+          print(json.dumps({
+              'pg15_decision': pg['qualification_decision'],
+              'pg15_schema_near_matches': pg['comparison']['schema_near_matches'],
+              'eumtpl_decision': eu['qualification_decision'],
+              'eumtpl_schema_near_matches': eu['comparison']['schema_near_matches'],
+              'new_fresh_source_opened': r['new_fresh_source_opened'],
+          }, indent=2))
+          PY
+      - name: Assert no RDA or row-level output exists in repository worktree
+        if: always()
+        run: |
+          if git status --porcelain | grep -E '\.rda$|row_level|predictions\.csv'; then
+            echo 'Q0 qualification must not leave source binaries or row-level outputs in the worktree' >&2
+            exit 1
+          fi
+      - name: Upload aggregate Q0 qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-pricing-source-contract-qualification-v63
+          path: results_v63/
+          if-no-files-found: error
