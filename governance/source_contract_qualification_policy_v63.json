@@ -1,0 +1,104 @@
+{
+  "version": "v0.63",
+  "status": "V63_SOURCE_CONTRACT_QUALIFICATION_POLICY_LOCKED",
+  "title": "Pre-seal metadata-only source-contract qualification",
+  "purpose": "Prevent a future fresh evidence stage from being consumed by a source-schema/documentation mismatch that can be discovered without reading row values or outcomes.",
+  "historical_incidents_motivating_policy": [
+    {
+      "version": "v0.58",
+      "dataset": "euMTPL",
+      "incident": "registered cost_fcd/num_fcd versus pinned-object cost_fcg/num_fcg",
+      "historical_state_remains_terminal": true
+    },
+    {
+      "version": "v0.62",
+      "dataset": "pg15training",
+      "incident": "registered/documented Expdays versus pinned-object Exppdays",
+      "historical_state_remains_terminal": true
+    }
+  ],
+  "qualification_stage": {
+    "name": "Q0_SOURCE_CONTRACT_QUALIFICATION",
+    "must_complete_before_new_change_request_or_source_stage_is_sealed": true,
+    "allowed_operations": [
+      "download_or_fetch_exactly_pinned_source_binary_for_identity_verification",
+      "verify_registered_repository_commit_path_git_blob_sha1_and_byte_size",
+      "pyreadr.list_objects_for_object_names_and_column_names_only",
+      "fetch_exactly_pinned_text_documentation",
+      "verify_documentation_git_blob_sha1_and_byte_size",
+      "extract_identifier_tokens_from_documentation_without_using_example_values",
+      "compare_proposed_semantic_field_names_against_binary_schema_metadata_and_documentation_identifiers"
+    ],
+    "forbidden_operations": [
+      "pyreadr.read_r",
+      "inspect_any_row_value",
+      "inspect_any_outcome_value",
+      "inspect_any_exposure_value",
+      "inspect_any_feature_value",
+      "compute_row_count_from_decoded_data",
+      "compute_any_distribution_or_summary_statistic",
+      "fit_or_calibrate_any_model",
+      "compute_any_performance_metric",
+      "choose_or_change_source_based_on_outcomes",
+      "choose_or_change_model_or_gate_based_on_source_values"
+    ],
+    "fresh_evidence_eligibility_rule": "Schema metadata inspection alone does not create model-performance evidence and does not consume a future evidence stage. The source may be sealed only after Q0 passes. If Q0 blocks, the source may be corrected/replaced before a request is sealed because no row/outcome value has been inspected.",
+    "important_boundary": "This policy is prospective from v0.63. It does not retroactively reopen or repair MCR-XGB-MOTOR-001, MCR-XGB-MOTOR-002, euMTPL v0.58 or pg15training v0.62."
+  },
+  "binary_schema_gate": {
+    "required_object_name_must_be_present": true,
+    "proposed_required_semantic_columns_must_equal_metadata_column_set": true,
+    "column_order_is_not_a_gate": true,
+    "missing_or_extra_required_semantic_field": "BLOCK_BEFORE_SEAL",
+    "near_match_identifier": "BLOCK_BEFORE_SEAL_AND_REQUIRE_EXPLICIT_SCHEMA_REVIEW",
+    "automatic_aliasing": false,
+    "case_folding_or_fuzzy_repair": false
+  },
+  "documentation_gate": {
+    "pinned_documentation_identity_required": true,
+    "proposed_required_field_absent_from_documentation_identifiers": "BLOCK_BEFORE_SEAL",
+    "binary_metadata_field_absent_from_documentation_but_near_match_present": "DOCUMENTATION_SCHEMA_CONFLICT_BLOCK",
+    "competing_near_equivalent_identifiers_for_same_registered_semantic_role": "DOCUMENTATION_SCHEMA_AMBIGUITY_BLOCK",
+    "documentation_row_counts_are_not_binary_identity_gates": true,
+    "documentation_example_values_must_not_be_used": true
+  },
+  "near_match_rule": {
+    "algorithm": "case-sensitive Levenshtein distance on identifier tokens after exact-match failure",
+    "maximum_distance_for_review": 2,
+    "same_prefix_or_suffix_not_required": true,
+    "near_match_never_auto_corrects": true
+  },
+  "qualification_output": {
+    "persist_only": [
+      "source_identity",
+      "documentation_identity",
+      "object_names",
+      "column_names",
+      "identifier_conflicts",
+      "qualification_decision",
+      "qualification_sha256"
+    ],
+    "forbid_persisting": [
+      "raw_source_binary",
+      "row_values",
+      "outcome_values",
+      "feature_values",
+      "predictions"
+    ],
+    "pass_label": "QUALIFIED_FOR_PROSPECTIVE_SEAL_NOT_YET_VALIDATION",
+    "block_label": "SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL"
+  },
+  "historical_governance_boundary": {
+    "mcr_001_state": "TERMINAL_STRUCTURALLY_BLOCKED",
+    "mcr_002_state": "TERMINAL_S1_SOURCE_CONTRACT_INCIDENT",
+    "historical_committee_gate_pass_count": 5,
+    "historical_committee_gate_count": 8,
+    "historical_model_family_decision": "HOLD",
+    "historical_serving_status": "HOLD_SHADOW_ONLY",
+    "historical_promotion_review_status": "NOT_OPEN",
+    "customer_pricing_authorised": false,
+    "v63_creates_new_change_request": false,
+    "v63_opens_new_fresh_source": false,
+    "v63_creates_model_performance_evidence": false
+  }
+}
