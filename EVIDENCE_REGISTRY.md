@@ -212,7 +212,17 @@ This file maps the project's headline claims to persisted result files. The goal
 | v0.62 MCR-XGB-MOTOR-002 lifecycle | under the v0.61 rules an opened-stage source-contract incident consumes S1; no S1 pass or reproduction is authorised, S2 `swmotorcycle` and S3 `brvehins1` remain sealed, source substitution and reserve rescue are forbidden, and the request is terminal as `TERMINAL_S1_SOURCE_CONTRACT_INCIDENT` | `governance/prospective_request_registration_v61.json`, `RESULTS_V62.md`, `action_results/v62/ACTION_V62_STATUS.json` |
 | v0.62 evidence/governance outcome | no fresh temporal/external model evidence and no committee-gate credit were created; historical state remains **5/8**, `HOLD / HOLD_SHADOW_ONLY / NOT_OPEN`, customer pricing unauthorised | `RESULTS_V62.md`, `action_results/v62/ACTION_V62_STATUS.json` |
 
+
+| v0.63 pre-seal source-contract qualification | prospective `Q0_SOURCE_CONTRACT_QUALIFICATION` requires binary/documentation identity plus metadata-only object/column-name qualification before a future fresh source/request can be sealed; `pyreadr.read_r`, row/outcome/exposure/feature values, summaries, model fitting and performance metrics remain forbidden | `governance/source_contract_qualification_policy_v63.json`, `run_source_contract_qualification_v63.py`, `execute_source_contract_qualification_v63.py`, `RESULTS_V63.md` |
+| v0.63 historical Q0 replay | metadata-only replay on already-consumed `pg15training` and `euMTPL` would have blocked both before seal: `Expdays` vs `Exppdays`, and `cost_fcd/num_fcd` vs `cost_fcg/num_fcg`; no automatic aliases are used | `action_results/v63/source_contract_qualification_replay_v63.json`, `RESULTS_V63.md` |
+| v0.63 metadata-reader compatibility evidence | pyreadr 0.5.3 and 0.5.6 `list_objects` required a narrow no-op `ListObjectsParser.handle_row_name` compatibility patch for these RDA files; row names are discarded and no value callback or `read_r` path is introduced | `action_results/v63/metadata_reader_patch_v63.json`, `RESULTS_V63.md` |
+| v0.63 governance outcome | process control only: no new change request/source, no fresh performance evidence, MCR-001 and MCR-002 remain terminal, historical committee state stays **5/8**, `HOLD / HOLD_SHADOW_ONLY / NOT_OPEN`, pricing unauthorised | `action_results/v63/ACTION_V63_STATUS.json`, `RESULTS_V63.md` |
+
 ## Interpretation rules
+
+- Future prospective fresh-source work must complete `Q0_SOURCE_CONTRACT_QUALIFICATION` before sealing the source/request. Metadata-only schema qualification can block or correct a source specification before any row/outcome value is inspected; it is not model validation.
+- Binary authenticity and documentation prose are not enough by themselves. Proposed semantic identifiers must also agree with pinned binary schema metadata; near matches trigger explicit review and never auto-alias.
+- A metadata-reader limitation must not be bypassed with value decoding. Qualification must either obtain schema metadata under the Q0 boundary or block sealing until a compliant metadata path exists.
 
 - A semantic source-contract incident in an opened prospective stage is not repaired retrospectively for confirmatory credit when the pre-access programme explicitly says that such an incident consumes the stage.
 - A trivial engineering compatibility fix can still be a material governance amendment: `Expdays` versus `Exppdays` is easy to alias in code, but doing so after first stage access would change the registered semantic contract and is therefore not used to rescue `MCR-XGB-MOTOR-002`.

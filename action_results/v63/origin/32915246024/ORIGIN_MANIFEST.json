@@ -1,0 +1,11 @@
+{
+  "run_id": "32915246024",
+  "source_sha": "38a392c530ae63b4dacbaebc5223f553efafc456",
+  "files": {
+    "ACTION_V63_STATUS.json": "c47bea25874e402c63070a06324242f7be74959ca710cd4eedb9a02ed0895a4f",
+    "source_contract_qualification_replay_v63.json": "3770647453f05f60c09d74373dc52c57a801296860abb062c60d46afe6aec623",
+    "metadata_reader_patch_v63.json": "30993b3428c2057cd24452826e8c13c9aa3f8123b8303e43c505d6138cc52ec2"
+  },
+  "new_fresh_source_opened": false,
+  "new_change_request_created": false
+}

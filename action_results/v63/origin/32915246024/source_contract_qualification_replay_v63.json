@@ -1,0 +1,249 @@
+{
+  "status": "V63_METADATA_ONLY_SOURCE_CONTRACT_QUALIFICATION_REPLAY_PASS",
+  "policy_status": "V63_SOURCE_CONTRACT_QUALIFICATION_POLICY_LOCKED",
+  "cases": [
+    {
+      "case_id": "V61_S1_PG15TRAINING_RETROSPECTIVE",
+      "historical_dataset": "pg15training",
+      "historical_only_not_a_new_evidence_stage": true,
+      "source_identity": {
+        "repository": "dutangc/CASdatasets",
+        "commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+        "path": "data/pg15training.rda",
+        "bytes": 1934161,
+        "git_blob_sha1": "9e670d214c05a7454d558ab32de5df96a6b0aba6"
+      },
+      "documentation_identity": {
+        "path": "man-md/pg15training.md",
+        "bytes": 12679,
+        "git_blob_sha1": "9c0f44bd6bc2b24c760917398c6c0783b916d1f5"
+      },
+      "metadata_access": {
+        "api": "pyreadr.list_objects",
+        "object_names": [
+          "pg15training"
+        ],
+        "selected_object": "pg15training",
+        "column_names": [
+          "PolNum",
+          "CalYear",
+          "Gender",
+          "Type",
+          "Category",
+          "Occupation",
+          "Age",
+          "Group1",
+          "Bonus",
+          "Poldur",
+          "Value",
+          "Adind",
+          "SubGroup2",
+          "Group2",
+          "Density",
+          "Exppdays",
+          "Numtppd",
+          "Numtpbi",
+          "Indtppd",
+          "Indtpbi"
+        ],
+        "row_values_accessed": false,
+        "outcome_values_accessed": false,
+        "exposure_values_accessed": false,
+        "feature_values_accessed": false,
+        "row_count_computed_from_data": false,
+        "pyreadr_read_r_called": false
+      },
+      "comparison": {
+        "proposed_required_columns": [
+          "PolNum",
+          "CalYear",
+          "Gender",
+          "Type",
+          "Category",
+          "Occupation",
+          "Age",
+          "Group1",
+          "Bonus",
+          "Poldur",
+          "Value",
+          "Adind",
+          "SubGroup2",
+          "Group2",
+          "Density",
+          "Expdays",
+          "Numtppd",
+          "Numtpbi",
+          "Indtppd",
+          "Indtpbi"
+        ],
+        "registered_only_columns": [
+          "Expdays"
+        ],
+        "binary_only_columns": [
+          "Exppdays"
+        ],
+        "schema_near_matches": [
+          {
+            "left": "Expdays",
+            "right": "Exppdays",
+            "distance": 1
+          }
+        ],
+        "binary_columns_absent_from_documentation_identifiers": [
+          "Exppdays"
+        ],
+        "proposed_documented_columns_absent_from_binary": [
+          "Expdays"
+        ],
+        "documentation_near_matches_for_binary_only_identifiers": [
+          {
+            "left": "Exppdays",
+            "right": "Expdays",
+            "distance": 1
+          }
+        ],
+        "column_order_ignored": true,
+        "automatic_aliasing_used": false
+      },
+      "qualification_decision": "SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL",
+      "expected_retrospective_decision": "SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL",
+      "historical_terminal_state_is_not_modified": true,
+      "qualification_sha256": "56a3ee9844458610ba7a06363673721cef83396335d6fae9ae6982a0165f86c0"
+    },
+    {
+      "case_id": "V57_EUMTPL_RETROSPECTIVE",
+      "historical_dataset": "euMTPL",
+      "historical_only_not_a_new_evidence_stage": true,
+      "source_identity": {
+        "repository": "dutangc/CASdatasets",
+        "commit": "227fb56b8734bdb7c0327a41180e01d2ddaeaf26",
+        "path": "data/euMTPL.rda",
+        "bytes": 17829164,
+        "git_blob_sha1": "4bb386d89606eb5b529206d0835e11074103042b"
+      },
+      "documentation_identity": {
+        "path": "man-md/euMTPL.md",
+        "bytes": 1600,
+        "git_blob_sha1": "c50e96b2a4a470edb000fd71de0f2f01334799c7"
+      },
+      "metadata_access": {
+        "api": "pyreadr.list_objects",
+        "object_names": [
+          "euMTPL"
+        ],
+        "selected_object": "euMTPL",
+        "column_names": [
+          "policy_id",
+          "group",
+          "fuel_type",
+          "year",
+          "vehicle_category",
+          "vehicle_use",
+          "province",
+          "horsepower",
+          "gender",
+          "age",
+          "exposure",
+          "cost_nc",
+          "num_nc",
+          "cost_cg",
+          "num_cg",
+          "cost_fcg",
+          "num_fcg",
+          "cost_cd",
+          "num_cd"
+        ],
+        "row_values_accessed": false,
+        "outcome_values_accessed": false,
+        "exposure_values_accessed": false,
+        "feature_values_accessed": false,
+        "row_count_computed_from_data": false,
+        "pyreadr_read_r_called": false
+      },
+      "comparison": {
+        "proposed_required_columns": [
+          "policy_id",
+          "year",
+          "group",
+          "fuel_type",
+          "vehicle_category",
+          "vehicle_use",
+          "province",
+          "horsepower",
+          "gender",
+          "age",
+          "exposure",
+          "cost_nc",
+          "num_nc",
+          "cost_cg",
+          "num_cg",
+          "cost_cd",
+          "num_cd",
+          "cost_fcd",
+          "num_fcd"
+        ],
+        "registered_only_columns": [
+          "cost_fcd",
+          "num_fcd"
+        ],
+        "binary_only_columns": [
+          "cost_fcg",
+          "num_fcg"
+        ],
+        "schema_near_matches": [
+          {
+            "left": "cost_fcd",
+            "right": "cost_fcg",
+            "distance": 1
+          },
+          {
+            "left": "num_fcd",
+            "right": "num_fcg",
+            "distance": 1
+          }
+        ],
+        "binary_columns_absent_from_documentation_identifiers": [
+          "cost_fcg",
+          "num_fcg"
+        ],
+        "proposed_documented_columns_absent_from_binary": [
+          "cost_fcd",
+          "num_fcd"
+        ],
+        "documentation_near_matches_for_binary_only_identifiers": [
+          {
+            "left": "cost_fcg",
+            "right": "cost_cg",
+            "distance": 1
+          },
+          {
+            "left": "num_fcg",
+            "right": "num_cg",
+            "distance": 1
+          }
+        ],
+        "column_order_ignored": true,
+        "automatic_aliasing_used": false
+      },
+      "qualification_decision": "SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL",
+      "expected_retrospective_decision": "SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL",
+      "historical_terminal_state_is_not_modified": true,
+      "qualification_sha256": "aaa8ee28de5f6ac1942210159f37c079209970452dae9d28092a5b240640b333"
+    }
+  ],
+  "new_fresh_source_opened": false,
+  "new_change_request_created": false,
+  "row_values_accessed": false,
+  "outcome_values_accessed": false,
+  "model_fit_executed": false,
+  "performance_metrics_computed": false,
+  "mcr_001_reopened": false,
+  "mcr_002_reopened": false,
+  "historical_committee_gate_pass_count": 5,
+  "historical_committee_gate_count": 8,
+  "historical_model_family_decision": "HOLD",
+  "historical_serving_status": "HOLD_SHADOW_ONLY",
+  "historical_promotion_review_status": "NOT_OPEN",
+  "customer_pricing_authorised": false,
+  "summary_sha256": "e0fc971026d19a89454904f17bed1cb006081220b96f98caf28a69a611b39994"
+}

@@ -1,0 +1,12 @@
+{
+  "pyreadr_version": "0.5.6",
+  "parser": "ListObjectsParser",
+  "missing_handle_row_name_before_patch": true,
+  "patch": "no-op handle_row_name callback",
+  "row_names_stored": false,
+  "row_names_compared": false,
+  "row_names_persisted": false,
+  "column_values_callback_added": false,
+  "value_decode_api_used": false,
+  "reason": "pyreadr 0.5.3 and 0.5.6 list_objects fail on these RDA files because ListObjectsParser lacks the row-name callback expected by librdata"
+}
