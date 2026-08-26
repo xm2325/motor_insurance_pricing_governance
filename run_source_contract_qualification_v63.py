@@ -11,7 +11,7 @@ import pyreadr
 
 POLICY = Path("governance/source_contract_qualification_policy_v63.json")
 OUTDIR = Path("results_v63")
-TEMPDIR = Path("source_qualification_v63")
+TEMPDIR = Path("/tmp/source_qualification_v63")
 UPSTREAM_REPO = "dutangc/CASdatasets"
 UPSTREAM_COMMIT = "227fb56b8734bdb7c0327a41180e01d2ddaeaf26"
 
@@ -102,7 +102,7 @@ def qualify_case(case: dict[str, Any], max_distance: int) -> dict[str, Any]:
     local_path = TEMPDIR / f"{case['case_id']}.rda"
     local_path.write_bytes(source_bytes)
 
-    # Critical Q0 boundary: schema metadata only. Never replace this with read_r().
+    # Critical Q0 boundary: schema metadata only. Never replace this with value decoding.
     object_map = normalise_list_objects(pyreadr.list_objects(str(local_path)))
     if case["object_name"] not in object_map:
         decision = "SOURCE_CONTRACT_QUALIFICATION_BLOCK_BEFORE_SEAL"
