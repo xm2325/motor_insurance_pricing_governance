@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "governance" / "source_contract_qualification_policy_v63.json"
 RUNNER_PATH = ROOT / "run_source_contract_qualification_v63.py"
+EXECUTOR_PATH = ROOT / "execute_source_contract_qualification_v63.py"
 V58_STATUS = ROOT / "action_results" / "v58" / "ACTION_V58_STATUS.json"
 V62_STATUS = ROOT / "action_results" / "v62" / "ACTION_V62_STATUS.json"
 
@@ -20,6 +21,7 @@ class SourceContractQualificationV63Tests(unittest.TestCase):
     def setUpClass(cls):
         cls.policy = json.loads(POLICY_PATH.read_text())
         cls.runner_text = RUNNER_PATH.read_text()
+        cls.executor_text = EXECUTOR_PATH.read_text()
         cls.v58 = json.loads(V58_STATUS.read_text())
         cls.v62 = json.loads(V62_STATUS.read_text())
 
@@ -38,11 +40,22 @@ class SourceContractQualificationV63Tests(unittest.TestCase):
         self.assertNotIn("mean_tweedie_deviance", self.runner_text)
         self.assertIn('Path("/tmp/source_qualification_v63")', self.runner_text)
 
+    def test_metadata_patch_is_narrow_noop_row_name_handler(self):
+        self.assertIn("ListObjectsParser", self.executor_text)
+        self.assertIn("def _discard_row_name(self, name, index):", self.executor_text)
+        self.assertIn("return None", self.executor_text)
+        self.assertNotIn("pyreadr.read_r(", self.executor_text)
+        self.assertNotIn("handle_column =", self.executor_text)
+        self.assertNotIn("handle_text_value =", self.executor_text)
+        self.assertIn('"column_values_callback_added": False', self.executor_text)
+        self.assertIn('"row_names_persisted": False', self.executor_text)
+        self.assertIn('"value_decode_api_used": False', self.executor_text)
+
     def test_near_match_is_review_only_never_alias(self):
         self.assertEqual(runner.levenshtein("Expdays", "Exppdays"), 1)
         self.assertEqual(runner.levenshtein("cost_fcd", "cost_fcg"), 1)
         self.assertFalse(self.policy["binary_schema_gate"]["automatic_aliasing"])
-        self.assertFalse(self.policy["near_match_rule"]["near_match_never_auto_corrects"] is False)
+        self.assertTrue(self.policy["near_match_rule"]["near_match_never_auto_corrects"])
 
     def test_column_order_and_row_counts_are_not_schema_identity_gates(self):
         self.assertTrue(self.policy["binary_schema_gate"]["column_order_is_not_a_gate"])
