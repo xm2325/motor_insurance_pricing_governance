@@ -5,6 +5,7 @@ on:
     paths:
       - 'governance/source_contract_qualification_policy_v63.json'
       - 'run_source_contract_qualification_v63.py'
+      - 'execute_source_contract_qualification_v63.py'
       - 'tests/test_source_contract_qualification_v63.py'
       - '.github/workflows/v63-source-contract-qualification.yml'
       - 'action_results/v58/**'
@@ -33,13 +34,14 @@ jobs:
       - name: Verify prospective Q0 contracts before metadata replay
         run: python -m unittest -v tests/test_source_contract_qualification_v63.py
       - name: Replay metadata-only qualification on consumed historical sources
-        run: python run_source_contract_qualification_v63.py
+        run: python execute_source_contract_qualification_v63.py
       - name: Assert historical incidents would have been blocked before seal
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           r = json.loads(Path('results_v63/source_contract_qualification_replay_v63.json').read_text())
+          p = json.loads(Path('results_v63/metadata_reader_patch_v63.json').read_text())
           assert r['status'] == 'V63_METADATA_ONLY_SOURCE_CONTRACT_QUALIFICATION_REPLAY_PASS'
           assert r['new_fresh_source_opened'] is False
           assert r['new_change_request_created'] is False
@@ -49,6 +51,13 @@ jobs:
           assert r['performance_metrics_computed'] is False
           assert r['mcr_001_reopened'] is False
           assert r['mcr_002_reopened'] is False
+          assert p['parser'] == 'ListObjectsParser'
+          assert p['patch'] == 'no-op handle_row_name callback'
+          assert p['row_names_stored'] is False
+          assert p['row_names_compared'] is False
+          assert p['row_names_persisted'] is False
+          assert p['column_values_callback_added'] is False
+          assert p['value_decode_api_used'] is False
           by_id = {x['case_id']: x for x in r['cases']}
           pg = by_id['V61_S1_PG15TRAINING_RETROSPECTIVE']
           eu = by_id['V57_EUMTPL_RETROSPECTIVE']
@@ -63,6 +72,8 @@ jobs:
           assert all(x['metadata_access']['row_values_accessed'] is False for x in r['cases'])
           assert all(x['metadata_access']['outcome_values_accessed'] is False for x in r['cases'])
           print(json.dumps({
+              'metadata_reader_version': p['pyreadr_version'],
+              'metadata_reader_patch': p['patch'],
               'pg15_decision': pg['qualification_decision'],
               'pg15_schema_near_matches': pg['comparison']['schema_near_matches'],
               'eumtpl_decision': eu['qualification_decision'],
