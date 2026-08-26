@@ -7,9 +7,21 @@ on:
       - 'run_source_contract_qualification_v63.py'
       - 'execute_source_contract_qualification_v63.py'
       - 'tests/test_source_contract_qualification_v63.py'
+      - 'scripts/migrate_evidence_registry_v63.py'
+      - 'RESULTS_V63.md'
       - '.github/workflows/v63-source-contract-qualification.yml'
       - 'action_results/v58/**'
       - 'action_results/v62/**'
+  push:
+    branches: [main]
+    paths:
+      - 'governance/source_contract_qualification_policy_v63.json'
+      - 'run_source_contract_qualification_v63.py'
+      - 'execute_source_contract_qualification_v63.py'
+      - 'tests/test_source_contract_qualification_v63.py'
+      - 'scripts/migrate_evidence_registry_v63.py'
+      - 'RESULTS_V63.md'
+      - '.github/workflows/v63-source-contract-qualification.yml'
   workflow_dispatch:
 
 concurrency:
@@ -17,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   metadata-only-source-qualification:
@@ -25,6 +37,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -81,6 +95,93 @@ jobs:
               'new_fresh_source_opened': r['new_fresh_source_opened'],
           }, indent=2))
           PY
+      - name: Apply and verify v0.63 evidence-registry migration
+        run: |
+          python scripts/migrate_evidence_registry_v63.py
+          cp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v63_once.md
+          python scripts/migrate_evidence_registry_v63.py
+          cmp EVIDENCE_REGISTRY.md /tmp/EVIDENCE_REGISTRY_v63_once.md
+          grep -F '| v0.63 pre-seal source-contract qualification |' EVIDENCE_REGISTRY.md
+          grep -F 'Future prospective fresh-source work must complete `Q0_SOURCE_CONTRACT_QUALIFICATION`' EVIDENCE_REGISTRY.md
+      - name: Persist aggregate v0.63 Q0 evidence only
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          set -euo pipefail
+          mkdir -p action_results/v63
+          cp results_v63/source_contract_qualification_replay_v63.json action_results/v63/
+          cp results_v63/metadata_reader_patch_v63.json action_results/v63/
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          policy = Path('governance/source_contract_qualification_policy_v63.json').read_bytes()
+          replay = json.loads(Path('results_v63/source_contract_qualification_replay_v63.json').read_text())
+          by_id = {x['case_id']: x for x in replay['cases']}
+          Path('action_results/v63/ACTION_V63_STATUS.json').write_text(json.dumps({
+              'workflow': 'Source-contract qualification v0.63',
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'sha': os.environ.get('GITHUB_SHA'),
+              'status': 'success',
+              'policy_status': 'V63_SOURCE_CONTRACT_QUALIFICATION_POLICY_LOCKED',
+              'policy_file_sha256': hashlib.sha256(policy).hexdigest(),
+              'q0_required_before_future_seal': True,
+              'metadata_api': 'pyreadr.list_objects',
+              'value_decode_api_used': False,
+              'pg15_retrospective_decision': by_id['V61_S1_PG15TRAINING_RETROSPECTIVE']['qualification_decision'],
+              'eumtpl_retrospective_decision': by_id['V57_EUMTPL_RETROSPECTIVE']['qualification_decision'],
+              'new_fresh_source_opened': False,
+              'new_change_request_created': False,
+              'row_values_accessed': False,
+              'outcome_values_accessed': False,
+              'model_fit_executed': False,
+              'performance_metrics_computed': False,
+              'mcr_001_reopened': False,
+              'mcr_002_reopened': False,
+              'historical_committee_gate_pass_count': 5,
+              'historical_committee_gate_count': 8,
+              'historical_model_family_decision': 'HOLD',
+              'historical_serving_status': 'HOLD_SHADOW_ONLY',
+              'historical_promotion_review_status': 'NOT_OPEN',
+              'customer_pricing_authorised': False,
+              'raw_source_binary_persisted': False,
+              'evidence_role': 'ROLLING_SOURCE_CONTRACT_QUALIFICATION_PROCESS_CONTROL',
+          }, indent=2) + '\n')
+          PY
+          origin_dir="action_results/v63/origin/${GITHUB_RUN_ID}"
+          if [ -e "$origin_dir" ]; then
+            echo "Refusing to overwrite immutable v0.63 snapshot: $origin_dir" >&2
+            exit 1
+          fi
+          mkdir -p "$origin_dir"
+          cp action_results/v63/source_contract_qualification_replay_v63.json "$origin_dir/"
+          cp action_results/v63/metadata_reader_patch_v63.json "$origin_dir/"
+          cp action_results/v63/ACTION_V63_STATUS.json "$origin_dir/"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          origin = Path('action_results/v63/origin') / os.environ['GITHUB_RUN_ID']
+          status_path = origin / 'ACTION_V63_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['evidence_role'] = 'IMMUTABLE_SOURCE_CONTRACT_QUALIFICATION_PROCESS_CONTROL_SNAPSHOT'
+          status_path.write_text(json.dumps(status, indent=2) + '\n')
+          names = ['ACTION_V63_STATUS.json','source_contract_qualification_replay_v63.json','metadata_reader_patch_v63.json']
+          files = {name: hashlib.sha256((origin / name).read_bytes()).hexdigest() for name in names}
+          (origin / 'ORIGIN_MANIFEST.json').write_text(json.dumps({
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_sha': os.environ['GITHUB_SHA'],
+              'files': files,
+              'new_fresh_source_opened': False,
+              'new_change_request_created': False,
+          }, indent=2) + '\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- action_results/v63 EVIDENCE_REGISTRY.md
+          if git diff --cached --quiet; then
+            echo 'No v0.63 evidence changes'
+          else
+            git commit -m "Persist v0.63 source qualification evidence ${GITHUB_RUN_ID}"
+            bash scripts/push_evidence_with_rebase.sh "$GITHUB_REF_NAME"
+          fi
       - name: Assert no RDA or row-level output exists in repository worktree
         if: always()
         run: |
